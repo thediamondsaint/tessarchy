@@ -21,10 +21,10 @@ navigation.
 | Layouts | Automatic Phone/Tablet/Desktop selection with a saved manual override |
 | Navigation | Touch-sized icon controls, Alt+Tab, workspace controls and confirmed close/exit |
 | Login | Four-digit account-password entry through greetd/PAM; real VM login cycle tested |
-| Radios | rfkill power/airplane controls; Bluetooth discovery and connections to already-paired devices |
+| Radios | rfkill power/airplane controls; Bluetooth discovery/connections to paired devices; NetworkManager Wi-Fi scanning, connect/disconnect and passphrase entry |
 | Audio and media | Optional PipeWire controls and MPRIS playback integration |
 | Keyboard and captures | Optional squeekboard; Print and pull-down screenshot actions |
-| Latest checks | 44 Python tests and 37 Qt Quick results; Ubuntu/Arch CI passed |
+| Latest checks | 49 Python tests and 39 Qt Quick results; Ubuntu/Arch CI passed |
 | Next device milestone | Select and bring up one physical reference device |
 
 The [validation record](docs/testing.md) tracks runtime results for each feature.

@@ -12,6 +12,11 @@ ColumnLayout {
     property color accentColor: "#a9e8d5"
     property var bluetoothAdapter: null
     property bool bluetoothExpanded: false
+    property var wifiDevice: null
+    property bool wifiExpanded: false
+    // The status bar layer may take keyboard focus only while the password
+    // prompt is visible, so typing and the on-screen keyboard reach the field.
+    readonly property bool wifiPromptOpen: sheet.wifiExpanded && wifiPanel.promptOpen
     property var mediaPlayer: null
     property bool audioBackendAvailable: false
     property bool audioExpanded: false
@@ -66,6 +71,21 @@ ColumnLayout {
                 onClicked: sheet.radios.toggle(modelData.name)
             }
         }
+    }
+    TouchButton {
+        text: sheet.wifiExpanded ? "Hide Wi-Fi networks" : "Wi-Fi networks"
+        focusPolicy: Qt.TabFocus
+        Layout.fillWidth: true
+        accentColor: sheet.accentColor
+        Accessible.description: "Scan, connect and disconnect Wi-Fi networks"
+        onClicked: sheet.wifiExpanded = !sheet.wifiExpanded
+    }
+    WifiPanel {
+        id: wifiPanel
+        visible: sheet.wifiExpanded
+        device: sheet.wifiDevice
+        accentColor: sheet.accentColor
+        Layout.fillWidth: true
     }
     TouchButton {
         text: sheet.bluetoothExpanded ? "Hide Bluetooth devices" : "Bluetooth devices"

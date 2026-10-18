@@ -81,3 +81,17 @@ function playbackStream(mediaClass) {
 function volumePercent(value) {
     return Math.round(Math.max(0, Math.min(1, Number(value) || 0)) * 100);
 }
+
+// Wi-Fi signal strength is 0..1 from NetworkManager; display as a percent.
+function signalPercent(strength) {
+    if (typeof strength !== "number" || !isFinite(strength)) return 0;
+    return Math.round(Math.max(0, Math.min(1, strength)) * 100);
+}
+
+// What tapping a network row does: connected ones disconnect; saved profiles
+// and open networks connect; unsaved secured networks ask for a password.
+function wifiAction(connected, known, openSecurity) {
+    if (connected) return "disconnect";
+    if (known || openSecurity) return "connect";
+    return "prompt";
+}

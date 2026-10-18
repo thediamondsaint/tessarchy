@@ -65,7 +65,14 @@ selection is reactive, with no polling. Optional PipeWire integration is loaded
 only when the service socket exists at launch. Radio power controls use the rfkill helper. Bluetooth quick controls bind only when BlueZ
 exposes an adapter: the pull-down panel toggles the radio, requests discovery only while
 expanded and powered on, and connects or disconnects already-paired devices; pairing,
-forgetting and passkey agents are out of scope.
+forgetting and passkey agents are out of scope. Wi-Fi quick controls bind only when
+NetworkManager exposes a Wi-Fi device: the panel scans only while expanded with the radio
+on, orders networks connected-first then by strength, connects saved and open networks,
+disconnects the connected one, and asks for a passphrase on unsaved secured networks.
+Passphrases go straight to NetworkManager through `connectWithPsk`; the field is masked,
+cleared before the attempt and on cancel, and the panel stores no copy. The live image
+enables NetworkManager with `wpa_supplicant`; development hosts without NetworkManager
+fall back to the "no NetworkManager backend" row.
 
 ## Verified against installed files, 2026-10-16
 

@@ -47,10 +47,10 @@ sed -i 's|^\(root:[^:]*:0:0:[^:]*:[^:]*:\).*|\1/usr/bin/bash|' "$airoot/etc/pass
 # The home scaffolding comes from the skel tree: Bash and fish login profiles.
 mkdir -p "$airoot/home/tess"
 cp -a "$root/iso/airootfs/etc/skel/." "$airoot/home/tess/"
-# Releng may enable SSH for rescue. Keep network services out of this prototype.
+# Releng may enable SSH for rescue. Keep rescue services out of this prototype.
 find "$airoot/etc/systemd/system" -type l -name 'sshd.service' -delete
 mkdir -p "$airoot/etc/systemd/system/multi-user.target.wants"
-ln -sf /usr/lib/systemd/system/systemd-networkd.service "$airoot/etc/systemd/system/multi-user.target.wants/"
+ln -sf /usr/lib/systemd/system/NetworkManager.service "$airoot/etc/systemd/system/multi-user.target.wants/"
 ln -sf /usr/lib/systemd/system/systemd-resolved.service "$airoot/etc/systemd/system/multi-user.target.wants/"
 ln -sf /usr/lib/systemd/system/systemd-timesyncd.service "$airoot/etc/systemd/system/multi-user.target.wants/"
 ln -sf /run/systemd/resolve/stub-resolv.conf "$airoot/etc/resolv.conf"

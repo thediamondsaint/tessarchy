@@ -189,7 +189,7 @@ Read [pr-triage.md](docs/pr-triage.md) and inspect current PR heads first.
 | --- | --- | --- |
 | T09 | Review #18 power controls | Reliable service detection, supported modes and guarded writes |
 | T10 | Review #21 idle blanking | Current Lua-compatible display control, wake input and session lifecycle tested |
-| T11 | Review #23 Wi-Fi connection workflow | Scan ownership, NetworkManager lifecycle, credentials agent and cancellation resolved |
+| T11 | In progress | #23 | Reworked on current main: Wi-Fi quick controls with passphrase prompt (connectWithPsk; cancel clears and sends nothing), scanner owned by panel visibility, NetworkManager and wpa_supplicant in the live image; local checks green, guest association pending |
 | T12 | Review #22 rotation | Current Lua support, touch mapping, output settings and recovery verified |
 | T13 | Review #13 notifications | Plain-text rendering, popup/history lifecycle, replacement and withdrawal checked |
 | T14 | Review #19 brightness/night light | Hardware availability and owned-process lifetime handled correctly |

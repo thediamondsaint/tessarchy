@@ -671,6 +671,31 @@ assert(#fire("window.open", dialog) == 0, "desktop dialogs are left alone")
         self.assertEqual(launcher.read_text(), 'unrelated helper')
         self.assertFalse((self.home / 'data/tessarchy').exists())
 
+    def test_wifi_panel_password_contract(self):
+        source = (ROOT / 'shell/components/WifiPanel.qml').read_text()
+        # A passphrase leaves the panel only through connectWithPsk, the field
+        # is masked, and every close path clears it before the attempt.
+        self.assertEqual(source.count('connectWithPsk'), 1)
+        self.assertIn('TextInput.Password', source)
+        self.assertIn('pskField.text = ""', source)
+        self.assertGreaterEqual(source.count('closePrompt()'), 4)
+        self.assertIn('psk.length < 8', source)
+        # The scanner is owned by the panel: on only while visible and on.
+        self.assertIn('panel.device.scannerEnabled = panel.visible && panel.wifiOn', source)
+        self.assertIn('if (!panel.visible)', source)
+
+    def test_wifi_quick_controls_wiring(self):
+        sheet = (ROOT / 'shell/components/QuickSettings.qml').read_text()
+        self.assertIn('WifiPanel {', sheet)
+        self.assertIn('device: sheet.wifiDevice', sheet)
+        self.assertIn('property var wifiDevice', sheet)
+        shell = (ROOT / 'shell/shell.qml').read_text()
+        self.assertIn('wifiDevice: root.wifiDevice', shell)
+        self.assertIn('NetworkBackendType.None', shell)
+        self.assertIn('available: root.networkBackend', shell)
+        # Keyboard focus reaches the drawer only while the prompt is open.
+        self.assertIn('quickSheet.wifiPromptOpen ? WlrKeyboardFocus.Exclusive', shell)
+
     def test_iso_staging_preserves_boot_assets_and_account_databases(self):
         # Minimal fixture exercises our assembly, not upstream archiso validity.
         repo = self.home / 'source'
@@ -703,9 +728,11 @@ assert(#fire("window.open", dialog) == 0, "desktop dialogs are left alone")
         self.assertFalse((profile / 'airootfs/etc/systemd/system/multi-user.target.wants/sshd.service').is_symlink())
         self.assertTrue(ssh_link.is_symlink())
         self.assertIn('quickshell', (profile / 'packages.x86_64').read_text())
+        self.assertIn('networkmanager', (profile / 'packages.x86_64').read_text())
+        self.assertIn('wpa_supplicant', (profile / 'packages.x86_64').read_text())
         self.assertNotIn('unused-rescue-tool', (profile / 'packages.x86_64').read_text())
         self.assertNotIn('linux-firmware', (profile / 'packages.x86_64').read_text())
-        self.assertTrue((profile / 'airootfs/etc/systemd/system/multi-user.target.wants/systemd-networkd.service').is_symlink())
+        self.assertTrue((profile / 'airootfs/etc/systemd/system/multi-user.target.wants/NetworkManager.service').is_symlink())
         self.assertTrue((profile / 'airootfs/etc/systemd/system/multi-user.target.wants/systemd-timesyncd.service').is_symlink())
         self.assertEqual((profile / 'airootfs/etc/hostname').read_text().strip(), 'tessarchy')
         self.assertIn('en_US.UTF-8', (profile / 'airootfs/etc/locale.conf').read_text())

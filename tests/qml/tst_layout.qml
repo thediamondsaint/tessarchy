@@ -152,4 +152,18 @@ TestCase {
         compare(Policy.volumePercent(2), 100);
         compare(Policy.volumePercent(-1), 0);
     }
+    function test_wifi_signal_percent() {
+        compare(Policy.signalPercent(0.42), 42);
+        compare(Policy.signalPercent(-1), 0);
+        compare(Policy.signalPercent(2), 100);
+        compare(Policy.signalPercent(undefined), 0);
+        compare(Policy.signalPercent(NaN), 0);
+    }
+    function test_wifi_action_matrix() {
+        compare(Policy.wifiAction(true, true, false), "disconnect");
+        compare(Policy.wifiAction(true, false, false), "disconnect");
+        compare(Policy.wifiAction(false, true, false), "connect");
+        compare(Policy.wifiAction(false, false, true), "connect");
+        compare(Policy.wifiAction(false, false, false), "prompt");
+    }
 }

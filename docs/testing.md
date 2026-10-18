@@ -965,3 +965,31 @@ Remaining work:
   pause, rather than replacing every firmware/bootloader message.
 - Physical display/touch validation, graphical encrypted-disk prompts and recovery
   acceptance remain planned. No new ISO was built or boot-tested in this task.
+
+## Wi-Fi quick-controls rework (PR #23) — 2026-10-18 UTC
+
+Validated locally:
+
+- `./scripts/check.sh` passes: 49 Python tests, including new password-contract
+  and quick-controls wiring tests, and 39 Qt Quick results with `signalPercent`
+  and the `wifiAction` matrix including the new `prompt` action.
+- `qmllint` 6.12 from the live-image rootfs parses `shell.qml`, `WifiPanel.qml`,
+  `QuickSettings.qml` and `StatusIcon.qml` without syntax errors. Quickshell
+  0.3.1 metadata confirmed `WifiNetwork.connectWithPsk`, `WifiSecurityType.Open`
+  and `Owe`, the `ConnectionState` values, and
+  `wifiEnabled`/`wifiHardwareEnabled`/`scannerEnabled`.
+- The staged ISO profile enables `NetworkManager.service` instead of
+  `systemd-networkd` and packages `networkmanager` and `wpa_supplicant`;
+  `systemd-resolved` and `systemd-timesyncd` remain enabled. The staging test
+  asserts the symlink and packages.
+
+Not performed:
+
+- No guest association. The host and the standard live image expose no wireless
+  hardware. A `mac80211_hwsim`-based debug image (access point on one radio,
+  panel scan and passphrase entry on the other) is planned for the next debug
+  boot; NetworkManager D-Bus behavior without hardware was not exercised.
+- No real touch-keyboard passphrase entry. The drawer grants the status layer
+  exclusive keyboard focus only while the prompt is open so squeekboard and
+  hardware keyboards can reach the field; QMP-driven typing is planned with the
+  same debug boot.

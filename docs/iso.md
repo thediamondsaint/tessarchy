@@ -28,8 +28,9 @@ public release.
 The staged rootfs pins the hostname to `tessarchy`, generates the en_US.UTF-8
 locale, sets a live-console motd that points at `/usr/share/tessarchy/docs`
 (a snapshot of `docs/` staged into the image), keeps the journal volatile with
-a 64M runtime cap, and enables `systemd-timesyncd` alongside networkd so guests
-without a working RTC still get a sane clock. `noto-fonts-emoji` is included so
+a 64M runtime cap, and enables `systemd-timesyncd` alongside NetworkManager so
+guests without a working RTC still get a sane clock and Wi-Fi works through the
+shell's quick controls (`networkmanager` and `wpa_supplicant` are packaged). `noto-fonts-emoji` is included so
 browser pages render emoji. None of this changes development installs.
 
 ## Build explicitly on Arch

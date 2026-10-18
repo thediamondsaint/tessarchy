@@ -11,6 +11,7 @@ import Quickshell.Wayland
 import Quickshell.Services.UPower
 import Quickshell.Services.Mpris
 import Quickshell.Services.SystemTray
+import Quickshell.Networking
 import "components"
 import "LayoutPolicy.js" as Policy
 
@@ -52,8 +53,32 @@ ShellRoot {
     }
     RadioBackend { id: radioBackend }
     readonly property var bluetoothAdapter: Bluetooth.defaultAdapter
-    // Signal strength remains unavailable until a real connection backend is added.
-    property real wifiStrength: -1
+    // NetworkManager through Quickshell's Networking service: the first
+    // Wi-Fi device and its connected network feed the status icon. Negative
+    // strength means no connected network; `networkBackend` distinguishes a
+    // present-but-idle radio from a missing backend.
+    readonly property bool networkBackend: Networking.backend !== NetworkBackendType.None
+    readonly property var wifiDevice: {
+        if (!root.networkBackend)
+            return null;
+        const devices = Networking.devices.values;
+        for (let i = 0; i < devices.length; i++) {
+            if (devices[i].type === DeviceType.Wifi)
+                return devices[i];
+        }
+        return null;
+    }
+    readonly property var wifiConnected: {
+        if (!root.wifiDevice)
+            return null;
+        const networks = root.wifiDevice.networks.values;
+        for (let i = 0; i < networks.length; i++) {
+            if (networks[i].connected)
+                return networks[i];
+        }
+        return null;
+    }
+    readonly property real wifiStrength: root.wifiConnected ? root.wifiConnected.signalStrength : -1
     property real cellularStrength: -1
     // squeekboard via tessarchy-osk; it also appears by itself for text fields.
     readonly property bool oskAvailable: Quickshell.env("TESSARCHY_OSK") === "1"
@@ -443,7 +468,11 @@ ShellRoot {
                 }
                 WlrLayershell.namespace: "tessera-status"
                 WlrLayershell.layer: WlrLayer.Top
-                WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
+                // The drawer grants keyboard focus only while the Wi-Fi
+                // password prompt is open so hardware typing and the
+                // on-screen keyboard reach the field; everything else stays
+                // non-interactive for the keyboard.
+                WlrLayershell.keyboardFocus: quickSheet.wifiPromptOpen ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
                 Item {
                     id: statusHeader
                     width: parent.width
@@ -574,6 +603,7 @@ ShellRoot {
                         symbol: "wifi"
                         label: "Wi-Fi"
                         strength: root.wifiStrength
+                        available: root.networkBackend
                     }
                     NavButton {
                         text: root.audioAvailable ? "Volume " + root.volumePercent + "%" : "Quick controls · audio unavailable"
@@ -627,6 +657,7 @@ ShellRoot {
                     contentWidth: availableWidth
                     QuickSettings {
                         bluetoothAdapter: root.bluetoothAdapter
+                        wifiDevice: root.wifiDevice
                         id: quickSheet
                         width: parent.width
                         radios: radioBackend

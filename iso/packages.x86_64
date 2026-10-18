@@ -27,3 +27,5 @@ python
 util-linux
 grim
 libnotify
+networkmanager
+wpa_supplicant
