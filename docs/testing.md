@@ -1615,3 +1615,42 @@ source tree, rejection of edited/missing launcher originals, legacy uninstall
 and long/empty event messages. No host settings, development
 installation or running VM were modified. Fractional-scale acceptance on a
 physical display remains pending.
+
+## PR #20 rebase VM touch verification (2026-10-19)
+
+Actually exercised the rebased branch in the Arch QEMU guest at 720×1440
+physical, scale 0.9 (800×1600 logical), with `TESSARCHY_OSK=1` and two Foot
+windows. Deployed this branch's complete `shell/` and `session/` tree (removed
+an unrelated stale guest `components/qmldir` before launch). A synthetic
+uinput **touchscreen** tapped Recents at physical (154,1410); the page opened
+and `busctl --user get-property sm.puri.OSK0 /sm/puri/OSK0 sm.puri.OSK0
+Visible` returned `b false`. Launching/focusing a second Foot from outside
+while Recents stayed open also returned `b false`; the page screenshot shows
+both previews and no keyboard (`vm/rebase-guard-focus.png`). After touch
+closed Recents, explicitly focusing the first then second Foot with Hyprland's
+`hl.dsp.focus({ window = "address:…" })` returned `b true`, with keys visible
+(`vm/rebase-guard-osk-visible.png`). The intermediate page screenshot is
+`vm/rebase-guard-page.png`. The first post-close focus attempt that left the
+same Foot focused did not cause a keyboard re-show; a *change of focus* did.
+The four focused OSK workflow tests passed; `qmllint` exited 0 with the
+existing PanelWindow/type-metadata warnings. No change to this branch's
+implementation was needed. These screenshots are ignored VM artifacts, not
+physical-device validation.
+
+## Keyboard suppression while a shell page stays open — PR #20
+
+The shell already calls `tessarchy-osk hide` when a panel page opens and when
+quick controls opens. That one-time call does not prevent squeekboard from
+reappearing if a text-input app behind the open panel takes focus: it maps a new
+`osk` layer. This branch also listens for Hyprland `openlayer>>osk` while a
+shell page or quick-controls drawer is open, and hides the keyboard again.
+The separate file picker layer is unaffected.
+
+Earlier development-VM validation on the original PR branch (2026-10-17,
+800×1600 logical at scale 0.9, four Foot windows, `TESSARCHY_OSK=1`): with
+Recents open, shifting app focus showed the keyboard after each change on the
+control shell (#11), but left it hidden after each change and after one second
+with this guard; closing Recents restored auto-show on focus. This evidence is
+for the old branch, **not** a live test of the current rebase. The current
+rebase was checked with `./scripts/check.sh` on the host; guest behaviour and
+physical touch still require separate acceptance.

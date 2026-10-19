@@ -197,6 +197,18 @@ ShellRoot {
                     if (expanded && root.oskAvailable)
                         Quickshell.execDetached(["tessarchy-osk", "hide"]);
                 }
+                // squeekboard re-shows itself whenever an app behind the drawer
+                // takes focus with text input enabled; it maps a fresh "osk"
+                // layer each time, so dismiss it again while a page or the
+                // quick-controls drawer is open. The file picker is separate.
+                Connections {
+                    target: Hyprland
+                    enabled: root.oskAvailable && (panel.expanded || statusBar.drawerOpen)
+                    function onRawEvent(event) {
+                        if (event.name === "openlayer" && event.data === "osk")
+                            Quickshell.execDetached(["tessarchy-osk", "hide"]);
+                    }
+                }
                 anchors {
                     bottom: true
                     // Desktop uses a full-width taskbar, open page or not; touch
