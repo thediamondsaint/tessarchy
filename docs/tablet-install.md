@@ -37,10 +37,10 @@ install the four session/profile packages together (select exact build filenames
 
 ```bash
 sudo pacman -Syu
-sudo pacman -U dist/tessera-shell-0.1.0-2-any.pkg.tar.zst \
+sudo pacman -U dist/tessera-shell-0.1.0-3-any.pkg.tar.zst \
   dist/tessarchy-session-0.1.0-2-any.pkg.tar.zst \
   dist/tessarchy-bootsplash-0.1.0-2-any.pkg.tar.zst \
-  dist/tessarchy-tablet-0.1.0-1-x86_64.pkg.tar.zst
+  dist/tessarchy-tablet-0.1.0-2-x86_64.pkg.tar.zst
 ```
 
 Pacman resolves the profile's repository dependencies. Nothing in these packages
@@ -53,7 +53,7 @@ with a wired fallback; do not disable the only remote connection over SSH.
 Enable NetworkManager and Bluetooth explicitly:
 
 ```bash
-sudo systemctl enable --now NetworkManager.service bluetooth.service
+sudo systemctl enable --now NetworkManager.service ModemManager.service bluetooth.service
 systemctl --user enable --now pipewire.socket pipewire-pulse.socket wireplumber.service
 ```
 
@@ -105,6 +105,6 @@ certification. Then check:
 Send the model, CPU architecture, kernel/graphics versions, logical display size,
 preflight JSON and the steps/results above. Remove serial numbers, saved network
 credentials, contact data and other personal information before posting logs.
-Automatic rotation, native Wi-Fi association UI, secure session locking and
-model-specific firmware fixes remain separate acceptance work. Use Connections
+Automatic rotation, secure session locking and
+model-specific firmware fixes remain separate acceptance work. Use Connections for enterprise certificates and advanced IP/profile settings,
 and the device's existing orientation controls during this pilot.

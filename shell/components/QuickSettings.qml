@@ -5,6 +5,9 @@ import QtQuick.Layouts
 ColumnLayout {
     id: sheet
     required property var radios
+    required property var network
+    property bool wifiExpanded: false
+    readonly property bool needsKeyboard: wifiExpanded && wifiPanel.needsKeyboard
     required property var preferences
     required property string activeMode
     required property var date
@@ -17,6 +20,7 @@ ColumnLayout {
     property bool audioExpanded: false
     property var audioSink: null
     readonly property bool audioAvailable: !!(audioSink && audioSink.ready && audioSink.audio)
+    signal networkSettingsRequested
     signal cellularRequested
     signal screenshotRequested
     signal settingsRequested
@@ -57,16 +61,34 @@ ColumnLayout {
             ]
             delegate: RadioTile {
                 required property var modelData
-                readonly property var radio: sheet.radios.state[modelData.name] || {available: false, enabled: false, label: "Unavailable"}
+                readonly property bool networkRadio: ["wifi", "cellular", "airplane"].indexOf(modelData.name) >= 0
+                readonly property var radio: (networkRadio ? sheet.network.state : sheet.radios.state)[modelData.name] || {available: false, enabled: false, label: "Unavailable"}
                 text: modelData.title
                 symbol: modelData.icon
                 detail: radio.label
                 selected: radio.enabled
-                enabled: radio.available && !radio.hardBlocked && sheet.radios.state.canControl && !sheet.radios.busy
+                enabled: radio.available && (networkRadio ? sheet.network.state.available && (modelData.name === "airplane" || radio.hardwareEnabled) && !sheet.network.busy :
+                    !radio.hardBlocked && sheet.radios.state.canControl && !sheet.radios.busy)
                 accentColor: sheet.accentColor
-                onClicked: sheet.radios.toggle(modelData.name)
+                onClicked: {
+                    if (networkRadio) sheet.network.request(modelData.name === "airplane" ? "airplane" : modelData.name === "wifi" ? "wifi-power" : "cellular-power", {enabled: !radio.enabled});
+                    else sheet.radios.toggle(modelData.name);
+                }
             }
         }
+    }
+    TouchButton {
+        text: sheet.wifiExpanded ? "Hide Wi-Fi networks" : "Wi-Fi networks"
+        Layout.fillWidth: true; focusPolicy: Qt.StrongFocus
+        onClicked: { sheet.wifiExpanded = !sheet.wifiExpanded; if (sheet.wifiExpanded) sheet.network.refresh(); }
+    }
+    WifiPanel {
+        id: wifiPanel
+        onAdvancedRequested: sheet.networkSettingsRequested()
+        visible: sheet.wifiExpanded
+        backend: sheet.network
+        accentColor: sheet.accentColor
+        Layout.fillWidth: true
     }
     TouchButton {
         text: "SIM & cellular"

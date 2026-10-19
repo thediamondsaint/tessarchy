@@ -103,6 +103,9 @@ class Modems:
 
     def snapshot(self, selected=''):
         objects = self.call(ROOT, 'org.freedesktop.DBus.ObjectManager', 'GetManagedObjects')[0]
+        def properties(path, interface):
+            cached = objects.get(path, {}).get(interface)
+            return cached if cached is not None else self.props(path, interface)
         modems = []
         for path, interfaces in objects.items():
             if MM + '.Modem' in interfaces:
@@ -117,7 +120,7 @@ class Modems:
         sims = []
         slots = modem.get('SimSlots') or [modem.get('Sim', '/')]
         for index, sim in enumerate(slots):
-            p = self.props(sim, MM + '.Sim') if sim != '/' else {}
+            p = properties(sim, MM + '.Sim') if sim != '/' else {}
             sims.append({'id': sim, 'slot': index + 1, 'present': sim != '/', 'active': sim == modem.get('Sim'),
                          'name': p.get('OperatorName') or ('SIM ' + str(index + 1)),
                          'type': 'eSIM' if p.get('SimType') == 2 or p.get('Eid') else 'Physical SIM' if p.get('SimType') == 1 else 'SIM',
@@ -126,11 +129,11 @@ class Modems:
         voice, messaging = MM + '.Modem.Voice', MM + '.Modem.Messaging'
         calls = []
         for call in interfaces.get(voice, {}).get('Calls', [])[:8]:
-            p = self.props(call, MM + '.Call')
+            p = properties(call, MM + '.Call')
             calls.append({'id': call, 'number': p.get('Number', ''), 'state': p.get('State', 0), 'direction': p.get('Direction', 0)})
         messages = []
         for sms in interfaces.get(messaging, {}).get('Messages', [])[-100:]:
-            p = self.props(sms, MM + '.Sms')
+            p = properties(sms, MM + '.Sms')
             if p.get('State') not in (3, 5):
                 continue
             content = {'number': p.get('Number', ''), 'text': p.get('Text', ''), 'timestamp': p.get('Timestamp', ''),

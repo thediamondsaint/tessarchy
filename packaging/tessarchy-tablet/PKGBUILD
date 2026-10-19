@@ -1,12 +1,12 @@
 pkgname=tessarchy-tablet
 pkgver=0.1.0
-pkgrel=1
+pkgrel=2
 pkgdesc='Tessarchy Intel/AMD tablet desktop and hardware support profile'
 arch=('x86_64')
 license=('MIT')
 depends=('tessarchy-session=0.1.0' 'tessarchy-bootsplash=0.1.0' 'linux-firmware' 'sof-firmware' 'alsa-ucm-conf'
          'mesa' 'vulkan-intel' 'vulkan-radeon' 'libinput' 'xorg-xwayland'
-         'squeekboard' 'networkmanager' 'network-manager-applet' 'bluez' 'bluez-utils' 'blueman'
+         'squeekboard' 'networkmanager' 'network-manager-applet' 'nm-connection-editor' 'modemmanager' 'mobile-broadband-provider-info' 'dnsmasq' 'bluez' 'bluez-utils' 'blueman'
          'polkit' 'hyprpolkitagent' 'pipewire' 'pipewire-audio' 'pipewire-alsa' 'pipewire-pulse'
          'wireplumber' 'rtkit' 'upower' 'power-profiles-daemon' 'iio-sensor-proxy'
          'xdg-desktop-portal-hyprland' 'xdg-desktop-portal-gtk' 'xdg-user-dirs'

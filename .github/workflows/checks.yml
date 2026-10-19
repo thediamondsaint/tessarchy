@@ -18,7 +18,7 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y --no-install-recommends \
-            python3 lua5.4 fish shellcheck ffmpeg libqt6svg6 \
+            python3 python3-gi gir1.2-nm-1.0 dbus-daemon lua5.4 fish shellcheck ffmpeg libqt6svg6 \
             qt6-declarative-dev-tools \
             qml6-module-qtquick qml6-module-qtquick-templates \
             qml6-module-qtquick-controls qml6-module-qtquick-layouts \
@@ -35,7 +35,7 @@ jobs:
     steps:
       - name: Install target toolchain in the disposable CI container
         run: |
-          pacman -Syu --noconfirm --needed git python lua fish shellcheck ffmpeg \
+          pacman -Syu --noconfirm --needed git python python-gobject libnm dbus lua fish shellcheck ffmpeg \
             qt6-declarative quickshell hyprland desktop-file-utils ttf-dejavu
           useradd --create-home checker
       - uses: actions/checkout@v4

@@ -67,6 +67,10 @@ class Workflows(unittest.TestCase):
     def test_audio_panel_without_pipewire_service(self):
         self.run_quickshell_harness('audio', 'AUDIO')
 
+    def test_networking_components_without_services_never_fabricate_signal(self):
+        self.env['DBUS_SYSTEM_BUS_ADDRESS'] = 'unix:path=/nonexistent/tessarchy-test-network-bus'
+        self.run_quickshell_harness('networking', 'NETWORK')
+
     def test_communications_components_and_private_contact_save(self):
         self.env['DBUS_SYSTEM_BUS_ADDRESS'] = 'unix:path=/nonexistent/tessarchy-test-bus'
         self.run_quickshell_harness('communications', 'COMMUNICATIONS')

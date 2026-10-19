@@ -37,6 +37,15 @@ The alarm selection is stored for alarm apps; this change does not add a schedul
 The file browser stays inside the glass panel, avoiding native dialogs hidden
 behind the layer-shell window. Selection rows are at least 48 pixels high.
 
+## Mobile data
+
+SIM & cellular now includes NetworkManager data profiles, APN/authentication,
+operator selection, roaming controls and saved-profile connect/disconnect/forget.
+The selected modem is shared with SIM/call/message controls. Modem registration
+and data connectivity have separate reported states; indicators use recent modem
+signal independently of the message/contact worker. See [networking.md](networking.md)
+for controls, dependencies and remaining device acceptance.
+
 ## SIM and eSIM
 
 Open **Settings → SIM & cellular**, or choose **SIM & cellular** in the pull-down.

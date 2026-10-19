@@ -6,11 +6,18 @@ import Quickshell
 ColumnLayout {
     id: page
     required property var backend
+    property var network: null
     property color accentColor: "#a9e8d5"
     property var pending: null
     readonly property var cellular: backend.state.cellular
     spacing: 12
     Text { text: page.cellular.label; color: page.accentColor; font.pixelSize: 20; Layout.fillWidth: true; wrapMode: Text.WordWrap }
+    Loader {
+        active: page.network !== null
+        visible: active
+        Layout.fillWidth: true
+        sourceComponent: MobileDataPanel { backend: page.network; accentColor: page.accentColor; onAdvancedRequested: Quickshell.execDetached(["nm-connection-editor"]) }
+    }
     Text { text: "SIMs, cellular service and eSIM profiles"; color: "#9eb6c3"; Layout.fillWidth: true; wrapMode: Text.WordWrap }
     GlassCombo {
         visible: page.cellular.modems.length > 1

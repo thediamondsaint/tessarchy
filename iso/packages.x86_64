@@ -65,3 +65,7 @@ vulkan-radeon
 plymouth
 brightnessctl
 hyprsunset
+
+mobile-broadband-provider-info
+dnsmasq
+nm-connection-editor

@@ -15,7 +15,10 @@ status strip in this mode), the application tray icons and the clock. The task
 strip scrolls within available space and reveals the active window. Tray glyphs
 share a pale-mint palette and 18px size, with uniform 32px tray slots
 that are 48px tall; NetworkManager uses the
-matching outlined network glyph. The taskbar stays full width while a page is open so the page reads as a centered sheet. The
+matching outlined network glyph. Built-in Wi-Fi and cellular indicators read
+actual NetworkManager/ModemManager percentages through a separate typed D-Bus
+helper; unknown or unavailable radios have no invented strength. Tapping either
+indicator opens its connection controls. See [networking](networking.md). The taskbar stays full width while a page is open so the page reads as a centered sheet. The
 Start button toggles a Windows-XP-style Start menu: a blue-tinted panel with a
 compact grid of floating app icons and labels, without tile backgrounds. It sits
 flush on the taskbar's top edge and is frosted by the

@@ -189,3 +189,7 @@ includes transparent sizes, SVG, WebP, JPG, ICO, PDF and a spinning GIF.
 Agents can claim one of 56 starter tasks in [AGENT-README.md](AGENT-README.md).
 Local session notes belong in the ignored `.HANDOFF.local.md`. A ready-to-copy channel
 update is in [docs/community-update.md](docs/community-update.md).
+
+Networking controls and implementation status are documented in
+[docs/networking.md](docs/networking.md), including Wi-Fi, hotspots, mobile
+APNs, actual signal indicators and the pending device acceptance checks.

@@ -16,28 +16,24 @@ The same preferences remain available in Settings.
 
 ## What the switches control
 
-`RadioBackend.qml` runs the installed Python helper with argument arrays. The
-helper reads explicit JSON columns from `rfkill`, then blocks/unblocks Wi-Fi
-(`wlan`), Bluetooth, or cellular (`wwan`) transmitters that the kernel exposes.
-These are radio power controls, not network selection, Bluetooth pairing, calls,
-or mobile-data configuration. Some modem drivers do not expose an rfkill switch;
-those devices are not treated as controllable cellular hardware.
+Wi-Fi and cellular quick controls now use NetworkManager and ModemManager.
+Tap a status icon to open the relevant connections. The Wi-Fi list supports
+scanning, saved/personal/hidden networks and hotspots; SIM & cellular includes
+mobile-data profiles and APN/roaming controls. Signal icons display reported
+percentages and separate connection, disabled, blocked and unavailable states.
+See [networking.md](networking.md) for the implementation and acceptance limits.
 
-Airplane mode blocks all detected rfkill radios. Turning it off unblocks all
-software-blocked radios, rather than restoring a previous per-radio selection.
-Its displayed on-state requires a nonempty set with every radio software-blocked.
-A hardware block remains effective after a software unblock and is shown in the UI.
-The switches do not claim to override physical switches or unsupported devices.
+Bluetooth's existing power switch still uses the rfkill helper; device discovery
+and paired connections use BlueZ. Airplane mode coordinates NetworkManager,
+detected modems and kernel switches, reads back actual state, and reports errors
+when it cannot verify or control a radio. It does not restore previous individual
+radio selections when turned off.
 
-No state is changed optimistically. The helper refreshes after each action,
-including a failed/partially successful bulk action. A ten-second poll and a
-refresh on opening controls pick up external changes. Unavailable devices,
-hardware blocks, and missing write permission disable the respective control.
-No sudo, dependency installation, or privilege prompt is launched by the shell.
-A normal active local session needs access to `/dev/rfkill` through its system's
-existing device/session policy. Errors remain visible in the sheet.
+Controls do not change network-manager ownership, install dependencies or run
+sudo. NetworkManager/ModemManager operations use the session's standard PolicyKit
+and credentials agents. A physical switch remains effective. New connections
+are not labelled successful until their backend reports the connected state.
 
-Python and util-linux are declared packaging/live-image dependencies. They are
-not installed onto the host or guest by development commands. The current QEMU
-guest exposes no radio devices, so all four radio controls correctly show
-Unavailable. Actual transmitter changes still require hardware validation.
+Automated tests use private D-Bus services and synthetic devices. No VM was
+opened for the networking implementation; real adapter, modem and carrier
+acceptance remains to be recorded in docs/testing.md.

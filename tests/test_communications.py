@@ -135,6 +135,23 @@ class Communications(unittest.TestCase):
         with self.assertRaises(ValueError):
             modem.act({'action': 'dial', 'modem': '/other/modem', 'number': '123'}, result)
 
+    def test_managed_sms_inventory_does_not_block_calls_with_per_message_queries(self):
+        modem = comm.Modems.__new__(comm.Modems)
+        path = comm.ROOT + '/Modem/0'
+        messages = ['/sms/' + str(i) for i in range(100)]
+        objects = {path: {comm.MM + '.Modem': {'State': 8, 'Sim': '/'},
+                          comm.MM + '.Modem.Messaging': {'Messages': messages}}}
+        for message in messages:
+            objects[message] = {comm.MM + '.Sms': {'State': 3, 'Number': '+12025550123', 'Text': 'Synthetic'}}
+        requests = []
+        modem.call = lambda *args: requests.append(args) or (objects,)
+        def unexpected(*args):
+            self.fail('Redundant per-message D-Bus query')
+        modem.props = unexpected
+        result = modem.snapshot()
+        self.assertEqual(len(result['messages']), 100)
+        self.assertEqual(len(requests), 1)
+
     def test_sim_pin_and_sms_use_typed_dbus_calls_without_subprocess(self):
         try:
             from gi.repository import GLib

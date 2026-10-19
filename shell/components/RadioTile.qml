@@ -23,7 +23,7 @@ TouchButton {
                 width: Math.max(1, tile.availableWidth - 52)
                 spacing: 4
                 Text { width: parent.width; text: tile.text; font.pixelSize: 13; font.weight: Font.DemiBold; color: "#edf5fa"; wrapMode: Text.WordWrap }
-                Text { width: parent.width; text: tile.detail; font.pixelSize: 10; color: tile.selected ? tile.accentColor : "#99afbe"; elide: Text.ElideRight }
+                Text { width: parent.width; textFormat: Text.PlainText; text: tile.detail; font.pixelSize: 10; color: tile.selected ? tile.accentColor : "#99afbe"; elide: Text.ElideRight }
             }
         }
     }

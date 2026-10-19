@@ -73,12 +73,34 @@ ShellRoot {
         property bool nightLight: false
     }
     RadioBackend { id: radioBackend }
+    NetworkBackend { id: networkBackend }
     CommunicationBackend { id: communications }
+    Connections {
+        target: communications
+        function onSelectedModemChanged() {
+            if (communications.selectedModem && networkBackend.modem !== communications.selectedModem) {
+                networkBackend.modem = communications.selectedModem;
+                networkBackend.refresh();
+            }
+        }
+    }
+    Connections {
+        target: networkBackend
+        function onModemChanged() {
+            if (networkBackend.modem && communications.selectedModem !== networkBackend.modem) {
+                communications.selectedModem = networkBackend.modem;
+                communications.request("status");
+            }
+        }
+        function onCompleted(action, success) {
+            if (action === "airplane") radioBackend.refresh();
+            if (action === "cellular-power") communications.request("status");
+        }
+    }
     WeatherBackend { id: weatherBackend }
     readonly property var bluetoothAdapter: Bluetooth.defaultAdapter
-    // Signal strength remains unavailable until a real connection backend is added.
-    property real wifiStrength: -1
-    readonly property real cellularStrength: communications.state.cellular.signal === undefined ? -1 : communications.state.cellular.signal / 100
+    readonly property int wifiStrength: networkBackend.state.wifi.strength
+    readonly property int cellularStrength: networkBackend.state.cellular.strength
     // squeekboard via tessarchy-osk; it also appears by itself for text fields.
     readonly property bool oskAvailable: Quickshell.env("TESSARCHY_OSK") === "1"
     // Desktop mode must never raise the on-screen keyboard; touch modes may.
@@ -430,7 +452,7 @@ ShellRoot {
                                     visible: active
                                     active: panel.page === "cellular"
                                     Layout.fillWidth: true
-                                    sourceComponent: CellularSettings { backend: communications; accentColor: root.accentColor }
+                                    sourceComponent: CellularSettings { backend: communications; network: networkBackend; accentColor: root.accentColor }
                                 }
                                 Loader {
                                     visible: active
@@ -665,7 +687,15 @@ ShellRoot {
                                     notificationCount: root.notificationCount
                                     cellularStrength: root.cellularStrength
                                     wifiStrength: root.wifiStrength
-                                    airplaneOn: !!(radioBackend.state.airplane && radioBackend.state.airplane.enabled)
+                                    wifiStatus: networkBackend.state.wifi.status
+                                    cellularStatus: networkBackend.state.cellular.status
+                                    wifiDetail: networkBackend.state.wifi.label
+                                    cellularDetail: networkBackend.state.cellular.label
+                                    wifiBadge: networkBackend.state.wifi.status === "hotspot" ? "AP" : ["Sign-in required", "Limited connectivity", "No internet"].indexOf(networkBackend.state.wifi.connectivity) >= 0 ? "!" : ""
+                                    cellularBadge: networkBackend.state.cellular.roaming ? "R" : ""
+                                    onWifiRequested: { statusBar.drawerOpen = true; quickSheet.wifiExpanded = true; networkBackend.refresh(); }
+                                    onCellularRequested: { statusBar.drawerOpen = false; panel.showPage("cellular"); }
+                                    airplaneOn: !!networkBackend.state.airplane.enabled
                                     batteryPresent: UPower.displayDevice.isPresent
                                     batteryPercent: UPower.displayDevice.percentage
                                     audioAvailable: root.audioAvailable
@@ -768,6 +798,7 @@ ShellRoot {
                         panel.closeTarget = null;
                         panel.page = "";
                         radioBackend.refresh();
+                        networkBackend.refresh();
                         if (root.oskAvailable) Quickshell.execDetached(["tessarchy-osk", "hide"]);
                     }
                 }
@@ -795,7 +826,7 @@ ShellRoot {
                 }
                 WlrLayershell.namespace: "tessera-status"
                 WlrLayershell.layer: WlrLayer.Top
-                WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
+                WlrLayershell.keyboardFocus: statusBar.drawerOpen && quickSheet.needsKeyboard ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
                 Item {
                     id: statusHeader
                     width: parent.width
@@ -843,7 +874,7 @@ ShellRoot {
                     }
                     TouchButton {
                         Layout.fillWidth: true
-                        Layout.minimumWidth: 64
+                        Layout.minimumWidth: 48
                         Layout.minimumHeight: 48
                         implicitHeight: 48
                         text: "Quick controls"
@@ -859,7 +890,7 @@ ShellRoot {
                         onClicked: statusBar.toggleDrawer()
                     }
                     WeatherChip {
-                        visible: weatherBackend.available && surface.mode !== "desktop"
+                        visible: weatherBackend.available && surface.mode !== "desktop" && surface.modelData.width >= 560
                         conditions: weatherBackend.state
                         Layout.alignment: Qt.AlignVCenter
                         Layout.leftMargin: 4
@@ -868,11 +899,21 @@ ShellRoot {
                     // mode; the mobile strip keeps them along the top edge.
                     StatusIndicators {
                         visible: surface.mode !== "desktop"
+                        dense: surface.modelData.width < 560
+                        showAirplane: surface.modelData.width >= 380
                         accentColor: root.accentColor
                         notificationCount: root.notificationCount
                         cellularStrength: root.cellularStrength
                         wifiStrength: root.wifiStrength
-                        airplaneOn: !!(radioBackend.state.airplane && radioBackend.state.airplane.enabled)
+                        wifiStatus: networkBackend.state.wifi.status
+                        cellularStatus: networkBackend.state.cellular.status
+                        wifiDetail: networkBackend.state.wifi.label
+                        cellularDetail: networkBackend.state.cellular.label
+                        wifiBadge: networkBackend.state.wifi.status === "hotspot" ? "AP" : ["Sign-in required", "Limited connectivity", "No internet"].indexOf(networkBackend.state.wifi.connectivity) >= 0 ? "!" : ""
+                        cellularBadge: networkBackend.state.cellular.roaming ? "R" : ""
+                        onWifiRequested: { statusBar.drawerOpen = true; quickSheet.wifiExpanded = true; networkBackend.refresh(); }
+                        onCellularRequested: { statusBar.drawerOpen = false; panel.showPage("cellular"); }
+                        airplaneOn: !!networkBackend.state.airplane.enabled
                         batteryPresent: UPower.displayDevice.isPresent
                         batteryPercent: UPower.displayDevice.percentage
                         audioAvailable: root.audioAvailable
@@ -900,6 +941,8 @@ ShellRoot {
                         id: quickSheet
                         width: parent.width
                         radios: radioBackend
+                        network: networkBackend
+                        onNetworkSettingsRequested: Quickshell.execDetached(["nm-connection-editor"])
                         preferences: shellPreferences
                         activeMode: Policy.title(surface.mode)
                         date: clock.date

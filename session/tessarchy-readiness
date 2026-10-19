@@ -6,7 +6,8 @@ import platform
 import subprocess
 
 PACKAGES = ('tessarchy-session', 'linux-firmware', 'sof-firmware', 'squeekboard',
-            'networkmanager', 'network-manager-applet', 'bluez', 'blueman', 'hyprpolkitagent',
+            'networkmanager', 'network-manager-applet', 'nm-connection-editor', 'modemmanager',
+            'mobile-broadband-provider-info', 'dnsmasq', 'bluez', 'blueman', 'hyprpolkitagent',
             'pipewire', 'pipewire-audio', 'pipewire-alsa', 'pipewire-pulse', 'wireplumber',
             'upower', 'power-profiles-daemon', 'iio-sensor-proxy', 'nautilus', 'gvfs',
             'gnome-text-editor', 'papers', 'loupe', 'mpv', 'gnome-calculator',

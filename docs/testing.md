@@ -1782,3 +1782,46 @@ the merge. The resulting feature-branch source checks were still running at
 this checkpoint. No installer, newer ISO boot or physical-device acceptance is
 inferred from these build results. The closing documentation update changes no
 runtime or website behavior.
+
+## Networking readiness — 2026-10-19 (T75)
+
+Implemented a separate typed NetworkManager/ModemManager helper, real measured
+Wi-Fi/cellular status indicators, Wi-Fi scan/connect/disconnect/forget, hidden
+networks and WPA2 hotspot setup, saved cellular data connections and GSM/APN
+creation. Native enterprise certificate setup and CDMA creation use the advanced
+Connections editor. The indicators do not depend on contact or SMS inventory.
+Unknown, stale, hardware-blocked and absent signals remain unavailable; modem
+registration is distinct from an active mobile-data connection.
+
+Executed without opening a VM or changing host networking:
+
+- ./scripts/check.sh: 140 Python tests, 70 Qt Quick results and four website
+  tests passed. Lua parsing, both Hyprland configurations, desktop entries and
+  QML lint passed. Fish and ShellCheck were unavailable locally; CI runs them.
+- Network fixtures cover missing services, separate Wi-Fi/modem measurements,
+  zero/stale signal, failed/pending connections, multiple devices, private
+  credentials, radio permissions, airplane readback and strict request validation.
+- Private dbus-daemon services exercise the actual helper's typed GetAll, Set
+  and AddAndActivateConnection2 requests for Wi-Fi and APN creation. Installed
+  libnm verifies personal-security, hotspot and GSM settings; its GSM validation
+  emits a GValue flags debug warning while verification succeeds.
+- Offscreen UI checks cover password clearing, cancellation, disappearing APs,
+  enterprise routing, roaming defaults, actual percentage glyphs, preserved
+  application focus and 48px network controls fitting a 320px phone header.
+  A Quickshell harness checks backend polling/action recovery without services.
+- The communications inventory regression returns 100 SMS records with one
+  managed-object request rather than a follow-up request per message.
+- All five Arch packages built as a normal user without installation. Inspected
+  shell contents include the networking helper, panels and ten signal assets;
+  the tablet metadata includes modem/provider/editor/hotspot dependencies.
+
+Device acceptance remains pending. Do not infer RF, carrier or ISO boot success
+from source checks or package builds. The normal QEMU wired adapter cannot supply
+Wi-Fi or cellular RF measurements. On the prepared guest, verify drawer/OSK
+focus, narrow layouts, service restarts and missing-service messages. With real
+adapters or explicitly supplied passthrough, test personal/hidden/enterprise
+association, wrong-password recovery, disconnect/reconnect, captive portals,
+hotspot DHCP/NAT, SIM PIN and modem selection, carrier/APN data routing, roaming,
+airplane hardware switches, voice/SMS and audio routing. Record the exact source,
+package versions, devices and observed outcomes before promoting this networking
+work as device-tested. No VM was opened or booted for this change.

@@ -5,9 +5,17 @@ RowLayout {
     id: control
     property color accentColor: "#a9e8d5"
     property bool compact: false
+    property bool dense: false
+    property bool showAirplane: true
     property int notificationCount: 0
     property int cellularStrength: -1
     property int wifiStrength: -1
+    property string wifiStatus: "unavailable"
+    property string cellularStatus: "unavailable"
+    property string wifiDetail: ""
+    property string cellularDetail: ""
+    property string wifiBadge: ""
+    property string cellularBadge: ""
     property bool airplaneOn: false
     property bool batteryPresent: false
     property real batteryPercent: 0
@@ -20,9 +28,11 @@ RowLayout {
     property bool showSettings: true
     signal notificationsRequested
     signal settingsRequested
+    signal wifiRequested
+    signal cellularRequested
     signal muteToggled
     readonly property int glyphSize: compact ? 18 : 21
-    spacing: compact ? 0 : 8
+    spacing: compact || dense ? 0 : 8
 
     TrayButton {
         id: bellButton
@@ -54,7 +64,7 @@ RowLayout {
         onClicked: control.notificationsRequested()
     }
     Item {
-        visible: control.airplaneOn
+        visible: control.airplaneOn && control.showAirplane
         Layout.preferredWidth: control.compact ? 32 : 18
         Layout.preferredHeight: 48
         Image {
@@ -69,15 +79,23 @@ RowLayout {
         symbol: "cellular"
         label: "Cellular"
         strength: control.cellularStrength
+        status: control.cellularStatus
+        detail: control.cellularDetail
+        badge: control.cellularBadge
         uniform: control.compact
-        Layout.preferredWidth: control.compact ? 32 : 18
+        Layout.preferredWidth: control.compact ? 32 : 48
+        onClicked: control.cellularRequested()
     }
     StatusIcon {
         symbol: "wifi"
         label: "Wi-Fi"
         strength: control.wifiStrength
+        status: control.wifiStatus
+        detail: control.wifiDetail
+        badge: control.wifiBadge
         uniform: control.compact
-        Layout.preferredWidth: control.compact ? 32 : 18
+        Layout.preferredWidth: control.compact ? 32 : 48
+        onClicked: control.wifiRequested()
     }
     Item {
         Layout.preferredWidth: control.compact ? 32 : batteryRow.implicitWidth
