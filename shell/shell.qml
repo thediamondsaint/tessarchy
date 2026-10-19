@@ -180,6 +180,13 @@ ShellRoot {
                 id: clock
                 precision: SystemClock.Minutes
             }
+            SplitDivider {
+                screen: surface.modelData
+                // Hidden under open pages: both are Top-layer surfaces, so it
+                // could otherwise draw over a confirmation.
+                allowed: surface.mode === "tablet" && !panel.expanded
+                accentColor: root.accentColor
+            }
             PanelWindow {
                 id: panel
                 screen: surface.modelData
@@ -205,7 +212,7 @@ ShellRoot {
                     right: surface.mode === "desktop"
                 }
                 implicitWidth: expanded ? Policy.panelWidth(surface.mode, surface.modelData.width) : surface.dock.width
-                implicitHeight: expanded ? Math.min(page === "windows" ? surface.modelData.height - 60 : page === "apps" ? surface.launcherRows * 124 + 156 : surface.mode === "tablet" ? 740 : 640, surface.modelData.height - 64) : surface.navHeight
+                implicitHeight: expanded ? Math.min(page === "windows" ? surface.modelData.height - 60 : page === "close" ? 250 : page === "session" ? 270 : page === "apps" ? surface.launcherRows * 124 + 156 : surface.mode === "tablet" ? 740 : 640, surface.modelData.height - 64) : surface.navHeight
                 exclusiveZone: surface.navHeight
                 color: "transparent"
                 Rectangle {
@@ -323,6 +330,7 @@ ShellRoot {
                             Layout.fillHeight: true
                             windows: Hyprland.toplevels.values
                             fillApp: surface.mode !== "desktop"
+                            tabletMode: surface.mode === "tablet"
                             accentColor: root.accentColor
                             reducedMotion: shellPreferences.reducedMotion
                             onActivated: panel.page = ""
@@ -330,6 +338,15 @@ ShellRoot {
                             onCloseRequested: target => {
                                 panel.closeTarget = target;
                                 panel.page = "close";
+                            }
+                            onSplitRequested: (first, second) => {
+                                const a = first.wayland && String(first.address);
+                                const b = second.wayland && String(second.address);
+                                if (!a || !b || a === b) return;
+                                // Addresses originate from Hyprland, not user input.
+                                const sel = address => "address:" + (address.startsWith("0x") ? address : "0x" + address);
+                                Quickshell.execDetached(["hyprctl", "eval", "tessarchy.split(\"" + sel(a) + "\", \"" + sel(b) + "\")"]);
+                                panel.page = "";
                             }
                         }
                         ScrollView {
@@ -461,25 +478,30 @@ ShellRoot {
                                         wrapMode: Text.WrapAnywhere
                                         Layout.fillWidth: true
                                     }
-                                    TouchButton {
-                                        text: "Cancel"
+                                    RowLayout {
                                         Layout.fillWidth: true
-                                        onClicked: {
-                                            panel.closeTarget = null;
-                                            panel.page = "windows";
+                                        spacing: 12
+                                        TouchButton {
+                                            text: "Cancel"
+                                            symbol: "back"
+                                            Layout.fillWidth: true
+                                            onClicked: {
+                                                panel.closeTarget = null;
+                                                panel.page = "windows";
+                                            }
                                         }
-                                    }
-                                    TouchButton {
-                                        text: "Close window"
-                                        destructive: true
-                                        enabled: panel.closeTarget !== null
-                                        Layout.fillWidth: true
-                                        onClicked: {
-                                            const target = panel.closeTarget;
-                                            panel.closeTarget = null;
-                                            panel.page = "windows";
-                                            if (target)
-                                                target.close();
+                                        TouchButton {
+                                            text: "Close window"
+                                            symbol: "close"
+                                            destructive: true
+                                            enabled: panel.closeTarget !== null
+                                            Layout.fillWidth: true
+                                            onClicked: {
+                                                const target = panel.closeTarget;
+                                                panel.closeTarget = null;
+                                                panel.page = "windows";
+                                                if (target) target.close();
+                                            }
                                         }
                                     }
                                 }
@@ -492,16 +514,22 @@ ShellRoot {
                                         wrapMode: Text.WordWrap
                                         Layout.fillWidth: true
                                     }
-                                    TouchButton {
-                                        text: "Cancel"
+                                    RowLayout {
                                         Layout.fillWidth: true
-                                        onClicked: panel.page = ""
-                                    }
-                                    TouchButton {
-                                        text: "End session"
-                                        destructive: true
-                                        Layout.fillWidth: true
-                                        onClicked: Hyprland.dispatch("hl.dsp.exit()")
+                                        spacing: 12
+                                        TouchButton {
+                                            text: "Cancel"
+                                            symbol: "back"
+                                            Layout.fillWidth: true
+                                            onClicked: panel.page = ""
+                                        }
+                                        TouchButton {
+                                            text: "End session"
+                                            symbol: "power"
+                                            destructive: true
+                                            Layout.fillWidth: true
+                                            onClicked: Hyprland.dispatch("hl.dsp.exit()")
+                                        }
                                     }
                                 }
                             }

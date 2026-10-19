@@ -1,5 +1,38 @@
 # Validation and manual acceptance
 
+## PR #12 rebase onto upstream AppSwitcher (2026-10-19)
+
+Actually performed in a separate worktree: `./scripts/check.sh` passed:
+`Ran 105 tests in 18.670s`, `OK (skipped=1)`, Qt
+`Totals: 49 passed, 0 failed, 0 skipped, 0 blacklisted, 2066ms`,
+and Hyprland `config ok`. `/usr/lib/qt6/bin/qmllint -I /usr/lib/qt6/qml`
+on changed QML exited 0 (PanelWindow/margins metadata warnings also appear
+in upstream shell.qml; the new swipe transform produces a layout-positioning
+warning). The Lua fake-Hyprland split test was ported to the
+current config and covers pair creation, maximize exemption, ratio, swap,
+new-app isolation, dialog preservation, close cleanup, and unsplit.
+
+Upstream's AppSwitcher already has live `ScreencopyView` previews, full-width
+titles, glyph return/close controls, and default-off dock labels; these are
+not duplicated. Its QuickSettings already has glyph navigation/radio/volume/
+screenshot controls. This branch adds a tablet-only Split action, a split
+divider, swipe-to-request-close on previews (capture source dropped first,
+150 ms delay, then the normal **confirmation** screen), and side-by-side
+glyph confirmation actions. Carousel scrolling remains available from the
+title and gaps; preview swipes are reserved for close. Colours added reuse
+the exact existing upstream values; no Theme singleton exists in this main.
+
+**Not yet re-verified after rebase:** No QEMU guest used for this rebase.
+In the guest, check split pairing and divider touch drag/double-tap/swap/
+unsplit at tablet portrait and landscape sizes, newly opened app isolation,
+closing one partner, split restore after shell restart, and OSK overlap.
+Check short/long preview swipes, confirmation Cancel/Close including an app
+with unsaved work, rapid close with live preview (watch Wayland invalid-object
+errors), carousel scrolling from title/gaps, keyboard Alt-Tab and screen
+reader names. Check narrow phone confirmation layout and hardware touch.
+Earlier guest checks from the pre-rebase branch do **not** validate this UI.
+
+
 ## Actually performed, 2026-10-16
 
 Environment: Omarchy/Arch, Hyprland 0.56.2-2, Quickshell 0.3.1-1,
@@ -1615,3 +1648,27 @@ source tree, rejection of edited/missing launcher originals, legacy uninstall
 and long/empty event messages. No host settings, development
 installation or running VM were modified. Fractional-scale acceptance on a
 physical display remains pending.
+
+## PR #12 rebase VM touch verification — 2026-10-19
+
+Rebased `feat/tablet-split` on current upstream main; deployed the shell and session into the QEMU Hyprland guest (removed a stale installed `components/qmldir` which shadowed updated QML). Injected real uinput touchscreen taps/swipes, not mouse clicks. Portrait: 720×1440 physical, scale 0.9 (800×1600 logical), VM preference set to auto. Side-by-side tests: 1280×800, scale 1, explicit tablet preference. Composite of inspected screenshots: `vm/rebase-verify-split.png` (local VM artifact, not tracked).
+
+- **Pass:** Touch Recents, tablet-only Split, select two Foot cards: the clients acquired `split` tags on a dedicated workspace; see `rebase-split-tablet-ready.png`, `rebase-split-select.png`, `rebase-split-pair.png`.
+- **Pass after fix:** Portrait divider touch drag `(120,703)` → `(120,1000)` changed client sizes to `[800,1062]` and `[800,406]` and moved the visible seam; `rebase-split-drag.png`. Fixed the rebased divider's incorrect orientation-dependent held-anchor (`heldLeft`/`heldTop`) in `SplitDivider.qml`.
+- **Pass:** Double-tap restored near-half; client origins `[0,48]` and `[0,782]` after restart, divider at physical y≈703; `rebase-split-double.png`, `rebase-split-swap-ready.png`.
+- **Pass:** Side-by-side touch Swap exchanged which client occupies `[0,48]` versus `[640,48]`; touch Leave cleared both `split` tags and removed the divider (`rebase-split-swap-wide.png`, `rebase-split-leave-ws4.png`, `rebase-split-leave-done.png`).
+- **Pass:** Opening another Foot from the paired workspace put it alone on workspace 3, leaving the pair on workspace 2 (`rebase-split-isolated.png` and `hyprctl clients -j`).
+- **Pass after fix:** A short horizontal touch swipe on a Recents card sprang back, preserving four clients (`rebase-split-short.png`). A >35% swipe exposed side-by-side Cancel/Close actions (`rebase-split-fixed-settled.png`); touching Close removed the chosen Foot while `qs` stayed alive and its log had no Wayland `invalid object`/connection error (`rebase-split-close-survive.png`). Before the fix the same swipe sprang back because measuring `mouse.x` within the translated preview undercounted travel. Changed to scene-coordinate motion and moved the transform off `ColumnLayout` (the `qmllint` transform warning is gone).
+- **Pass, root cause identified:** At physical 1200×600, scale 1, output `transform = 1`, resetting split gave logical stacked clients `[600,534]` each, boundary logical y=582 / screenshot physical x≈582. With `input:touchdevice:transform = 0`, a screenshot-coordinate touchscreen drag `(582,430)` → `(780,430)` left both client positions/sizes unchanged (`rebase-split-rotated-unmapped-after.png`). Setting `hl.config({ input = { touchdevice = { transform = 1 } } })` corrected the touch mapping: the identical drag moved the boundary from physical x≈582 to x≈779 and changed the clients to `[600,731]` / `[600,337]`, a 197 px motion for 198 px of finger travel (`rebase-split-rotated-divider.png`, `rebase-split-rotated-drag.png`, `hyprctl clients -j`). Therefore the prior no-move is an input-touchdevice transform mismatch, **not** a broken divider drag. This VM-only touch config must track monitor rotation; not committed as an app change.
+- **Pass:** End-session touch from Settings → Session exposed side-by-side Cancel / End session actions; touching Cancel dismissed the confirmation and left `qs` running (`rebase-split-session-result.png`, `rebase-split-session-cancel.png`). Close confirmation also had side-by-side Cancel / Close actions (`rebase-split-fixed-settled.png`).
+
+- **Fixed after review of the screenshots:** the split divider (Top layer)
+  drew over the End-session drawer, and both confirmations' Cancel used the
+  `return` (→) glyph. The divider now hides while a shell page is open and
+  Cancel uses `back` (←). Executed by an agent in the QEMU VM, 1280×800,
+  layoutMode=tablet, split pair on the active workspace: `tessera-split` was
+  mapped before `qs ipc call actions endSession` and absent after it; the
+  screenshot shows no divider over the dialog and a left arrow
+  (`vm/split-confirm-fix.png`). Close-window confirmation not re-captured.
+
+`python3 -m unittest discover -s tests -p test_workflows.py -k tablet_split -v` passed. `/usr/lib/qt6/bin/qmllint -I /usr/lib/qt6/qml shell/components/{AppSwitcher,SplitDivider}.qml` exited 0; no transform warning remains, but standalone lint cannot resolve Quickshell `PanelWindow`/`margins` and still prints those three warnings. `git diff --check` clean.

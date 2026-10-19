@@ -11,12 +11,16 @@ FocusScope {
     property color accentColor: "#a9e8d5"
     property bool reducedMotion: false
     property bool fillApp: false
+    property bool tabletMode: false
+    property var splitFirst: null
+    onVisibleChanged: if (!visible) splitFirst = null
     property var pendingTarget: null
     property var selection: null
     readonly property int currentIndex: cards.currentIndex
     signal activated
     signal dismissed
     signal closeRequested(var target)
+    signal splitRequested(var first, var second)
 
     function selectActive() {
         cards.currentIndex = SwitcherPolicy.activeIndex(windows);
@@ -96,13 +100,18 @@ FocusScope {
                 required property int index
                 readonly property var handle: modelData.wayland
                 readonly property var entry: handle ? DesktopEntries.heuristicLookup(handle.appId) : null
+                property bool closing: false
+                property real swipeOffset: 0
                 width: Math.min(cards.width * 0.82, 340)
                 height: cards.height
                 scale: ListView.isCurrentItem ? 1 : 0.94
                 Behavior on scale { NumberAnimation { duration: control.reducedMotion ? 0 : 180 } }
-                ColumnLayout {
+                Item {
                     anchors.fill: parent
-                    spacing: 10
+                    transform: Translate { x: card.swipeOffset }
+                    ColumnLayout {
+                        anchors.fill: parent
+                        spacing: 10
                     RowLayout {
                         Layout.fillWidth: true
                         Rectangle {
@@ -129,8 +138,8 @@ FocusScope {
                             ScreencopyView {
                                 id: preview
                                 anchors.fill: parent
-                                captureSource: control.visible ? card.handle : null
-                                live: control.visible
+                                captureSource: control.visible && !card.closing ? card.handle : null
+                                live: control.visible && !card.closing
                                 paintCursor: false
                                 constraintSize: Qt.size(width, height)
                             }
@@ -143,12 +152,50 @@ FocusScope {
                                 Text { width: parent.width; text: card.modelData.title || "Untitled window"; color: "#edf5fa"; wrapMode: Text.WrapAnywhere; horizontalAlignment: Text.AlignHCenter }
                                 Text { width: parent.width; text: "Preview unavailable"; color: "#a7bbca"; horizontalAlignment: Text.AlignHCenter; font.pixelSize: 12 }
                             }
-                            // Taps select; horizontal drags are stolen by the ListView.
+                            // Own preview gestures so the carousel does not steal a
+                            // close swipe; swipe the title or gaps to scroll cards.
                             MouseArea {
                                 anchors.fill: parent
-                                onClicked: { cards.currentIndex = card.index; control.selection = card.modelData; control.activateCurrent(); }
+                                preventStealing: true
+                                property real startX: 0
+                                property bool dragged: false
+                                // The preview translates during the gesture; measure
+                                // in scene coordinates to avoid halving the swipe.
+                                onPressed: mouse => { startX = mapToItem(null, mouse.x, mouse.y).x; dragged = false; card.swipeOffset = 0; }
+                                onPositionChanged: mouse => {
+                                    if (pressed) {
+                                        card.swipeOffset = mapToItem(null, mouse.x, mouse.y).x - startX;
+                                        if (Math.abs(card.swipeOffset) > 8) dragged = true;
+                                    }
+                                }
+                                onReleased: {
+                                    if (Math.abs(card.swipeOffset) > card.width * 0.35 && card.handle) {
+                                        card.closing = true; // Drop ScreencopyView before any close request.
+                                        card.swipeOffset = card.swipeOffset < 0 ? -card.width : card.width;
+                                        closeDelay.restart();
+                                    } else card.swipeOffset = 0;
+                                }
+                                onCanceled: card.swipeOffset = 0
+                                onClicked: {
+                                    if (card.closing || dragged) return;
+                                    cards.currentIndex = card.index;
+                                    control.selection = card.modelData;
+                                    if (control.splitFirst && control.splitFirst !== card.modelData) {
+                                        control.splitRequested(control.splitFirst, card.modelData);
+                                        control.splitFirst = null;
+                                    } else if (!control.splitFirst) control.activateCurrent();
+                                }
                                 Accessible.name: "Switch to " + (card.modelData.title || "Untitled window")
                                 Accessible.role: Accessible.Button
+                            }
+                            Timer {
+                                id: closeDelay
+                                interval: 150
+                                onTriggered: {
+                                    if (card.handle) control.closeRequested(card.handle);
+                                    card.swipeOffset = 0;
+                                    card.closing = false;
+                                }
                             }
                         }
                     }
@@ -157,6 +204,7 @@ FocusScope {
                         text: card.modelData.title || "Untitled window"
                         color: "#edf5fa"; font.pixelSize: 14; elide: Text.ElideRight
                         horizontalAlignment: Text.AlignHCenter
+                    }
                     }
                 }
             }
@@ -182,9 +230,28 @@ FocusScope {
                 }
             }
         }
+        Text {
+            visible: !!control.splitFirst
+            Layout.alignment: Qt.AlignHCenter
+            Layout.maximumWidth: cards.width
+            text: "Tap another app to place beside " + (control.splitFirst ? control.splitFirst.title || "this app" : "")
+            color: "#edf5fa"
+            elide: Text.ElideRight
+        }
         RowLayout {
             Layout.alignment: Qt.AlignHCenter
             spacing: 16
+            TouchButton {
+                id: splitButton
+                visible: control.tabletMode && cards.count >= 2
+                text: control.splitFirst ? "Cancel split" : "Split apps"
+                symbol: "split"
+                selected: !!control.splitFirst
+                implicitWidth: 56
+                enabled: !!(control.windows[cards.currentIndex] && control.windows[cards.currentIndex].wayland)
+                accentColor: control.accentColor
+                onClicked: control.splitFirst = control.splitFirst ? null : control.windows[cards.currentIndex]
+            }
             TouchButton {
                 id: returnButton
                 text: "Return to app"

@@ -256,6 +256,7 @@ class Workflows(unittest.TestCase):
             self.skipTest('Lua interpreter unavailable')
         script = r'''local callbacks, commands = {}, {}
 hl = {
+    get_windows = function() return {} end,
     layer_rule = function() end,
     monitor = function() end, config = function() end, bind = function() end,
     on = function(name, callback) callbacks[name] = callback end,
@@ -624,6 +625,7 @@ assert(#commands == 4, "unexpected extra autostart commands")
         folder.mkdir(parents=True)
         script = r'''local callbacks, actions, binds = {}, {}, {}
 hl = {
+    get_windows = function() return {} end,
     monitor = function() end, config = function() end,
     bind = function(keys, dispatcher, flags) binds[keys] = { dispatcher = dispatcher, flags = flags } end,
     layer_rule = function() end,
@@ -693,6 +695,7 @@ check("phone", 400, 800, 1, 0, false, 2, 0)
         script = r'''local callbacks, actions = {}, {}
 local function action(kind) return function(a) a = a or {}; a.kind = kind; return a end end
 hl = {
+    get_windows = function() return {} end,
     layer_rule = function() end,
     monitor = function() end, config = function() end, bind = function() end,
     on = function(name, callback) callbacks[name] = callback end,
@@ -749,6 +752,100 @@ assert(#fire("window.open", dialog) == 0, "desktop dialogs are left alone")
                                 input=script, text=True, capture_output=True, env=self.env)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
+    def test_tablet_split_pairs_windows_and_exempts_them_from_maximize(self):
+        import shutil
+        if not shutil.which('lua'):
+            self.skipTest('Lua interpreter unavailable')
+        (self.home / 'config/tessarchy').mkdir(parents=True)
+        (self.home / 'config/tessarchy/shell.ini').write_text('[Shell]\nlayoutMode=tablet\n')
+        script = r'''local callbacks, actions, windows, active = {}, {}, {}, nil
+local mon = { width = 800, height = 1280, scale = 1, transform = 0 }
+local function win(address, y)
+    windows[address] = { address = address, mapped = true, floating = false, fullscreen = 1,
+        tags = {}, monitor = mon, workspace = { id = 1 }, at = { x = 0, y = y }, size = { x = 800, y = 576 } }
+    return windows[address]
+end
+local function get(sel)
+    if type(sel) == "table" then return sel end
+    return windows[(sel or ""):gsub("^address:", "")]
+end
+local function action(kind) return function(a) a = a or {}; a.kind = kind; return a end end
+local next_ws = 7
+local rules = {}
+local function run(a)
+    table.insert(actions, a)
+    local w = get(a.window)
+    if a.kind == "tag" then
+        local name, add = a.tag:sub(2), a.tag:sub(1, 1) == "+"
+        local kept = {}
+        for _, t in ipairs(w.tags) do if t ~= name then kept[#kept + 1] = t end end
+        if add then kept[#kept + 1] = name end
+        w.tags = kept
+    elseif a.kind == "fullscreen" then
+        w.fullscreen = a.action == "set" and 1 or 0
+    elseif a.kind == "move" then
+        if a.workspace == "emptynm" then w.workspace = { id = next_ws }; next_ws = next_ws + 1
+        else w.workspace = { id = tonumber(a.workspace) } end
+    elseif a.kind == "focus" then active = w end
+end
+hl = {
+    layer_rule = function() end,
+    workspace_rule = function(spec)
+        rules[spec.workspace] = { spec = spec, on = false }
+        return { set_enabled = function(_, on) rules[spec.workspace].on = on end }
+    end,
+    monitor = function() end, config = function() end, bind = function() end,
+    on = function(name, callback) callbacks[name] = callback end,
+    dispatch = run,
+    get_window = get,
+    get_windows = function() local l = {} for _, w in pairs(windows) do l[#l + 1] = w end return l end,
+    get_active_workspace = function() return active and active.workspace end,
+    get_active_window = function() return active end,
+    dsp = { exec_cmd = function() end, exit = function() end, focus = action("focus"),
+            layout = function(msg) return { kind = "layout", msg = msg } end,
+            window = { fullscreen = action("fullscreen"), resize = action("resize"), center = action("center"),
+                       tag = action("tag"), move = action("move"), float = action("float"),
+                       cycle_next = function() end, drag = function() end, close = function() end } }
+}
+dofile(arg[1])
+local a, b, c = win("0xa", 48), win("0xb", 48), win("0xc", 48)
+tessarchy.split("address:0xa", "address:0xb")
+assert(a.tags[1] == "split" and b.tags[1] == "split" and #c.tags == 0)
+assert(a.fullscreen == 0 and b.fullscreen == 0)
+assert(a.workspace.id == 7 and b.workspace.id == 7 and active == a)
+assert(rules["7"].on and rules["7"].spec.gaps_in == 24 and rules["7"].spec.no_rounding, "split gap rule")
+b.at = { x = 0, y = 624 }
+actions = {}; callbacks["window.active"](b)
+assert(#actions == 0, "split focus must not maximize")
+actions = {}; tessarchy.ratio(0.25)
+assert(#actions == 1 and actions[1].kind == "resize" and actions[1].window == "address:0xa")
+assert(actions[1].x == 800 and actions[1].y == 288)
+actions = {}; tessarchy.ratio(0.05)
+assert(actions[1].y == 230, "ratio clamps to 20%")
+b.at = { x = 0, y = 672 }
+actions = {}; tessarchy.ratio(0.25)
+assert(actions[1].y == 276, "gap midpoint sits at the ratio")
+b.at = { x = 0, y = 624 }
+actions = {}; tessarchy.swap()
+assert(actions[#actions].kind == "layout" and actions[#actions].msg == "swapsplit")
+local d = win("0xd", 48); d.workspace = { id = 7 }; d.fullscreen = 0
+callbacks["window.open"](d)
+assert(d.workspace.id ~= 7 and d.fullscreen == 1, "new app kept outside split")
+local e = win("0xe", 48); e.workspace = { id = 7 }; e.floating = true; e.size = { x = 100, y = 100 }
+callbacks["window.open"](e)
+assert(e.workspace.id == 7, "dialog stays with pair")
+actions = {}; callbacks["window.close"](b)
+assert(#a.tags == 0 and a.fullscreen == 1, "partner unsplit after close")
+assert(not rules["7"].on, "gap rule dropped after close")
+tessarchy.split("address:0xa", "address:0xc")
+c.at = { x = 400, y = 48 }
+active = c; tessarchy.unsplit()
+assert(#a.tags == 0 and #c.tags == 0 and c.fullscreen == 1 and a.fullscreen == 0)
+'''
+        result = subprocess.run(['lua', '-', str(ROOT / 'session/hyprland.lua')],
+                                input=script, text=True, capture_output=True, env=self.env)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
     def test_windowed_desktop_floats_new_windows_and_honors_settings_toggle(self):
         import shutil
         if not shutil.which('lua'):
@@ -757,6 +854,7 @@ assert(#fire("window.open", dialog) == 0, "desktop dialogs are left alone")
         script = r'''local callbacks, actions = {}, {}
 local function action(kind) return function(a) a = a or {}; a.kind = kind; return a end end
 hl = {
+    get_windows = function() return {} end,
     layer_rule = function() end,
     monitor = function() end, config = function() end, bind = function() end,
     on = function(name, callback) callbacks[name] = callback end,
