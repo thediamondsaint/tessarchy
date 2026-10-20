@@ -41,7 +41,11 @@ local function shell_mode(monitor)
     return "tablet"
 end
 -- Title bars are desktop chrome. Phone and tablet apps fill the screen with no
--- decorations, so the plugin is loaded only for the desktop layout.
+-- decorations, so the plugin is loaded only for the desktop layout. Hyprland
+-- plugins load once at compositor start, so this is decided here at startup:
+-- a session that starts in a touch layout has no title bars until it restarts
+-- in Desktop mode. Title bars are therefore an optional desktop-only
+-- development feature, not a runtime-adaptive one.
 local function desktop_layout(monitor)
     return monitor ~= nil and shell_mode(monitor) == "desktop"
 end

@@ -1989,3 +1989,11 @@ current AppSwitcher.qml and hyprland.lua. The development guest's read-only
 expected; no system upgrade was applied. The 38 updater tests passed. Arch CI
 caught the tablet bundle's old, pinned package filenames after the revision bump;
 updated the bundle list and tablet installation examples to the new revisions.
+
+## Title-bar scope — 2026-10-19
+
+Hyprland plugins load once at compositor start, so Hyprbars is a startup-time
+decision in `session/hyprland.lua`: only a session that starts already in
+Desktop mode loads it. Title bars are an optional desktop-only development
+feature — the patched plugin is built/deployed separately and is not part of
+the standard packages or ISO. They do not adapt at runtime to a layout change.

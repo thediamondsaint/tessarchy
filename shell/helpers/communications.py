@@ -37,6 +37,8 @@ def local_file(value):
 
 
 class Store:
+    BACKUP = 'data.json.bak'
+
     def __init__(self, directory=None):
         self.directory = directory or Path(os.environ.get('XDG_DATA_HOME', str(Path.home() / '.local/share'))) / 'tessera/communications'
         self.directory.mkdir(parents=True, exist_ok=True, mode=0o700)
@@ -44,14 +46,45 @@ class Store:
         os.chmod(self.lock.name, 0o600)
         fcntl.flock(self.lock, fcntl.LOCK_EX)
         self.path = self.directory / 'data.json'
-        self.data = json.loads(self.path.read_text()) if self.path.exists() else {}
+        self.data = self._load()
         for key, default in [('contacts', []), ('messages', []), ('history', []), ('sounds', {})]:
             self.data.setdefault(key, default)
+
+    def _read(self, path):
+        if not path.exists():
+            return {}
+        data = json.loads(path.read_text())
+        if not isinstance(data, dict):
+            raise ValueError('Communications store is not a JSON object')
+        return data
+
+    def _load(self):
+        if not self.path.exists():
+            return {}
+        try:
+            return self._read(self.path)
+        except (ValueError, OSError):
+            # One corrupt write must not disable contacts, sounds and history
+            # together. Preserve the bad file for diagnosis, then recover the
+            # last good save when one exists.
+            try:
+                os.replace(self.path, self.directory / ('data.corrupt-' + time.strftime('%Y%m%d-%H%M%S')))
+            except OSError:
+                pass
+            try:
+                return self._read(self.directory / self.BACKUP)
+            except (ValueError, OSError):
+                return {}
 
     def save(self):
         with tempfile.NamedTemporaryFile(mode='w', dir=self.directory, delete=False) as out:
             temporary = Path(out.name)
             json.dump(self.data, out, ensure_ascii=False)
+        if self.path.exists():
+            try:
+                shutil.copy2(self.path, self.directory / self.BACKUP)
+            except OSError:
+                pass
         os.replace(temporary, self.path)
 
     def contact(self, request):
@@ -114,10 +147,19 @@ class Modems:
         interfaces = objects[path]
         modem = interfaces[MM + '.Modem']
         network = interfaces.get(MM + '.Modem.Modem3gpp', {})
+        # The modem's own ObjectManager returns its SIM, call and message child
+        # objects in one request, so a snapshot no longer issues a separate
+        # GetAll per child (a 100-message inbox previously cost 101 calls).
+        children = self.call(path, 'org.freedesktop.DBus.ObjectManager', 'GetManagedObjects')[0]
+
+        def props(child, interface):
+            info = children.get(child, {}).get(interface)
+            return info if info is not None else self.props(child, interface)
+
         sims = []
         slots = modem.get('SimSlots') or [modem.get('Sim', '/')]
         for index, sim in enumerate(slots):
-            p = self.props(sim, MM + '.Sim') if sim != '/' else {}
+            p = props(sim, MM + '.Sim') if sim != '/' else {}
             sims.append({'id': sim, 'slot': index + 1, 'present': sim != '/', 'active': sim == modem.get('Sim'),
                          'name': p.get('OperatorName') or ('SIM ' + str(index + 1)),
                          'type': 'eSIM' if p.get('SimType') == 2 or p.get('Eid') else 'Physical SIM' if p.get('SimType') == 1 else 'SIM',
@@ -126,11 +168,11 @@ class Modems:
         voice, messaging = MM + '.Modem.Voice', MM + '.Modem.Messaging'
         calls = []
         for call in interfaces.get(voice, {}).get('Calls', [])[:8]:
-            p = self.props(call, MM + '.Call')
+            p = props(call, MM + '.Call')
             calls.append({'id': call, 'number': p.get('Number', ''), 'state': p.get('State', 0), 'direction': p.get('Direction', 0)})
         messages = []
         for sms in interfaces.get(messaging, {}).get('Messages', [])[-100:]:
-            p = self.props(sms, MM + '.Sms')
+            p = props(sms, MM + '.Sms')
             if p.get('State') not in (3, 5):
                 continue
             content = {'number': p.get('Number', ''), 'text': p.get('Text', ''), 'timestamp': p.get('Timestamp', ''),
