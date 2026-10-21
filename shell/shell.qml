@@ -906,6 +906,7 @@ ShellRoot {
                     id: edgeWheel
                     anchors.fill: parent
                     placement: wheelPanel.placement
+                    movementScale: Math.max(1, surface.modelData.width / 400)
                     reducedMotion: shellPreferences.reducedMotion
                     canPan: tapeControl.canPan
                     onStarted: surface.tapeCommand("begin")

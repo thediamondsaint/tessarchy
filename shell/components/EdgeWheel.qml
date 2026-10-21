@@ -7,6 +7,7 @@ Item {
     readonly property bool vertical: placement !== "bottom"
     property bool canPan: true
     property bool reducedMotion: false
+    property real movementScale: 1
     property real pending: 0
     property real travel: 0
     property bool recentlyUsed: false
@@ -38,6 +39,7 @@ Item {
     onVisibleChanged: if (!visible) cancel()
     onCanPanChanged: if (!canPan) cancel()
     onPlacementChanged: cancel()
+    onMovementScaleChanged: cancel()
     Timer { id: frame; interval: 16; repeat: true; onTriggered: dial.flush() }
     Timer { id: idle; interval: 3000; onTriggered: dial.recentlyUsed = false }
     Canvas {
@@ -152,7 +154,7 @@ Item {
             if (!pressed || !dial.gestureActive) return;
             const position = dial.vertical ? mouse.y : mouse.x;
             const delta = position - lastPosition;
-            dial.pending += delta;
+            dial.pending += delta * dial.movementScale;
             dial.travel += delta;
             lastPosition = position;
         }

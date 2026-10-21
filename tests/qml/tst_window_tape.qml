@@ -54,6 +54,15 @@ TestCase {
         wait(50);
         compare(control.movements.reduce((sum, value) => sum + value, 0), -60);
     }
+    function test_tablet_thumb_distance_scales_to_window_width() {
+        const control = createTemporaryObject(wheelFactory, test, {movementScale: 2.56});
+        const area = findChild(control, "tapeDrag");
+        mousePress(area, 20, 24);
+        mouseMove(area, 260, 24, 5);
+        mouseRelease(area, 260, 24);
+        compare(control.movements.reduce((sum, value) => sum + value, 0), 614);
+        compare(control.finishes, 1);
+    }
     function test_hidden_control_discards_pending_movement() {
         const control = createTemporaryObject(wheelFactory, test);
         control.pending = 99;
