@@ -9,6 +9,8 @@ Item {
     property int hideDelay: 1500
     // Tessa's compact cube mode uses the existing native tape gestures.
     property bool tessaCube: true
+    // Existing tape drag remains the transport; compact wheel is only another input surface.
+    property bool edgeWheel: true
     signal launcherRequested()
     property real pending: 0
     readonly property bool dragging: dragArea.pressed
