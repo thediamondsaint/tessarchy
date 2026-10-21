@@ -2598,3 +2598,38 @@ warnings remain. The VM was returned to 1024×768 with the OSK enabled.
 the phone shelf before/after a flick, radial actions, collapsed cube and tablet
 shelf. Physical-device touch latency and sensors remain untested. Prior broader
 VM/packaging limitations above still apply.
+
+
+## Bundled Omarchy themes — 2026-10-21
+
+Runtime `bf63497` bundles 23 unmodified Omarchy palettes with their upstream MIT
+license/attribution, alongside Tessa Night and Tessa Light. No dependency or
+wallpaper is added. Settings uses the existing responsive palette cards, with
+readable names, applying/error state and a guard against overlapping changes.
+Palette-only themes now drive the cube/wheel glow through their accent.
+
+`./scripts/check.sh` passed: 222 Python, 100 Qt Quick and 11 Node results,
+including QML lint and Hyprland validation. Existing FilePicker warning and
+unavailable Fish/ShellCheck remain. New Python coverage renders all 23 imported
+palettes into normalized shell data, Foot configuration and Squeekboard CSS in
+scratch HOME. Qt coverage checks dark/light switching, semantic override reset,
+input foreground and palette-derived glow. Existing scratch install/uninstall
+checks passed with the bundled themes.
+
+The existing VM discovered 25 themes. Genuine virtual touch selected Catppuccin
+and Catppuccin Latte in Settings and Gruvbox from the 400×800 phone grid. Phone
+touch swipes reached the two-column theme cards. Live updates were captured at
+1024×768 for Catppuccin Latte, Tokyo Night, Gruvbox, Rose Pine and restored Tessa
+Night. The real Foot terminal launched through `tessarchy-run` updated its
+palette while open; keyboard CSS and mode data matched the selected light theme.
+The terminal's shell overwrites its window title, so mapping was confirmed using
+its initial title and client PID. No new terminal failure occurred.
+Config errors were empty; existing Mesa/SHM/absent-BlueZ warnings remain. The VM
+was returned to 1024×768 and Tessa Night. Guest themes were backed up before
+installation. Host configuration was not changed.
+
+[Seven actual screenshots](../assets/screenshots/tessa-themes/README.md) show the
+themed cube/terminal, light picker and phone grid. Theme-card palette previews
+are native UI widgets, not wallpaper downloads. Physical-device latency and
+application-specific GTK/Qt styling beyond existing launcher policies remain
+unverified; previous broader validation limitations still apply.
