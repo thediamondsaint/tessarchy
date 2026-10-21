@@ -9,8 +9,7 @@ Item {
     property int hideDelay: 1500
     // Tessa's compact cube mode uses the existing native tape gestures.
     property bool tessaCube: true
-    // Existing tape drag remains the transport; compact wheel is only another input surface.
-    property bool edgeWheel: true
+    property int maxControlWidth: 10000
     signal launcherRequested()
     property real pending: 0
     readonly property bool dragging: dragArea.pressed
@@ -20,7 +19,7 @@ Item {
     signal stepped(string direction)
     signal settled()
     signal leaveRequested()
-    implicitWidth: expanded ? (tessaCube ? 384 : 336) : (tessaCube ? 56 : 128)
+    implicitWidth: Math.min(maxControlWidth, expanded ? (tessaCube ? 384 : 336) : (tessaCube ? 56 : 128))
     implicitHeight: 48
 
     function cancel() {
@@ -65,9 +64,10 @@ Item {
         visible: control.expanded
         TouchButton {
             visible: control.tessaCube
+            Layout.minimumWidth: 48
             text: "Apps"
             Accessible.name: "Open Tessa launcher"
-            Layout.preferredWidth: 64
+            Layout.preferredWidth: 56
             Layout.fillHeight: true
             onClicked: { control.launcherRequested(); control.expanded = false; }
         }
