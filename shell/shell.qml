@@ -116,7 +116,11 @@ ShellRoot {
     property string themeName: ""
     property string themeBackground: ""
     property var themes: []
+    property string themeError: ""
+    readonly property bool themeBusy: themeSetter.running
     function setTheme(name) {
+        if (themeBusy) return;
+        themeError = "";
         themeSetter.command = ["tessarchy-theme", "set", name];
         themeSetter.running = true;
     }
@@ -151,8 +155,10 @@ ShellRoot {
     }
     Process {
         id: themeSetter
-        onRunningChanged: if (!running)
-            themeColors.reload()
+        onExited: (code, status) => {
+            root.themeError = code === 0 && status === 0 ? "" : "Could not apply theme. Please try again.";
+            themeColors.reload();
+        }
     }
     Process {
         id: themeList
@@ -552,6 +558,8 @@ ShellRoot {
                                         preferences: shellPreferences
                                         themes: root.themes
                                         currentTheme: root.themeName
+                                        themeBusy: root.themeBusy
+                                        themeError: root.themeError
                                         onThemeRequested: name => root.setTheme(name)
                                         activeMode: Policy.title(surface.mode)
                                         displayWidth: surface.modelData.width

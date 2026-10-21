@@ -72,3 +72,22 @@ preview and reveal patterns fit the existing `AppSwitcher` and cube; compact mod
 reuses Tessa's capture lifetime, horizontal flicking, touch activation, swipe
 closing and deferred compositor-focus handoff. No service or dependency is added.
 The cube's cyan edge uses the same `wheel_glow` token as the navigation wheel.
+
+
+## Themes
+
+Open the cube → Menu → Settings → Appearance. The existing touch theme cards
+apply the palette to Tessa, its on-screen keyboard and themed Foot terminals.
+Tessa Night and Tessa Light retain their compatible internal `tessera` IDs.
+23 additional unmodified Omarchy palettes are bundled, including Catppuccin,
+Tokyo Night, Gruvbox, Nord, Everforest, Rose Pine and light variants. No download
+or Omarchy installation is needed. Palette-only themes derive the existing glass
+surfaces and cube/wheel glow from their own accent; Tessa Night keeps its explicit
+cyan glow. Theme buttons pause while applying and show failures in Settings.
+
+Imported from [Omarchy](https://github.com/omacom/omarchy), revision
+`82662dd2627db3b22c63616d3cae025aeb0f1e47`. Only `themes/*/colors.toml` is copied;
+[MIT attribution](../themes/OMARCHY-NOTICE.md) and the upstream license ship with
+it. Wallpapers, icon packs and executable Hyprland configurations are not copied.
+Custom compatible palettes can still be placed under
+`$XDG_CONFIG_HOME/tessarchy/themes/<name>/colors.toml` (default `~/.config`).

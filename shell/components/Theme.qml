@@ -27,7 +27,7 @@ QtObject {
         return value === undefined ? fallback : Math.min(value, Math.max(0, height / 2));
     }
     function borderWidth(fallback) { return token("border_width", fallback); }
-    readonly property color wheelGlow: token("wheel_glow", "#72cfff")
+    readonly property color wheelGlow: token("wheel_glow", accent)
     readonly property color glass: token("glass", Qt.alpha(surface, 0.31))
     readonly property color glassBorder: token("glass_border", Qt.alpha(selection, 0.31))
     readonly property color glassStrong: token("glass_strong", Qt.alpha(background, 0.76))

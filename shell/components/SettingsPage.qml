@@ -16,6 +16,13 @@ ColumnLayout {
     // tessarchy-theme list rows: { name, mode, background, foreground, accent, preview }.
     property var themes: []
     property string currentTheme: ""
+    property bool themeBusy: false
+    property string themeError: ""
+    function themeLabel(name) {
+        if (name === "tessera") return "Tessa Night";
+        if (name === "tessera-light") return "Tessa Light";
+        return name.split("-").map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(" ");
+    }
     signal themeRequested(string name)
     signal endSessionRequested
     signal controlsRequested
@@ -35,7 +42,7 @@ ColumnLayout {
         ColumnLayout {
             Layout.fillWidth: true
             Text {
-                text: "TESSARCHY"
+                text: "TESSA"
                 color: Theme.text
                 font {
                     pixelSize: 20
@@ -44,7 +51,9 @@ ColumnLayout {
                 }
             }
             Text {
-                text: "One shell. Every screen."
+                text: "Running on Tessarchy · One shell. Every screen."
+                Layout.fillWidth: true
+                wrapMode: Text.WordWrap
                 color: Theme.textMuted
                 font.pixelSize: 13
             }
@@ -141,7 +150,7 @@ ColumnLayout {
         }
     }
     Text {
-        text: "Theme · shell, keyboard and apps"
+        text: page.themeBusy ? "Applying theme…" : "Theme · " + page.themeLabel(page.currentTheme)
         color: Theme.textSecondary
         font.pixelSize: 14
     }
@@ -155,8 +164,9 @@ ColumnLayout {
             delegate: TouchButton {
                 id: themeButton
                 required property var modelData
-                text: modelData.name
-                Accessible.name: "Theme " + modelData.name
+                text: page.themeLabel(modelData.name)
+                enabled: !page.themeBusy
+                Accessible.name: "Theme " + page.themeLabel(modelData.name)
                 selected: page.currentTheme === modelData.name
                 accentColor: modelData.accent
                 Layout.fillWidth: true
@@ -168,7 +178,7 @@ ColumnLayout {
                 // The theme's preview.png when it ships one; otherwise a mock built from its palette.
                 readonly property bool hasPreview: modelData.preview !== undefined && modelData.preview.length > 0 && previewImage.status !== Image.Error
                 contentItem: Text {
-                    text: themeButton.modelData.name
+                    text: page.themeLabel(themeButton.modelData.name)
                     color: themeButton.modelData.foreground
                     font.pixelSize: 15
                     font.bold: true
@@ -261,6 +271,13 @@ ColumnLayout {
                 onClicked: page.themeRequested(modelData.name)
             }
         }
+    }
+    Text {
+        visible: page.themeError.length > 0
+        text: page.themeError
+        color: Theme.errorText
+        Layout.fillWidth: true
+        wrapMode: Text.WordWrap
     }
     Text {
         text: "Bar opacity · " + Math.round(page.preferences.barOpacity * 100) + "%"

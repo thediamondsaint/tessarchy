@@ -399,6 +399,29 @@ class Workflows(unittest.TestCase):
         self.theme('set', 'tessera')
         self.assertEqual((state / 'theme/wallpaper').read_text().strip(), '')
 
+    def test_bundled_omarchy_palettes_render_every_output(self):
+        import tomllib
+        themes = [p for p in (ROOT / 'themes').glob('*/colors.toml')
+                  if not p.parent.name.startswith('tessera')]
+        self.assertEqual(len(themes), 23)
+        listed = {line.split('\t')[0] for line in self.theme('list').stdout.splitlines()}
+        state = self.home / 'state/tessarchy'
+        for path in themes:
+            with self.subTest(theme=path.parent.name):
+                raw = tomllib.loads(path.read_text())
+                self.assertIn(path.parent.name, listed)
+                result = self.theme('set', path.parent.name)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                normalized = tomllib.loads((state / 'theme/colors.toml').read_text())
+                self.assertEqual(normalized['background'], raw['background'].lower())
+                self.assertEqual(normalized['accent'], raw['accent'].lower())
+                self.assertNotIn('[tessera]', (state / 'theme/colors.toml').read_text())
+                self.assertIn('background=' + raw['background'][1:].lower(),
+                              (state / 'theme/foot.ini').read_text())
+                self.assertIn(raw['accent'].lower(), (state / 'osk/gtk-3.0/gtk.css').read_text())
+        self.assertEqual(self.theme('set', 'tessera').returncode, 0)
+        self.assertIn('[tessera]', (state / 'theme/colors.toml').read_text())
+
     def test_theme_surface_defaults_overrides_and_invalid_values(self):
         state = self.home / 'state/tessarchy/theme'
         borders = 'window_border = 0, window_border_active = "rgb(a9e8d5)", window_border_inactive = "rgb(34465e)"'
