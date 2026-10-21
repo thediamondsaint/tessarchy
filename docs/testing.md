@@ -2539,3 +2539,28 @@ Config errors were empty. Tablet launcher, three placements and a real scrolling
 GIF are in [tessa-tablet-preview](../assets/screenshots/tessa-tablet-preview/README.md).
 The VM was left at 1024×768; its previous phone preference was backed up first.
 Physical tablet input remains untested.
+
+
+## Compact app launcher — 2026-10-21
+
+Runtime `6e5ff9c` removes the large launcher grid and navigation-panel presentation.
+It adapts DMS/Dux's MIT application-row layout into a centered search popup, while
+retaining Tessa's DesktopEntries and execution/search policies. Attribution is
+shipped in `shell/third-party/dms`; no new dependency was added.
+
+`./scripts/check.sh` passed: 221 Python, 96 Qt Quick and 11 Node results, including
+QML lint and Hyprland configuration validation. Existing FilePicker warning and
+unavailable Fish/ShellCheck remain. Qt checks exercise fuzzy search, reopen reset,
+keyboard selection, touch activation and empty-result activation guards.
+
+The existing VM loaded the shell successfully. Genuine virtual touch/keyboard
+verified Escape and outside-tap dismissal, padding taps keeping the popup open,
+filtered Enter launching a real Calculator window, and touch-row launching.
+Opening the separate layer initially lacked keyboard focus; requesting focus on
+popup visibility fixed the failure, and retesting passed. Launch tests waited
+for asynchronous application mapping. 400×800 and 1024×768 captures verify phone
+and tablet sizing; real Squeekboard opens on phone search without covering the
+search field. Config errors were empty. The VM was returned to Tablet mode with
+OSK enabled. [Four actual captures](../assets/screenshots/tessa-compact-launcher/README.md)
+include the filtered list and phone keyboard. Physical touchscreen behavior
+remains untested; broader prior limitations above still apply.

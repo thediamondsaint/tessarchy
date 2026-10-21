@@ -1,0 +1,42 @@
+{
+  "captured_on": "2026-10-21",
+  "source_commit": "6e5ff9c138a4062a560f18f057ea9dec4259b48f",
+  "type": "actual VM screenshots",
+  "method": "grim in existing QEMU/KVM guest, copied unchanged over SSH",
+  "generated": false,
+  "interaction": "QMP keyboard and virtual multitouch; real GNOME Calculator and native DesktopEntries",
+  "files": [
+    {
+      "file": "tablet-launcher.png",
+      "dimensions": [
+        1024,
+        768
+      ],
+      "sha256": "707a4a2c32f966e6ff2e2578e79c203e107dcc36441dde18bd6e8edfe440d06c"
+    },
+    {
+      "file": "tablet-search.png",
+      "dimensions": [
+        1024,
+        768
+      ],
+      "sha256": "81ea434cec8413988bc484f8a1d0b450eb1acc91903614df0a8e41a64a115274"
+    },
+    {
+      "file": "phone-launcher.png",
+      "dimensions": [
+        400,
+        800
+      ],
+      "sha256": "b5cff0837263f40c3c1cde7511804f7417893c433fa87bed0a4ba96db5f73ffa"
+    },
+    {
+      "file": "phone-keyboard.png",
+      "dimensions": [
+        400,
+        800
+      ],
+      "sha256": "7f4d231097558e2c1f4a1602df79be74e5b4f27e840facbcf5e4a1db395e5f7b"
+    }
+  ]
+}
