@@ -23,7 +23,7 @@ if [[ -n "$runner" && -n "$qml_root" ]]; then
         QML2_IMPORT_PATH="$qml_root" "$runner" -input tests/qml
 else echo "SKIP: Qt Quick Test unavailable"; fi
 compiler=$(command -v luac || command -v luac5.4 || true)
-if [[ -n "$compiler" ]]; then "$compiler" -p session/hyprland.lua session/window-controls.lua session/preferences.example.lua session/greeter.lua; else echo "SKIP: luac unavailable"; fi
+if [[ -n "$compiler" ]]; then "$compiler" -p session/hyprland.lua session/window-controls.lua session/window-tape.lua session/preferences.example.lua session/greeter.lua; else echo "SKIP: luac unavailable"; fi
 if command -v fish >/dev/null; then fish -n iso/airootfs/etc/skel/.config/fish/config.fish; else echo "SKIP: fish unavailable"; fi
 if command -v desktop-file-validate >/dev/null; then
     # Ignore only the known DesktopNames validator false positive.

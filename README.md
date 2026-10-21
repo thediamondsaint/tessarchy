@@ -206,9 +206,10 @@ release assets. Generated build output stays in `build/`, `dist/` and `vm/`.
 | `assets/`, `website/` | Actual captures, roadmap and GitHub Pages source |
 | `docs/` | Architecture, operating guides, roadmap and evidence |
 
-The [window tape proposal](docs/window-tape-proposal.md) researches live scrolling
-windows with an auto-hiding touch control while retaining Hyprland. It includes
-implementation gates and difficulty estimates.
+The opt-in [window tape prototype](docs/window-tape-proposal.md) adds live scrolling
+windows with an auto-hiding touch control while retaining Hyprland. It includes an
+optional bridge to native continuous movement, a column-step fallback and remaining
+pilot acceptance gates.
 
 ## Roadmap, branding and sharing
 

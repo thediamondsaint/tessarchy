@@ -2344,3 +2344,33 @@ and 4 website tests; Hyprland config verification passed. Fish and ShellCheck
 were unavailable. QML lint emitted a FilePicker PanelWindow creatability warning.
 No tape implementation, runtime interaction or physical-touch test was performed.
 See [the proposal](window-tape-proposal.md) for planned implementation acceptance.
+
+## Window tape prototype — 2026-10-20
+
+PR #61 now implements an opt-in named tape workspace. Ordinary mobile/desktop
+policies remain covered by the existing workflow tests, including new assertions
+that tape windows bypass floating/maximization. The implementation reuses
+Hyprland's scrolling layout and an optional 48-line bridge to its native gesture
+methods. The bridge compiled without diagnostics against installed Hyprland
+0.56.2 headers and uses the standard client/server plugin ABI hash check.
+
+Actual runtime checks used an isolated nested Hyprland 0.56.2 compositor, private
+runtime/config/state directories and a private session bus, with the real Tessera
+shell and two live Foot windows. At 900×700, scale 1, a Wayland virtual pointer
+verified reveal, continuous drag, retained application focus during movement,
+destination focus on release, previous/next, fallback dragging after unloading
+the bridge, exit to workspace 1 and re-entry. The public pixel move path snapped
+back after hard refocus; the native gesture bridge and `follow_focus=false`
+resolved this. A real [mid-drag capture](images/window-tape-prototype.png) is
+included. No host desktop configuration was changed.
+
+The normal VM launcher crashed in QEMU before guest startup, including with
+headless display and no audio. These nested results do not establish VM, ISO
+or physical-device acceptance. OSK, fractional scale, rotation, dialogs,
+fullscreen, multiple outputs and physical touchscreen latency remain planned
+checks in [the proposal](window-tape-proposal.md).
+
+`./scripts/check.sh` passed: 219 Python tests, 83 Qt Quick results and 4 website
+tests, plus syntax/lint and Hyprland session/greeter config verification. Fish
+and ShellCheck were unavailable. QML lint retained the existing FilePicker
+PanelWindow creatability warning. `git diff --check` passed.

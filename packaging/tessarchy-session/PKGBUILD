@@ -15,6 +15,7 @@ package() {
     cp -R "$srcdir/session/osk" "$pkgdir/usr/share/tessarchy/session/"
     install -Dm644 "$srcdir/LICENSE" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
     install -Dm644 "$srcdir/session/hyprland.lua" "$pkgdir/usr/share/tessarchy/session/hyprland.lua"
+    install -Dm644 "$srcdir/session/window-tape.lua" "$pkgdir/usr/share/tessarchy/session/window-tape.lua"
     install -Dm644 "$srcdir/session/window-controls.lua" "$pkgdir/usr/share/tessarchy/session/window-controls.lua"
     install -Dm644 "$srcdir/session/hypridle.conf" "$pkgdir/usr/share/tessarchy/session/hypridle.conf"
     install -Dm755 "$srcdir/session/start-tessarchy" "$pkgdir/usr/bin/start-tessarchy"

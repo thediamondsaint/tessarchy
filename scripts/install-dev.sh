@@ -16,7 +16,7 @@ cp -R -- "$root/shell" "$root/themes" "$data/"
 cp -R -- "$root/session/osk" "$data/session/"
 find "$data/shell" -type f \( -name '*.pyc' -o -name '*.pyo' \) -delete
 find "$data/shell" -depth -type d -name __pycache__ -empty -delete
-cp -- "$root/session/hyprland.lua" "$root/session/window-controls.lua" "$root/session/hypridle.conf" "$data/session/"
+cp -- "$root/session/hyprland.lua" "$root/session/window-controls.lua" "$root/session/window-tape.lua" "$root/session/hypridle.conf" "$data/session/"
 cp -- "$root/session/start-tessarchy" "$root/session/tessera-shell" "$root/session/tessarchy-osk" "$root/session/tessarchy-theme" "$root/session/tessarchy-run" "$root/session/tessera-screenshot" "$root/session/tessarchy-session-services" "$root/session/tessera-brightness" "$root/session/tessera-nightlight" "$root/session/tessera-rotate" "$data/.tessarchy-dev-launchers/"
 cp -- "$data/.tessarchy-dev-launchers/"* "$bin/"
 printf '%s\n' 'tessarchy-dev-v3' > "$marker"

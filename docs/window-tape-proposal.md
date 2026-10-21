@@ -1,6 +1,6 @@
 # Proposal: touch-controlled window tape
 
-Status: design RFC; no runtime behavior changed. Research date: 2026-10-20.
+Status: opt-in prototype on PR #61; pilot acceptance remains pending. Research date: 2026-10-20.
 Repository baseline: `e52ff9e` (main).
 
 ## Recommendation
@@ -14,6 +14,75 @@ acceptance. Keep Desktop's existing windowed/tiling choices during the pilot.
 Hyprland stays: this is the owner’s explicit constraint. Niri is an interaction
 reference only. The migration comparison below explains the additional work; it
 is not a proposed implementation path.
+
+## Implemented prototype
+
+Open **Settings → Try Window Tape**, or press **Super+T**, then launch apps.
+Only the named `tessarchy-tape` workspace uses scrolling. Ordinary phone/tablet
+maximization and desktop floating rules skip its tiled windows. Existing apps
+stay in their original workspaces; this release does not migrate them.
+
+Tap **Window tape** to reveal the drag strip, previous/next buttons and an exit
+button. Drag horizontally to browse. The expanded strip hides after 1.5 seconds
+of inactivity and stays open under a held finger. Targets are at least 48 logical
+pixels, and the surface never takes keyboard focus. Super+[ and Super+] navigate
+columns. Exit returns to the preceding workspace, or workspace 1 if it is gone.
+
+The first version uses full-width columns in all modes. Tablet half-width sizing,
+proportional scrollbar telemetry and promotion to the default remain future work.
+
+### Reuse and the optional native bridge
+
+The layout, geometry, focus selection and snapping come from Hyprland. Tessera
+reuses TouchButton, GestureHandle, its theme and Qt's existing mouse/touch delivery.
+There is no new tiling engine, compositor fork or window screenshot carousel.
+
+Runtime inspection found that the public `move` layout message refocuses a
+window after each update. That hard focus fits the column back into view, so
+small drag increments cannot produce continuous motion. The optional 48-line
+C++ bridge calls the existing `CScrollingAlgorithm::moveTape`,
+`snapToProjectedOffset` and `focusColumn` methods used by native gestures.
+It registers two Lua callbacks through the public plugin API and keeps no
+window pointers or persistent compositor state. It checks the native plugin ABI
+hash before loading. Source:
+[Hyprland 0.56.2 scrolling implementation](https://github.com/hyprwm/Hyprland/blob/v0.56.2/src/layout/algorithm/tiled/scrolling/ScrollingAlgorithm.cpp).
+
+Without the bridge, dragging accumulates 120 logical pixels before using native
+previous/next column navigation. This is a discrete fallback, not continuous
+panning. The same buttons and shortcuts work in either case. Lua validates the
+active workspace/output, finite numeric input and content edges; QML coalesces
+movement at 16 ms intervals over Quickshell's existing compositor IPC connection.
+`follow_focus=false` prevents compositor mouse release from snapping back to the
+original app before Tessera settles; explicit click/key focus still follows.
+
+### Try continuous panning in a Tessarchy guest
+
+With matching Hyprland 0.56.2 headers, compiler, Lua headers and pkg-config
+dependencies already installed, build from this branch:
+
+```sh
+./scripts/build-window-tape.sh
+```
+
+After a development install, place `dist/tessarchy-tape-0.56.2.so` at
+`$XDG_DATA_HOME/tessarchy/plugins/tessarchy-tape.so`, or
+`$HOME/.local/share/tessarchy/plugins/tessarchy-tape.so` when XDG_DATA_HOME is
+unset. Reload the **guest's Tessarchy** configuration. The optional library is
+loaded from the session's data directory. Packaged sessions use
+`/usr/share/tessarchy/plugins/tessarchy-tape.so`. Do not replace a loaded library;
+unload it before replacing it. Rebuild against matching headers after a compositor
+upgrade. Neither the build script nor these changes installs dependencies, and
+the binary is not bundled in the ISO or committed.
+
+The strip respects the compositor's reserved panel area rather than reserving
+more application space. OSK interaction, physical touch latency, rotation and
+multi-output acceptance are still pending. The current evidence is an isolated
+nested compositor, not the target VM or physical tablet.
+
+![Live windows during a native tape drag](images/window-tape-prototype.png)
+
+Actual capture: nested Hyprland 0.56.2, 900×700, scale 1, two live Foot windows,
+Tessera and the native bridge. A Wayland virtual pointer exercised the drag.
 
 ## Research findings
 
@@ -168,5 +237,6 @@ Manual guest and physical-device acceptance must cover:
 - Touch-only discovery, mouse/keyboard equivalents, reduced motion and at least
   48-pixel targets. Capture actual interaction video and the tested source SHA.
 
-This RFC is based on source inspection and upstream documentation. No window-tape
-prototype, touch latency result or physical-device acceptance is claimed.
+Source inspection, automated tests and nested-compositor prototype results are
+recorded in [testing.md](testing.md). Physical-device acceptance and the remaining
+pilot matrix are pending. The original estimates above describe the full pilot.

@@ -8,7 +8,7 @@ mkdir -p "$root/build"
 share=$(mktemp -d "$root/build/source-share.XXXXXX")
 trap 'rm -rf -- "$share"' EXIT
 mkdir -p "$share/tessarchy"
-for directory in shell session scripts packaging iso docs tests assets website themes portal; do
+for directory in shell session scripts packaging iso docs tests assets website themes portal plugins; do
     cp -R -- "$root/$directory" "$share/tessarchy/"
 done
 cp -- "$root/README.md" "$root/AGENTS.md" "$root/LICENSE" "$share/tessarchy/"

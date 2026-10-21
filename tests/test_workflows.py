@@ -630,7 +630,7 @@ esac
             self.skipTest('Lua interpreter unavailable')
         script = r'''local callbacks, commands = {}, {}
 hl = {
-    layer_rule = function() end,
+    layer_rule = function() end, workspace_rule = function() end,
     monitor = function() end, config = function() end, bind = function() end,
     on = function(name, callback) callbacks[name] = callback end,
     exec_cmd = function(command) table.insert(commands, command) end,
@@ -971,7 +971,7 @@ assert(#commands == 4, "unexpected extra autostart commands")
     def test_export_vm_source_keeps_existing_snapshot_idempotent(self):
         repo = self.home / 'source'
         self.copy_repo(repo, ('shell', 'session', 'scripts', 'packaging', 'iso',
-                              'docs', 'tests', 'assets', 'website', 'themes', 'portal'))
+                              'docs', 'tests', 'assets', 'website', 'themes', 'portal', 'plugins'))
         share = repo / 'build/vm-share/tessarchy'
         def run():
             return subprocess.run([str(repo / 'scripts/export-vm-source.sh')], env=self.env,
@@ -1049,7 +1049,7 @@ assert(#commands == 4, "unexpected extra autostart commands")
         fakeqemu.chmod(0o755)
         import shutil
         source = self.home / 'source'
-        for directory in ('scripts', 'shell', 'session', 'packaging', 'iso', 'docs', 'tests', 'assets', 'website', 'themes', 'portal'):
+        for directory in ('scripts', 'shell', 'session', 'packaging', 'iso', 'docs', 'tests', 'assets', 'website', 'themes', 'portal', 'plugins'):
             shutil.copytree(ROOT / directory, source / directory)
         for name in ('README.md', 'AGENTS.md', 'LICENSE'):
             shutil.copy2(ROOT / name, source / name)
@@ -1075,7 +1075,7 @@ assert(#commands == 4, "unexpected extra autostart commands")
 hl = {
     monitor = function() end, config = function() end,
     bind = function(keys, dispatcher, flags) binds[keys] = { dispatcher = dispatcher, flags = flags } end,
-    layer_rule = function() end,
+    layer_rule = function() end, workspace_rule = function() end,
     on = function(name, callback) callbacks[name] = callback end,
     dispatch = function(action) table.insert(actions, action) end,
     dsp = { exec_cmd = function(command) return { exec = command } end, exit = function() end,
@@ -1109,12 +1109,12 @@ assert(binds["XF86AudioMute"].flags.locked == true and binds["XF86AudioMute"].fl
     "volume keys must work on the lock screen and repeat")
 assert(binds["SUPER + Q"].dispatcher.exec == "tessera-shell ipc call actions closeWindow")
 assert(binds["SUPER + SHIFT + E"].dispatcher.exec == "tessera-shell ipc call actions endSession")
-local function check(mode, width, height, scale, transform, floating, fullscreen, expected)
+local function check(mode, width, height, scale, transform, floating, fullscreen, expected, workspace)
     local f = assert(io.open(os.getenv("XDG_CONFIG_HOME") .. "/tessarchy/shell.ini", "w"))
     f:write("[Other]\nlayoutMode=desktop\n[Shell]\nlayoutMode=" .. mode .. "\n")
     f:close()
     actions = {}
-    local window = { floating = floating, fullscreen = fullscreen,
+    local window = { floating = floating, fullscreen = fullscreen, workspace = workspace,
         monitor = {width=width, height=height, scale=scale, transform=transform} }
     callbacks["window.open"](window)
     assert(#actions == expected, mode .. ": unexpected app startup policy")
@@ -1132,6 +1132,9 @@ check("phone", 1280, 800, 1, 0, false, 0, 4)
 check("invalid", 400, 800, 1, 0, false, 0, 4)
 check("phone", 400, 800, 1, 0, true, 0, 0)
 check("phone", 400, 800, 1, 0, false, 2, 0)
+check("phone", 400, 800, 1, 0, false, 0, 0, {name="tessarchy-tape"})
+check("tablet", 800, 1280, 1, 0, false, 0, 0, {name="tessarchy-tape"})
+check("desktop", 1280, 800, 1, 0, false, 0, 0, {name="tessarchy-tape"})
 '''
         result = subprocess.run(['lua', '-', str(ROOT / 'session/hyprland.lua')],
                                 input=script, text=True, capture_output=True, env=self.env)
@@ -1145,7 +1148,7 @@ check("phone", 400, 800, 1, 0, false, 2, 0)
         script = r'''local callbacks, actions = {}, {}
 local function action(kind) return function(a) a = a or {}; a.kind = kind; return a end end
 hl = {
-    layer_rule = function() end,
+    layer_rule = function() end, workspace_rule = function() end,
     monitor = function() end, config = function() end, bind = function() end,
     on = function(name, callback) callbacks[name] = callback end,
     dispatch = function(a) table.insert(actions, a) end,
@@ -1231,7 +1234,7 @@ assert(#fire("window.open", dialog) == 0, "desktop dialogs are left alone")
         script = r'''local callbacks, actions = {}, {}
 local function action(kind) return function(a) a = a or {}; a.kind = kind; return a end end
 hl = {
-    layer_rule = function() end,
+    layer_rule = function() end, workspace_rule = function() end,
     monitor = function() end, config = function() end, bind = function() end,
     on = function(name, callback) callbacks[name] = callback end,
     dispatch = function(a) table.insert(actions, a) end,
