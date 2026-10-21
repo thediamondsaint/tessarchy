@@ -2374,3 +2374,6 @@ checks in [the proposal](window-tape-proposal.md).
 tests, plus syntax/lint and Hyprland session/greeter config verification. Fish
 and ShellCheck were unavailable. QML lint retained the existing FilePicker
 PanelWindow creatability warning. `git diff --check` passed.
+
+Tested implementation revision: `2dc361a`. The mid-drag capture was refreshed
+from that source after the full checks passed.
