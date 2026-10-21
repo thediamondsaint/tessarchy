@@ -2467,7 +2467,9 @@ no C++ compiler. Guest compositor config errors were empty.
 Actual, unedited guest screenshots and hashes are in
 [assets/screenshots/tessa-development](../assets/screenshots/tessa-development/README.md).
 QEMU's direct display capture showed corruption at the custom phone mode;
-compositor `grim` captures were inspected and render correctly. Mesa reports no
+compositor `grim` captures were inspected and render correctly. A subsequent
+400×800 supported-mode check produced a correct direct QMP PNG capture; the VM
+was left upright at 400×800 with its original 390×844 preference backed up. Mesa reports no
 DRM render node and Quickshell falls back to SHM; live Recents preview coverage
 is incomplete in this software-rendered guest. Optional BlueZ is absent. No QML
 load failure remains; Wayland text-input disable warnings were observed during
@@ -2488,3 +2490,8 @@ with disk-backed scratch space passed all six tape/Lua tests, the native live
 DesktopEntries integration test, and all 94 Qt Quick results. The complete host
 suite above remains the full-suite pass; the guest-wide suite is not claimed
 as passing. Host/guest logs are retained in the ignored development `build/`.
+
+Arch CI on `49b9807` passed Python and Qt checks but failed ShellCheck SC2046
+in the inherited bridge build script. Replaced unquoted `pkg-config` expansion
+with a Bash argument array; the native bridge rebuilt successfully. The separate
+400×800 direct QEMU capture is saved with the other evidence (23 PNGs total).

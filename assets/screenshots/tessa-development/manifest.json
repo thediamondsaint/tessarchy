@@ -3,7 +3,7 @@
   "source_revision": "81df93bf4f2f47456aed1ebcccd6c2b3346c7df8",
   "date": "2026-10-21",
   "environment": "Existing x86_64 Arch QEMU/KVM guest on MacBookPro15,2; software virtio-vga; Hyprland 0.56.2 efb50993780079460b0cbed1363e2166a2de1d9f; Quickshell 0.3.2; Qt 6.12.0",
-  "capture_method": "grim inside the running guest, copied unchanged over SSH; no generated concepts or image edits",
+  "capture_method": "Unedited grim captures inside guest; phone-qemu-display-400.png is a direct QMP PNG screendump of the guest display. No generated concepts or image edits.",
   "input": "QEMU virtio multitouch, USB absolute mouse and keyboard; rotation via existing tessera-rotate helper",
   "files": [
     {
@@ -203,6 +203,16 @@
       ],
       "sha256": "60dbd6749c5e7c00632ff83064bc9bd3df8b6e2f03860497dba09e662e119f5d",
       "captured_utc": "2026-10-21T17:36:40.737397+00:00"
+    },
+    {
+      "file": "phone-qemu-display-400.png",
+      "dimensions": [
+        400,
+        800
+      ],
+      "sha256": "1c740b4264b40e3e8a7e0a930ae2e181531f40d2bc9c02486ea5a39a1a3551a8",
+      "captured_utc": "2026-10-21T17:45:35.937261+00:00",
+      "capture_method": "QMP screendump format=png; supported 400x800 mode"
     }
   ]
 }
