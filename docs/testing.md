@@ -2564,3 +2564,37 @@ search field. Config errors were empty. The VM was returned to Tablet mode with
 OSK enabled. [Four actual captures](../assets/screenshots/tessa-compact-launcher/README.md)
 include the filtered list and phone keyboard. Physical touchscreen behavior
 remains untested; broader prior limitations above still apply.
+
+
+## Cube recent-app shelf — 2026-10-21
+
+Runtime `cf0a0e8` opens a compact recent-app shelf when tapping the Tessa cube.
+It reuses AppSwitcher and the existing MRU history rather than adding a new
+capture service. Native previews have icon/title fallbacks; compact mode leaves
+normal Recents and Alt+Tab behavior intact. Cyan edges share `wheel_glow`.
+The existing previous/next signals were unconnected in the shell; they now call
+the original workspace-isolated native scrolling bridge.
+
+`./scripts/check.sh` passed: 221 Python, 97 Qt Quick and 11 Node results,
+including QML lint and Hyprland config validation. The existing FilePicker
+warning remains; Fish/ShellCheck are unavailable locally. Focused cube tests
+passed (10 results), including touch opening without taking keyboard focus,
+postponing idle collapse while browsing, explicit collapse, narrow sizing and
+retaining the switcher for its deferred focus handoff.
+
+The existing VM disk was booted through the established QEMU workflow. Real
+Files, Calculator and Foot windows were used at 400×800 and 1024×768. Virtual
+touch verified recent-card activation/collapse, horizontal flicking to reveal
+the third window and activate it, radial open/return, explicit and idle collapse,
+and previous/next buttons moving actual scrolling focus. Opening the cube kept
+the active application focused. Testing caught wheel/toolbar overlap and a
+visible IME; the wheel now hides during the shelf and the cube dismisses the IME.
+Retesting passed with the real keyboard enabled and explicitly shown first.
+Config errors were empty. Visible-window preview capture worked; unavailable
+inactive previews showed app icons/titles. Existing Mesa/SHM and absent-BlueZ
+warnings remain. The VM was returned to 1024×768 with the OSK enabled.
+
+[Five real screenshots](../assets/screenshots/tessa-cube-recents/README.md) record
+the phone shelf before/after a flick, radial actions, collapsed cube and tablet
+shelf. Physical-device touch latency and sensors remain untested. Prior broader
+VM/packaging limitations above still apply.

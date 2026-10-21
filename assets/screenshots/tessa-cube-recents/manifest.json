@@ -1,0 +1,50 @@
+{
+  "captured_on": "2026-10-21",
+  "source_commit": "cf0a0e8e96183debf0b7f4bf9b21d7a6485e25b6",
+  "type": "actual VM screenshots",
+  "method": "grim in existing QEMU/KVM guest; copied unchanged over SSH",
+  "generated": false,
+  "interaction": "QMP virtual touchscreen and keyboard, real Files/Calculator/Foot windows",
+  "files": [
+    {
+      "file": "tablet-recents-three.png",
+      "dimensions": [
+        1024,
+        768
+      ],
+      "sha256": "28e222236b33e4c27d3ad629478428e3443a8b8072938853b6f933592aac14b6"
+    },
+    {
+      "file": "phone-recents.png",
+      "dimensions": [
+        400,
+        800
+      ],
+      "sha256": "38db23b242f8e7adf202ea74dbda0f3a57001f55d4f4a6a7c8e63cd22c8e8222"
+    },
+    {
+      "file": "phone-recents-swiped.png",
+      "dimensions": [
+        400,
+        800
+      ],
+      "sha256": "93006d7874f92ccac425031ed6cf5a54de9ee197ca746a0981252c4cfdc22bb2"
+    },
+    {
+      "file": "phone-radial.png",
+      "dimensions": [
+        400,
+        800
+      ],
+      "sha256": "22ba0b35d0d473fa57c326f54e13dd2619f2cfa224f4d273f902f3b1af253835"
+    },
+    {
+      "file": "phone-cube.png",
+      "dimensions": [
+        400,
+        800
+      ],
+      "sha256": "1813f730d62c1cacb4c9a99fc51e61c9b5e595c06156a4ed7151aa47e1510e5c"
+    }
+  ]
+}
