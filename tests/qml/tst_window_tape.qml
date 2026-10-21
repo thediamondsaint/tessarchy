@@ -42,6 +42,38 @@ TestCase {
         control.tessaCube = false;
         compare(control.implicitWidth, 304);
     }
+    Component {
+        id: recentContent
+        Item {
+            property bool interacting: false
+            property int selections: 0
+            function selectActive() { selections++; }
+        }
+    }
+    function test_recent_shelf_preserves_focus_and_browsing() {
+        const control = createTemporaryObject(factory, test, {hideDelay: 100, recentsComponent: recentContent, reducedMotion: true});
+        const loader = findChild(control, "cubeRecents");
+        verify(loader.item !== null);
+        const touch = touchEvent(control);
+        touch.press(0, control, 24, 24).commit();
+        touch.release(0, control, 24, 24).commit();
+        tryCompare(control, "expanded", true);
+        compare(loader.visible, true);
+        compare(loader.item.selections, 1);
+        compare(control.activeFocus, false);
+        loader.item.interacting = true;
+        wait(150);
+        compare(control.expanded, true);
+        loader.item.interacting = false;
+        tryCompare(control, "expanded", false, 500);
+        compare(loader.visible, false);
+        // Keep the loaded switcher alive for its deferred focus handoff.
+        verify(loader.item !== null);
+        control.expanded = true;
+        compare(loader.item.selections, 2);
+        mouseClick(findChild(control, "collapseCube"));
+        compare(control.expanded, false);
+    }
     function test_drag_coalesces_and_settles_without_reversing() {
         const control = createTemporaryObject(wheelFactory, test);
         const area = findChild(control, "tapeDrag");

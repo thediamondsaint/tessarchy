@@ -867,7 +867,7 @@ ShellRoot {
                 margins.left: 8
                 implicitWidth: tapeControl.implicitWidth
                 implicitHeight: tapeControl.implicitHeight
-                margins.bottom: tapeControl.expanded ? 88 : 16
+                margins.bottom: 16
                 exclusiveZone: 0
                 color: "transparent"
                 WlrLayershell.namespace: "tessera-tape"
@@ -877,7 +877,30 @@ ShellRoot {
                     id: tapeControl
                     anchors.fill: parent
                     maxControlWidth: Math.max(192, surface.modelData.width - 16)
+                    recentsComponent: AppSwitcher {
+                        compactMode: true
+                        accentColor: Theme.wheelGlow
+                        windows: root.switcherWindows
+                        activeWindow: root.activeWindow
+                        screenSize: Qt.size(surface.modelData.width, surface.modelData.height - 48)
+                        iconForWindow: window => {
+                            const entry = window.wayland ? DesktopEntries.heuristicLookup(window.wayland.appId) : null;
+                            return entry && entry.icon ? Quickshell.iconPath(entry.icon, true) : "";
+                        }
+                        nameForWindow: window => {
+                            const entry = window.wayland ? DesktopEntries.heuristicLookup(window.wayland.appId) : null;
+                            return entry ? entry.name : window.title || "Application";
+                        }
+                        activateTarget: target => root.activateHandle(target)
+                        reducedMotion: shellPreferences.reducedMotion
+                        emptyHint: "No recent apps yet. Tap Apps to open one."
+                        Component.onCompleted: selectActive()
+                        onActivated: tapeControl.cancel()
+                        onDismissed: tapeControl.cancel()
+                        onCloseRequested: target => { if (target) target.close(); }
+                    }
                     reducedMotion: shellPreferences.reducedMotion
+                    onExpandedChanged: if (expanded && root.oskAvailable) Quickshell.execDetached(["tessarchy-osk", "hide"])
                     onActionRequested: action => {
                         if (action === "leave") Hyprland.dispatch("TessarchyTape.close_request()");
                         else if (action === "controls") statusBar.toggleDrawer();
@@ -886,6 +909,7 @@ ShellRoot {
                     }
                     canPan: surface.tapeWorkspace !== null && surface.tapeWorkspace.toplevels.values.filter(w => w.lastIpcObject && !w.lastIpcObject.floating).length > 1
                     onLauncherRequested: panel.showPage("apps")
+                    onStepped: direction => surface.tapeCommand(direction)
                     onLeaveRequested: Hyprland.dispatch('TessarchyTape.close_request()')
                 }
                 Connections {
@@ -903,7 +927,7 @@ ShellRoot {
                 id: wheelPanel
                 screen: surface.modelData
                 readonly property string placement: ["left", "right"].indexOf(shellPreferences.wheelStyle) >= 0 ? shellPreferences.wheelStyle : "bottom"
-                visible: surface.tapeActive && !panel.expanded
+                visible: surface.tapeActive && !panel.expanded && !tapeControl.expanded
                 anchors.bottom: placement === "bottom"
                 anchors.left: placement === "left"
                 anchors.right: placement === "right"

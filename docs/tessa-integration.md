@@ -11,8 +11,12 @@ scrolling workspace hides its dock and app-edge gesture interception.
 Super+Space opens the launcher; type to search, arrows select, Enter launches and
 Escape dismisses it.
 
-Enter Settings → Try Window Tape or Super+T. Tap the floating cube for Apps,
-previous/next windows, a radial Menu and exit. Drag the lower edge wheel to move
+Enter Settings → Try Window Tape or Super+T. Tap the floating cube for recent apps in most-recently-used order, Apps,
+previous/next windows, a radial Menu and exit. Swipe the recent shelf horizontally
+and tap a preview to switch. Available native previews fall back to app icons and
+titles when unavailable. The shelf dismisses the keyboard and hides the edge wheel
+to keep its touch controls clear, then collapses on selection, the header chevron
+or inactivity. Browsing postpones idle collapse. Drag the lower edge wheel to move
 real windows; release snaps through the existing #61 bridge. Without the optional
 bridge, the existing 120px stepped fallback remains available. The × action and
 Super+T return to the preceding normal workspace. Apps stay on the tape for reentry.
@@ -53,3 +57,18 @@ Its controller, Go backend and shell services are not required; Tessa keeps
 DesktopEntries, application policies and execution. No dependency was added.
 The existing #61 bridge attribution remains intact. Runtime acceptance
 and limitations are recorded in [testing.md](testing.md).
+
+
+For the cube's recent-app shelf, the actual GPL-3.0 end-4 files
+`FloatingActionButton.qml`, `overview/OverviewWidget.qml` and
+`overview/OverviewWindow.qml` were inspected again at revision
+`2f2a376fdb2ad738bf55f693dd0b474b64bb0ab8`.
+[Quickshell Overview](https://github.com/Shanu-Kumawat/quickshell-overview),
+revision `47f0d402822b26805ed0ecea4a770c38c537b728`, was also inspected:
+`modules/overview/{OverviewWidget.qml,OverviewWindow.qml}` uses native screencopy,
+glass surfaces and configurable previews. No root LICENSE was found there and
+its README credits end-4. Neither implementation is copied into Tessa. Their
+preview and reveal patterns fit the existing `AppSwitcher` and cube; compact mode
+reuses Tessa's capture lifetime, horizontal flicking, touch activation, swipe
+closing and deferred compositor-focus handoff. No service or dependency is added.
+The cube's cyan edge uses the same `wheel_glow` token as the navigation wheel.

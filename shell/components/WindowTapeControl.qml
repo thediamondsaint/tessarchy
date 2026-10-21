@@ -6,9 +6,11 @@ Item {
     id: control
     property bool expanded: false
     property bool canPan: true
-    property int hideDelay: 5000
+    property int hideDelay: 8000
     property bool reducedMotion: false
     property bool radialOpen: false
+    property Component recentsComponent
+    readonly property var recentView: recents.item
     signal actionRequested(string action)
     // Tessa's compact cube mode uses the existing native tape gestures.
     property bool tessaCube: true
@@ -20,8 +22,8 @@ Item {
     signal stepped(string direction)
     signal settled()
     signal leaveRequested()
-    implicitWidth: Math.min(maxControlWidth, radialOpen ? 280 : expanded ? (tessaCube ? 384 : 336) : (tessaCube ? 56 : 128))
-    implicitHeight: radialOpen ? 280 : 56
+    implicitWidth: Math.min(maxControlWidth, radialOpen ? 280 : expanded ? (tessaCube ? 560 : 336) : (tessaCube ? 56 : 128))
+    implicitHeight: radialOpen ? 280 : expanded && tessaCube ? 300 : 56
 
     function cancel() {
         radialOpen = false;
@@ -31,23 +33,24 @@ Item {
     }
     onVisibleChanged: if (!visible) cancel()
     onCanPanChanged: if (!canPan) cancel()
-    onExpandedChanged: if (expanded) idle.restart()
+    onExpandedChanged: if (expanded) { if (recentView) recentView.selectActive(); idle.restart(); }
     Timer {
         id: idle
         interval: control.hideDelay
         onTriggered: {
-            if (previous.down || next.down || leave.down || control.activeFocus) restart();
+            if (previous.down || next.down || leave.down || (control.recentView && control.recentView.interacting) || control.activeFocus) restart();
             else { control.expanded = false; control.radialOpen = false; }
         }
     }
     Rectangle {
         anchors.fill: parent
         radius: Theme.radius("card", control.radialOpen ? height / 2 : 20, height)
-        color: Theme.glassStrong
-        border.color: Qt.alpha(Theme.accent, 0.65)
+        color: Qt.alpha(Theme.background, 0.96)
+        border.color: Qt.alpha(Theme.wheelGlow, 0.65)
         border.width: Theme.borderWidth(1)
     }
     TouchButton {
+        id: cubeButton
         anchors.fill: parent
         visible: !control.expanded
         text: control.tessaCube ? "" : "Window tape"
@@ -58,13 +61,67 @@ Item {
             playOnStart: false
             reducedMotion: control.reducedMotion
         }
-        Accessible.name: control.tessaCube ? "Open Tessa window controls" : "Window tape"
+        background: Rectangle {
+            radius: Theme.radius("card", 20, height)
+            color: cubeButton.down ? Theme.pressed(Theme.wheelGlow) : Theme.glassStrong
+            border.color: Theme.wheelGlow
+            border.width: Theme.borderWidth(1)
+            Rectangle {
+                anchors.fill: parent
+                anchors.margins: 3
+                radius: Theme.radius("card", 17, height)
+                color: "transparent"
+                border.color: Qt.alpha(Theme.wheelGlow, 0.20)
+                border.width: Theme.borderWidth(1)
+            }
+        }
+        Accessible.name: control.tessaCube ? "Open recent apps and Tessa controls" : "Window tape"
         onClicked: control.expanded = true
+    }
+    RowLayout {
+        visible: control.tessaCube && control.expanded && !control.radialOpen
+        anchors { top: parent.top; left: parent.left; right: parent.right; leftMargin: 16; rightMargin: 4 }
+        height: 48
+        BrandMark {
+            Layout.preferredWidth: 32
+            Layout.preferredHeight: 32
+            playOnStart: false
+            reducedMotion: control.reducedMotion
+            enabled: false
+        }
+        Text {
+            text: "Recent apps"
+            color: Theme.text
+            font.pixelSize: 18
+            font.weight: Font.DemiBold
+            Layout.fillWidth: true
+        }
+        TouchButton {
+            objectName: "collapseCube"
+            text: "⌄"
+            Accessible.name: "Collapse recent apps"
+            Layout.preferredWidth: 48
+            Layout.fillHeight: true
+            onClicked: control.cancel()
+        }
+    }
+    Loader {
+        id: recents
+        objectName: "cubeRecents"
+        active: control.tessaCube
+        visible: control.expanded && !control.radialOpen
+        anchors { top: parent.top; left: parent.left; right: parent.right; topMargin: 48; leftMargin: 12; rightMargin: 12 }
+        height: Math.max(188, control.height - 112)
+        opacity: visible ? 1 : 0
+        scale: visible ? 1 : 0.96
+        Behavior on opacity { NumberAnimation { duration: control.reducedMotion ? 0 : 160 } }
+        Behavior on scale { NumberAnimation { duration: control.reducedMotion ? 0 : 180; easing.type: Easing.OutCubic } }
+        sourceComponent: control.recentsComponent
     }
     RowLayout {
         anchors.left: parent.left
         anchors.right: parent.right
-        anchors.top: parent.top
+        anchors.bottom: parent.bottom
         height: 56
         spacing: 0
         visible: control.expanded && !control.radialOpen
