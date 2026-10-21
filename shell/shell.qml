@@ -884,6 +884,7 @@ ShellRoot {
                     id: tapeControl
                     anchors.fill: parent
                     canPan: surface.tapeWorkspace !== null && surface.tapeWorkspace.toplevels.values.filter(w => w.lastIpcObject && !w.lastIpcObject.floating).length > 1
+                    onLauncherRequested: panel.showPage("apps")
                     onStarted: surface.tapeCommand("begin")
                     onCanceled: surface.tapeCommand("cancel")
                     onMoved: delta => surface.tapeCommand(delta)
