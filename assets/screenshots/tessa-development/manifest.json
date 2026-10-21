@@ -1,0 +1,208 @@
+{
+  "kind": "actual-vm-screenshots",
+  "source_revision": "81df93bf4f2f47456aed1ebcccd6c2b3346c7df8",
+  "date": "2026-10-21",
+  "environment": "Existing x86_64 Arch QEMU/KVM guest on MacBookPro15,2; software virtio-vga; Hyprland 0.56.2 efb50993780079460b0cbed1363e2166a2de1d9f; Quickshell 0.3.2; Qt 6.12.0",
+  "capture_method": "grim inside the running guest, copied unchanged over SSH; no generated concepts or image edits",
+  "input": "QEMU virtio multitouch, USB absolute mouse and keyboard; rotation via existing tessera-rotate helper",
+  "files": [
+    {
+      "file": "desktop-cube-expanded.png",
+      "dimensions": [
+        1280,
+        800
+      ],
+      "sha256": "69e785a03f1d2464d28144c5a2dc5d4e86f8f99e6a7e66b6139d0ba2beebb933",
+      "captured_utc": "2026-10-21T17:37:33.306569+00:00"
+    },
+    {
+      "file": "desktop-launcher.png",
+      "dimensions": [
+        1280,
+        800
+      ],
+      "sha256": "cfecb9a630bb25008c0044eef4292f27a5bf35428b7b0ed21f1c40782a758a5f",
+      "captured_utc": "2026-10-21T17:37:29.818491+00:00"
+    },
+    {
+      "file": "desktop-normal-workspace.png",
+      "dimensions": [
+        1280,
+        800
+      ],
+      "sha256": "8b0bcaba8503ad222a70e99a1d20804d1b2fdebdac7c012595411c611cbac94c",
+      "captured_utc": "2026-10-21T17:37:36.617643+00:00"
+    },
+    {
+      "file": "desktop-rotated.png",
+      "dimensions": [
+        800,
+        1280
+      ],
+      "sha256": "33b606922d84dea11f247ab41c1de9d698354c8cd3a809988fc0c29fc588fecc",
+      "captured_utc": "2026-10-21T17:37:41.281746+00:00"
+    },
+    {
+      "file": "phone-app-discovery.png",
+      "dimensions": [
+        390,
+        844
+      ],
+      "sha256": "60ac1227eafae56bf3e1ffa6db4d153690604af84189ee21b6754209f9e2aeac",
+      "captured_utc": "2026-10-21T17:39:23.124011+00:00"
+    },
+    {
+      "file": "phone-app-removed.png",
+      "dimensions": [
+        390,
+        844
+      ],
+      "sha256": "dbd09811b88058ae3c2f3d2efd95607fcf26e55cce6a8a92dc6b7410b8dd4911",
+      "captured_utc": "2026-10-21T17:39:25.267059+00:00"
+    },
+    {
+      "file": "phone-application-dialog.png",
+      "dimensions": [
+        390,
+        844
+      ],
+      "sha256": "c020408331c3ee7ff9ac179e2280bbfdbf416472d3f61760296c3fcbbb069c36",
+      "captured_utc": "2026-10-21T17:38:43.823138+00:00"
+    },
+    {
+      "file": "phone-cube-expanded.png",
+      "dimensions": [
+        390,
+        844
+      ],
+      "sha256": "d1bc07dc64abb4f626a7f2c7b070d5ac8a2479267045c92c45b80e386504f023",
+      "captured_utc": "2026-10-21T17:39:28.817137+00:00"
+    },
+    {
+      "file": "phone-edge-wheel-in-use.png",
+      "dimensions": [
+        390,
+        844
+      ],
+      "sha256": "1bac74cf01eec90a2090f1bfdebdd34e8add268628265ab14049f98270769f79",
+      "captured_utc": "2026-10-21T17:41:09.463370+00:00"
+    },
+    {
+      "file": "phone-fullscreen-cube.png",
+      "dimensions": [
+        390,
+        844
+      ],
+      "sha256": "b57c999330a923018d2ec61cf34e1ec61a6edf8b10d566241e8aedbd78213d05",
+      "captured_utc": "2026-10-21T17:38:00.633177+00:00"
+    },
+    {
+      "file": "phone-fuzzy-search.png",
+      "dimensions": [
+        390,
+        844
+      ],
+      "sha256": "0953824c445ff114323a93d59e32055aae6f24b144ededa629525db10c5d080d",
+      "captured_utc": "2026-10-21T17:39:19.948941+00:00"
+    },
+    {
+      "file": "phone-home.png",
+      "dimensions": [
+        390,
+        844
+      ],
+      "sha256": "20d252ce4f8cbe5f1be7635a1201bf77c1b9e86fbb0bb51fdc140e80ae78624f",
+      "captured_utc": "2026-10-21T17:39:47.062542+00:00"
+    },
+    {
+      "file": "phone-launcher-keyboard.png",
+      "dimensions": [
+        390,
+        844
+      ],
+      "sha256": "ce9a0a9ad74dacf3b224546011de075f853db94e7c0d83435cbd1c9d81180cff",
+      "captured_utc": "2026-10-21T17:41:38.415011+00:00"
+    },
+    {
+      "file": "phone-launcher.png",
+      "dimensions": [
+        390,
+        844
+      ],
+      "sha256": "e030f514ecd90c9f4a847cb3a90297be1128b5869ce8fc9aced1d24932b9a2f5",
+      "captured_utc": "2026-10-21T17:39:17.504886+00:00"
+    },
+    {
+      "file": "phone-narrow-cube-expanded.png",
+      "dimensions": [
+        320,
+        640
+      ],
+      "sha256": "f82d25274c801cd718e2bc9960000a304e644c5602780d7a123ee52181597666",
+      "captured_utc": "2026-10-21T17:36:30.728174+00:00"
+    },
+    {
+      "file": "phone-narrow-launcher.png",
+      "dimensions": [
+        320,
+        640
+      ],
+      "sha256": "461c3a1d05e25e53e70c9747997f672095a93b28ba843a0f19ad00979450a01d",
+      "captured_utc": "2026-10-21T17:36:27.698106+00:00"
+    },
+    {
+      "file": "phone-quick-settings.png",
+      "dimensions": [
+        390,
+        844
+      ],
+      "sha256": "2c6ccc19c9929b5102ec78043bd5aafe60c62d183b3a63bae2d4f7c3000f2f92",
+      "captured_utc": "2026-10-21T17:38:03.992252+00:00"
+    },
+    {
+      "file": "phone-radial-menu.png",
+      "dimensions": [
+        390,
+        844
+      ],
+      "sha256": "b4c384a5ba6b42be21618a0b0e802df1d61297a9c57221462775211dd746b9aa",
+      "captured_utc": "2026-10-21T17:39:30.813182+00:00"
+    },
+    {
+      "file": "phone-recents.png",
+      "dimensions": [
+        390,
+        844
+      ],
+      "sha256": "18f48601ef623486d6e9059f3937a5dc02b94797185f3acc76eae428fcb5b8b8",
+      "captured_utc": "2026-10-21T17:39:34.764269+00:00"
+    },
+    {
+      "file": "phone-two-scrolling-windows.png",
+      "dimensions": [
+        390,
+        844
+      ],
+      "sha256": "1bac74cf01eec90a2090f1bfdebdd34e8add268628265ab14049f98270769f79",
+      "captured_utc": "2026-10-21T17:41:09.108362+00:00"
+    },
+    {
+      "file": "tablet-cube-expanded.png",
+      "dimensions": [
+        1024,
+        768
+      ],
+      "sha256": "4f88487d4ec0cac9b4dcc8523be27db58c094517fe67fac687386b02f6994fc2",
+      "captured_utc": "2026-10-21T17:36:43.825466+00:00"
+    },
+    {
+      "file": "tablet-launcher.png",
+      "dimensions": [
+        1024,
+        768
+      ],
+      "sha256": "60dbd6749c5e7c00632ff83064bc9bd3df8b6e2f03860497dba09e662e119f5d",
+      "captured_utc": "2026-10-21T17:36:40.737397+00:00"
+    }
+  ]
+}

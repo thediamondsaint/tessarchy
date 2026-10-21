@@ -2420,3 +2420,71 @@ physical input or multi-output acceptance. Source checks and package generation
 do not establish those results or ISO boot acceptance. OnlyShowIn/NotShowIn/
 TryExec and terminal Exec compatibility remain the upstream limitations recorded
 in docs/start-menu-installed-apps.md.
+
+## Operation Tessa integration — 2026-10-21
+
+Implementation revision `81df93b`, branch `feat/operation-tessa`, starts from
+#85 on #61 and integrates #58. #84, #63 and #64 were reviewed; the independent
+tablet split and general auto-hide PRs remain untouched. Existing conflicted
+and modified checkouts were preserved in separate directories.
+
+Host `./scripts/check.sh` passed: 221 Python tests, 94 Qt Quick results and
+11 Node tests; QML lint and Hyprland session/greeter config verification passed.
+Fish and ShellCheck were unavailable. The existing FilePicker PanelWindow
+creatability warning remains. `git diff --check` passed. Tests include actual
+Qt mouse/touch events, radial action selection, launcher search, keyboard and
+reopen behavior, native DesktopEntries install/metadata/hide/removal monitoring,
+workspace guards and bridge/fallback behavior.
+
+The existing MacBookPro15,2 development disk booted through `run-basic-vm.sh`
+with KVM, software virtio-vga, 1536MiB RAM, two vCPUs, opt-in loopback SSH and
+virtio multitouch. Its existing local QEMU module workaround was reused.
+No host desktop configuration, disk formatting or dependency installation was
+performed. Guest shell, session and preferences were backed up before staging
+the new shell. Installation was first exercised in a scratch guest HOME.
+The guest has Hyprland 0.56.2 (`efb50993780079460b0cbed1363e2166a2de1d9f`),
+Quickshell 0.3.2 and Qt 6.12.0. The optional bridge was compiled on the host
+against the identical compositor ABI, then loaded in the guest; the guest has
+no C++ compiler. Guest compositor config errors were empty.
+
+| Guest check | Observed result |
+| --- | --- |
+| Cube | Real multitouch expand, radial opening/center cancel, idle collapse; absolute mouse click retained app focus |
+| Launcher | Responsive grid; `ffx` finds Firefox; type/arrows/Enter opens an existing Foot; Escape dismisses; Super+Space opens it |
+| App discovery | Added a user-installed `.desktop` entry for an existing executable; entry appeared without restarting the shell and disappeared after removal; no pacman/Flatpak/Snap installation claimed |
+| Native horizontal scrolling | Two live Foot windows remained 390×796 with zero bottom dock reservation; positive drag translated both full-width columns |
+| Focus and release | Focus remained on Notes during movement; release snapped to Terminal at x=0; a held drag showed both windows clipped by the output |
+| Bridge fallback | Unloaded bridge; 240px touch drag stepped to the previous window; bridge restored afterward |
+| Radial menu | Recents and center cancel exercised in the VM; all six action signals covered by Qt tests |
+| OSK | Real Squeekboard appeared on launcher text focus; launcher search remained visible above it; cube stayed above keyboard surface |
+| Quick Settings / Recents | Existing Quick Settings IPC opened/dismissed drawer; radial action opened Recents with both applications; side Back dismissed it |
+| Responsive layouts | Actual outputs 320×640, 390×844, 1024×768 and 1280×800; grid and cube fitted; normal Desktop taskbar remained available outside tape |
+| Rotation | Existing `tessera-rotate cycle` produced transform 1, then reset succeeded; original 390×844 preferences restored |
+| Fullscreen | Real native exclusive fullscreen reported mode 2; cube stayed available; returned to normal |
+| Dialog | Real GTK modal transient floated at 390×179 within phone bounds; OK dismissed dialog and test parent |
+| Exit / reentry | Returned to preceding workspace, restored normal navigation, then reentered with both windows retained |
+
+Actual, unedited guest screenshots and hashes are in
+[assets/screenshots/tessa-development](../assets/screenshots/tessa-development/README.md).
+QEMU's direct display capture showed corruption at the custom phone mode;
+compositor `grim` captures were inspected and render correctly. Mesa reports no
+DRM render node and Quickshell falls back to SHM; live Recents preview coverage
+is incomplete in this software-rendered guest. Optional BlueZ is absent. No QML
+load failure remains; Wayland text-input disable warnings were observed during
+panel changes.
+
+Physical phone/tablet touch latency, inertia feel, palm rejection, sensor-driven
+rotation, physical OSK behavior, multiple outputs, accelerated live previews,
+XWayland dialogs, real fullscreen video, and package-manager/Flatpak/Snap export
+installation remain manual acceptance work. Virtual touch and output transforms
+do not establish physical-device acceptance. No new ISO boot or release claim
+is made. The scrolling interface remains opt-in and the integration PR is draft.
+
+Guest `./scripts/check.sh` ran all 221 Python tests but stopped with four
+environment failures: VM/export scratch copies exceeded the guest `/tmp` quota,
+and two ISO staging cases require `make`, which is absent. Two pre-existing
+optional tests were skipped. No dependency was installed. A separate guest run
+with disk-backed scratch space passed all six tape/Lua tests, the native live
+DesktopEntries integration test, and all 94 Qt Quick results. The complete host
+suite above remains the full-suite pass; the guest-wide suite is not claimed
+as passing. Host/guest logs are retained in the ignored development `build/`.

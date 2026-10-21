@@ -7,6 +7,10 @@ that adapts from phone-sized screens to tablets and desktops. Its Quiet Edge
 design uses shallow glass, mint accents, a glacier wallpaper and floating icon
 navigation.
 
+The experimental [Tessa scrolling interface](docs/tessa-integration.md) adds a
+floating cube, edge wheel, radial actions and searchable launcher. Use Super+T
+to enter or leave its dedicated workspace, and Super+Space to open applications.
+
 [Website](https://thediamondsaint.github.io/tessarchy/) ·
 [Tester ISO](https://github.com/thediamondsaint/tessarchy/releases/tag/v0.1.0-alpha.4) ·
 [Agent workspace](AGENT-README.md) · [Contributing](CONTRIBUTING.md) ·
