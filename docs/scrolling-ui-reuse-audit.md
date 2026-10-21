@@ -42,3 +42,11 @@ Phone/tablet: real app windows scroll horizontally as windows, not cards. Replac
 ## Verification boundary
 
 This commit is a design and integration audit only. External candidate source files/licenses have not been fetched or vetted, and no code has been copied. No test, VM run, or live device change is claimed. Do not use Hermes's time/token estimate as a measured budget.
+
+## Naming and cost policy (owner decision)
+
+- **Tessarchy** is the OS/distribution/installer/ISO/project identity.
+- **Tessa** is the desktop environment: shell, launcher, panels, navigation, theme and user-facing UI.
+- Prefer changing user-visible strings first; preserve internal names, package IDs and IPC identifiers unless a migration is necessary.
+- Token discipline: inspect exact files and diffs, avoid repeated full-repository reads, reuse existing code and upstream APIs, implement in small increments, and run focused tests before the full suite.
+- Open-source reuse requires verifying the actual source version and license, preserving attribution and complying with redistribution terms. Do not blindly copy incompatible or unlicensed code.
