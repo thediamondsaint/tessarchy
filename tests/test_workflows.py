@@ -117,7 +117,9 @@ class Workflows(unittest.TestCase):
         for action in ('back', 'home', 'recents'):
             self.assertIn(f'onClicked: panel.navigate("{action}")', shell)
         self.assertEqual(shell.count('onGesture: action => panel.navigate(action)'), 2)
-        self.assertEqual(shell.count('visible: !surface.gestures'), 3)
+        self.assertEqual(shell.count('visible: !surface.gestures'), 2)
+        recents = shell[shell.index('text: surface.mode === "desktop" ? "Windows" : "Recents"') - 85:]
+        self.assertNotIn('visible: !surface.gestures', recents[:85])
         self.assertIn('shown: shellPreferences.showGestureHandle', shell)
         self.assertIn('visible: surface.gestures', shell)
         self.assertIn('value: "buttons"', settings)

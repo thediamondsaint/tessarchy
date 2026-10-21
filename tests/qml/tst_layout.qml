@@ -29,14 +29,14 @@ TestCase {
         compare(Policy.dockLayout("tablet", 800, true).columns, 6);
         compare(Policy.dockLayout("tablet", 800, true).rows, 1);
     }
-    // Gesture mode leaves Phone, Messages and the optional Keyboard in the dock.
-    function test_gesture_dock_drops_back_home_and_recents() {
+    // Gestures leave a visible Recents entry alongside Phone and Messages.
+    function test_gesture_dock_keeps_recents_without_back_and_home() {
         for (const mode of ["phone", "tablet"]) {
             const width = mode === "phone" ? 400 : 800;
             const gestures = Policy.gestureNavigation(mode, "gestures");
             verify(gestures);
-            compare(Policy.dockLayout(mode, width, true, gestures).columns, 3);
-            compare(Policy.dockLayout(mode, width, false, gestures).columns, 2);
+            compare(Policy.dockLayout(mode, width, true, gestures).columns, 4);
+            compare(Policy.dockLayout(mode, width, false, gestures).columns, 3);
             const buttons = Policy.gestureNavigation(mode, "buttons");
             verify(!buttons);
             compare(Policy.dockLayout(mode, width, true, buttons).columns, 6);

@@ -694,7 +694,7 @@ ShellRoot {
                             onClicked: Quickshell.execDetached(["tessarchy-osk", "toggle"])
                         }
                         NavButton {
-                            // Gesture navigation replaces Back, Home and Recents.
+                            // Gesture navigation replaces Back and Home only.
                             visible: !surface.gestures
                             text: "Back"
                             symbol: "back"
@@ -713,7 +713,6 @@ ShellRoot {
                             onClicked: panel.navigate("home")
                         }
                         NavButton {
-                            visible: !surface.gestures
                             text: surface.mode === "desktop" ? "Windows" : "Recents"
                             symbol: "recents"
                             showLabel: shellPreferences.showLabels
