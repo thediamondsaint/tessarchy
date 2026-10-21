@@ -642,11 +642,11 @@ hl = {
 dofile(arg[1])
 callbacks["hyprland.start"]()
 local share = os.getenv("TESSARCHY_DATA_DIR")
-assert(commands[1] == "tessarchy-session-services" and commands[2] == "tessera-shell" and commands[3] == "tessarchy-osk start",
+assert(commands[1] == "tessarchy-session-services" and commands[2] == "tessarchy-osk start",
        table.concat(commands, ","))
-assert(commands[4] == "hypridle -c '" .. share .. "/session/hypridle.conf'",
-       tostring(commands[4]))
-assert(#commands == 4, "unexpected extra autostart commands")
+assert(commands[3] == "hypridle -c '" .. share .. "/session/hypridle.conf'",
+       tostring(commands[3]))
+assert(#commands == 3, "unexpected extra autostart commands")
 '''
         env = dict(self.env, TESSARCHY_DATA_DIR=str(self.home / 'data'))
         result = subprocess.run(['lua', '-', str(ROOT / 'session/hyprland.lua')],
@@ -1355,7 +1355,7 @@ reload)
     [ -n "${STUB_KEEP_RELOAD:-}" ] && exit 0
     config=${XDG_CONFIG_HOME:-$HOME/.config}/tessarchy/display.lua
     if [ -f "$config" ]; then
-        sed -n 's/.*transform = \\([0-9]*\\).*/\\1/p' "$config" > "$state"
+        sed -n '/hl.monitor/s/.*transform = \\([0-9]*\\).*/\\1/p' "$config" > "$state"
     else
         echo 0 > "$state"
     fi
@@ -1387,14 +1387,32 @@ esac
         self.assertIn('position = "0x0"', first)
         self.assertIn('scale = 1.00', first)
         self.assertIn('transform = 1', first)
+        self.assertIn('hl.config({ input = { touchdevice = { transform = 1 } } })', first)
         self.assertEqual(state.read_text(), '1\n')
         result = subprocess.run(command + ['cycle', 'eDP-1'], env=env, capture_output=True, text=True)
         self.assertEqual(result.returncode, 0, result.stderr)
         second = display.read_text()
         self.assertIn('transform = 2', second)
+        self.assertIn('hl.config({ input = { touchdevice = { transform = 2 } } })', second)
         self.assertNotIn('transform = 1', second)
         self.assertEqual(second.count('hl.monitor('), 1)
         self.assertEqual(preferences.read_text(), '-- mine\n')
+
+    def test_rotation_explicit_angles_and_noop(self):
+        env, state = self.rotation_tools()
+        command = [str(ROOT / 'session/tessera-rotate')]
+        display = self.home / 'config/tessarchy/display.lua'
+        for angle in (1, 2, 3, 0):
+            result = subprocess.run(command + [str(angle), 'eDP-1'], env=env, capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(state.read_text(), f'{angle}\n')
+            rule = display.read_text()
+            self.assertIn(f'transform = {angle} }})', rule)
+            self.assertIn(f'touchdevice = {{ transform = {angle} }}', rule)
+            before = display.stat().st_mtime_ns
+            again = subprocess.run(command + [str(angle), 'eDP-1'], env=env, capture_output=True, text=True)
+            self.assertEqual(again.returncode, 0, again.stderr)
+            self.assertEqual(display.stat().st_mtime_ns, before)
 
     def test_rotation_helper_restores_state_when_reload_does_not_apply(self):
         env, _ = self.rotation_tools(keep_reload=True)

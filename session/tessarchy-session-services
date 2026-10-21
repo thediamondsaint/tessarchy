@@ -3,11 +3,21 @@
 set -euo pipefail
 [[ -n ${WAYLAND_DISPLAY:-} && -n ${HYPRLAND_INSTANCE_SIGNATURE:-} ]] || exit 0
 if command -v dbus-update-activation-environment >/dev/null; then
-    dbus-update-activation-environment --systemd WAYLAND_DISPLAY HYPRLAND_INSTANCE_SIGNATURE XDG_CURRENT_DESKTOP XDG_SESSION_TYPE || true
+    dbus-update-activation-environment --systemd WAYLAND_DISPLAY HYPRLAND_INSTANCE_SIGNATURE XDG_CURRENT_DESKTOP XDG_SESSION_TYPE TESSARCHY_DATA_DIR || true
 fi
+# Import the compositor environment before starting the supervised shell.
+# Development installs without a user unit still launch the shell directly.
+shell_service() {
+    command -v systemctl >/dev/null && systemctl --user cat tessera-shell.service >/dev/null 2>&1 || return 1
+    systemctl --user reset-failed tessera-shell.service 2>/dev/null || true
+    systemctl --user restart tessera-shell.service && systemctl --user is-active --quiet tessera-shell.service
+}
+shell_service || tessera-shell &
 if command -v xdg-user-dirs-update >/dev/null; then xdg-user-dirs-update; fi
 if command -v systemctl >/dev/null && systemctl --user cat hyprpolkitagent.service >/dev/null 2>&1; then
     systemctl --user start hyprpolkitagent.service || true
 fi
 if command -v nm-applet >/dev/null; then nm-applet --indicator & fi
+# A missing sensor proxy is optional; a transiently ended stream is retried.
+if command -v tessarchy-autorotate >/dev/null; then tessarchy-autorotate & fi
 wait

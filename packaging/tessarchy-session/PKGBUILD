@@ -7,7 +7,8 @@ license=('MIT' 'GPL-3.0-or-later')
 depends=('tessera-shell=0.1.0' 'hyprland>=0.56' 'hypridle' 'dbus' 'firefox' 'foot' 'ttf-dejavu' 'grim' 'libnotify')
 optdepends=('squeekboard: on-screen keyboard for touch text input'
             'brightnessctl: screen backlight control' 'hyprsunset: night light'
-            'tessarchy-portal: touch file dialogs on Phone/Tablet')
+            'tessarchy-portal: touch file dialogs on Phone/Tablet'
+            'iio-sensor-proxy: automatic rotation from the accelerometer')
 source=("tessarchy-$pkgver.tar.gz")
 sha256sums=('SKIP')
 package() {
@@ -23,6 +24,8 @@ package() {
     install -Dm755 "$srcdir/session/tessera-brightness" "$pkgdir/usr/bin/tessera-brightness"
     install -Dm755 "$srcdir/session/tessera-nightlight" "$pkgdir/usr/bin/tessera-nightlight"
     install -Dm755 "$srcdir/session/tessera-rotate" "$pkgdir/usr/bin/tessera-rotate"
+    install -Dm755 "$srcdir/session/tessarchy-autorotate" "$pkgdir/usr/bin/tessarchy-autorotate"
+    install -Dm644 "$srcdir/session/tessera-shell.service" "$pkgdir/usr/lib/systemd/user/tessera-shell.service"
     install -Dm755 "$srcdir/session/tessarchy-osk" "$pkgdir/usr/bin/tessarchy-osk"
     install -Dm755 "$srcdir/session/tessarchy-theme" "$pkgdir/usr/bin/tessarchy-theme"
     install -Dm755 "$srcdir/session/tessarchy-run" "$pkgdir/usr/bin/tessarchy-run"

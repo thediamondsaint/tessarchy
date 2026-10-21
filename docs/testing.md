@@ -1,5 +1,17 @@
 # Validation and manual acceptance
 
+## Session runtime port, 2026-10-21
+
+Ported rotation/touch and sensor retry, plus shell user-service supervision,
+onto upstream `e52ff9e` without replacing its window policy or packaging.
+`./scripts/check.sh` passed: 219 Python tests (one existing skip), Node tests,
+Qt checks, Lua syntax and Hyprland config verification; QML lint returned zero
+with unresolved-type warnings. Fake sensor-stream tests covered four rotations,
+retry backoff and compositor-socket exit; fake systemctl tests covered service
+startup, missing-unit fallback and failed-restart fallback. ISO staging is
+covered by the existing scratch-profile test. No ISO was built or booted; no
+hardware rotation or service recovery was verified on a live device.
+
 ## Theme picker layout fix, 2026-10-19
 
 Branch `feat/theme-extras` on `49728ce`. Executed by an agent in the running

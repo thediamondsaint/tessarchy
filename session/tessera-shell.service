@@ -1,0 +1,14 @@
+[Unit]
+Description=Tessera shell (status bar, home screen, pill and switcher)
+# Started after session services imports the compositor environment.
+StartLimitIntervalSec=60
+StartLimitBurst=5
+
+[Service]
+Type=simple
+# Skip startup when the compositor that started us has exited.
+ExecCondition=/bin/sh -c 'test -S "$${XDG_RUNTIME_DIR}/hypr/$${HYPRLAND_INSTANCE_SIGNATURE}/.socket.sock"'
+ExecStart=/usr/bin/tessera-shell
+Restart=on-failure
+RestartForceExitStatus=SIGTERM SIGINT SIGHUP
+RestartSec=1

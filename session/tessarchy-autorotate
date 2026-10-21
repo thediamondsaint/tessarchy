@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+# Follow accelerometer orientation inside the active graphical session.
+set -euo pipefail
+[[ -n ${HYPRLAND_INSTANCE_SIGNATURE:-} ]] || exit 0
+command -v monitor-sensor >/dev/null || { echo "monitor-sensor (iio-sensor-proxy) missing" >&2; exit 0; }
+
+output=${TESSARCHY_ROTATE_OUTPUT:-$(hyprctl monitors | awk '$1 == "Monitor" && $2 ~ /^(eDP|DSI|LVDS)/ { print $2; exit }')}
+[[ -n $output ]] || { echo "No built-in display; not auto-rotating" >&2; exit 0; }
+
+# iio-sensor-proxy applies the device mounting correction before naming edges.
+transform_for() {
+    case $1 in
+        normal) echo 0 ;;
+        left-up) echo 1 ;;
+        bottom-up) echo 2 ;;
+        right-up) echo 3 ;;
+        *) return 1 ;;  # Flat or unknown: preserve the current orientation.
+    esac
+}
+
+# Session exec commands otherwise discard stdout/stderr.
+if [[ -z ${TESSARCHY_AUTOROTATE_LOGGED:-} ]] && command -v systemd-cat >/dev/null; then
+    export TESSARCHY_AUTOROTATE_LOGGED=1
+    exec systemd-cat --identifier=tessarchy-autorotate "$0" "$@"
+fi
+
+follow() {
+    stdbuf -oL monitor-sensor --accel | while IFS= read -r line; do
+        case $line in
+            *"orientation changed: "*) orientation=${line##*: } ;;
+            *"Has accelerometer (orientation: "*) orientation=${line#*orientation: }; orientation=${orientation%%,*}; orientation=${orientation%%)*} ;;
+            *) continue ;;
+        esac
+        echo "orientation: $orientation"
+        transform=$(transform_for "$orientation") || continue
+        tessera-rotate "$transform" "$output" || echo "tessera-rotate $transform failed" >&2
+    done
+}
+
+# A refused sensor claim can exit successfully; retry until Hyprland exits.
+socket=${XDG_RUNTIME_DIR:-/run/user/$UID}/hypr/$HYPRLAND_INSTANCE_SIGNATURE/.socket.sock
+delay=2
+while [[ -S $socket ]]; do
+    started=$SECONDS
+    follow || true
+    (( SECONDS - started > 60 )) && delay=2
+    [[ -S $socket ]] || break
+    echo "monitor-sensor ended; retrying in ${delay}s" >&2
+    sleep "$delay"
+    (( delay < 60 )) && delay=$(( delay * 2 ))
+done

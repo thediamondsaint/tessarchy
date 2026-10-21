@@ -201,7 +201,7 @@ hl.on("layer.closed", refit_after_layers)
 hl.on("window.active", maximize_if_mobile)
 hl.on("hyprland.start", function ()
     hl.exec_cmd("tessarchy-session-services")
-    hl.exec_cmd("tessera-shell")
+    -- Session services imports the display environment and starts the shell.
     -- Optional; exits quietly when squeekboard is not installed.
     hl.exec_cmd("tessarchy-osk start")
     -- Blank the panel after five minutes without input; input wakes it back.
@@ -222,7 +222,7 @@ hl.bind("Print", hl.dsp.exec_cmd("tessera-screenshot"))
 hl.bind("SUPER + Return", hl.dsp.exec_cmd("tessarchy-run foot"))
 hl.bind("SUPER + F", hl.dsp.window.fullscreen({ mode = "maximized", action = "toggle" }))
 hl.bind("SUPER + SHIFT + F", hl.dsp.window.fullscreen({ mode = "fullscreen", action = "toggle" }))
-hl.bind("SUPER + SHIFT + R", hl.dsp.exec_cmd("tessera-shell"))
+hl.bind("SUPER + SHIFT + R", hl.dsp.exec_cmd("systemctl --user restart tessera-shell.service || tessera-shell"))
 hl.bind("SUPER + SHIFT + E", hl.dsp.exec_cmd("tessera-shell ipc call actions endSession"))
 -- Desktop mode: numbered workspaces, directional focus and window moving.
 -- These bindings are harmless in the touch layouts and mirror the workspace
