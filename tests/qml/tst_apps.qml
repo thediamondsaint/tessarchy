@@ -3,17 +3,22 @@ import QtTest
 import "../../shell/AppPolicy.js" as Apps
 
 TestCase {
-    name: "PrimaryApplications"
+    name: "InstalledApplications"
     function entry(id, hidden) { return {id: id, name: id, noDisplay: !!hidden, command: ["test"]}; }
-    function test_primary_roles_exclude_helpers_and_duplicate_browsers() {
-        const entries = [entry("nm-applet"), entry("qt6ct"), entry("chromium"), entry("firefox.desktop"), entry("org.gnome.Nautilus"), entry("foot"), entry("blueman-manager"), entry("org.gnome.Calculator", true)];
-        const selected = Apps.majorApplications(entries).map(e => e.id);
-        compare(selected.join(","), "firefox.desktop,org.gnome.Nautilus,blueman-manager,foot");
+    function test_all_launchable_apps_include_unknown_and_multiple_browsers() {
+        const entries = [entry("chromium"), entry("firefox.desktop"), entry("new-app"), entry("org.gnome.Calculator", true)];
+        compare(Apps.applications(entries).map(e => e.id).join(","), "chromium,firefox.desktop,new-app");
     }
-    function test_missing_and_hidden_apps_use_installed_alternatives() {
-        const browser = entry("chromium");
-        compare(Apps.majorApplications([entry("firefox", true), browser])[0], browser);
-        compare(Apps.majorApplications([]).length, 0);
-        compare(Apps.majorApplications([{id: "firefox", command: []}]).length, 0);
+    function test_empty_and_unlaunchable_entries() {
+        compare(Apps.applications([]).length, 0);
+        compare(Apps.applications([null, {id: "firefox", name: "Firefox", command: []}]).length, 0);
+    }
+    function test_categories_keep_each_app_once() {
+        const app = entry("editor");
+        app.categories = ["Development", "Utility"];
+        compare(Apps.category(app), "Development");
+        const rows = Apps.menuRows([entry("unknown"), app]);
+        compare(rows.filter(r => r.heading).map(r => r.name).join(","), "Development,Other");
+        compare(rows.filter(r => !r.heading).length, 2);
     }
 }

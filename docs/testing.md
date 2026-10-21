@@ -2377,3 +2377,46 @@ PanelWindow creatability warning. `git diff --check` passed.
 
 Tested implementation revision: `2dc361a`. The mid-drag capture was refreshed
 from that source after the full checks passed.
+
+## Start installed-application inventory, 2026-10-20
+
+PR #58 removes the primary-role whitelist, uses Quickshell's eligible inventory,
+sorts names and groups Desktop Start by category with Other fallback. Existing
+Start tiles, ScrollView, icon lookup and execution are reused. Native model and
+metadata notifications drive updates; no polling or scanner added. Stable desktop
+IDs retain unaffected tile objects and focused selections during row changes.
+Enter/Return activation, missing/broken icon fallback and empty-menu focus are
+covered by the implementation. Shared Phone/Tablet inventories become complete
+and alphabetical.
+
+Verified source commit: 73031822db8116a88a9a085ab29e7a5a0d8ffca0.
+[Source checks run](https://github.com/thediamondsaint/tessarchy/actions/runs/39425133957):
+
+- Ubuntu and Arch source-check jobs passed ./scripts/check.sh.
+- Arch: 199 Python tests completed, one GObject metadata test skipped; 67 Qt
+  Quick results passed; available QML lint, Hyprland config, Lua, fish and
+  ShellCheck checks passed. Tablet package generation and artifact upload passed.
+- Native Quickshell integration passed on Arch: isolated existing XDG application
+  directory, initial discovery, new desktop entry outside the old whitelist,
+  atomic rename/icon/category changes, NoDisplay masking and removal. This uses
+  real filesystem notifications and application-model updates, without a timer
+  or mocked inventory. The harness imports copied source inside its isolated
+  configuration root, following Quickshell's import boundary.
+- Ubuntu: 199 Python tests completed with unavailable-service/runtime skips;
+  67 Qt Quick results and all 10 Node policy/website tests passed.
+- Policy regressions cover unknown IDs, multiple browsers, nonlaunchable entries,
+  distinct IDs with equal names, category ordering/fallback, additions/removals,
+  metadata changes, stable row identity, no-op refreshes and 500 applications.
+- Qt component coverage includes focused app retention, removal recovery, metadata
+  updates, Enter launch signals and minimum target dimensions.
+- Local git diff --check and the same 10 Node tests passed. Local full Python
+  execution is restricted by root/socket permissions; an updater-status test
+  failure also reproduces on unchanged main here. CI's isolated environment
+  passed, so the local limitations are not reported as launcher regressions.
+
+Not performed: visual VM review, actual package installation/removal in a running
+interactive session, Flatpak/Snap export discovery, directory-watcher edge cases,
+physical input or multi-output acceptance. Source checks and package generation
+do not establish those results or ISO boot acceptance. OnlyShowIn/NotShowIn/
+TryExec and terminal Exec compatibility remain the upstream limitations recorded
+in docs/start-menu-installed-apps.md.

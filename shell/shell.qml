@@ -18,6 +18,19 @@ import "AppPolicy.js" as Apps
 
 ShellRoot {
     id: root
+    property int applicationRevision: 0
+    readonly property var appEntries: {
+        root.applicationRevision;
+        return Apps.applications(DesktopEntries.applications.values);
+    }
+    Connections {
+        target: DesktopEntries
+        function onApplicationsChanged() { root.applicationRevision++; }
+    }
+    function launchApplication(id) {
+        const entry = DesktopEntries.byId(id);
+        if (entry && !entry.noDisplay && entry.command.length > 0) entry.execute();
+    }
     signal controlsRequested
     IpcHandler {
         target: "controls"
@@ -308,7 +321,7 @@ ShellRoot {
             PanelWindow {
                 id: panel
                 screen: surface.modelData
-                readonly property var appEntries: Apps.majorApplications(DesktopEntries.applications.values)
+                readonly property var appEntries: root.appEntries
                 property string page: ""
                 // Desktop Start menu, opened by the taskbar's Start button.
                 property bool startMenuOpen: false
@@ -509,7 +522,7 @@ ShellRoot {
                                                 accentColor: root.accentColor
                                                 onClicked: {
                                                     panel.page = "";
-                                                    modelData.execute();
+                                                    root.launchApplication(modelData.id);
                                                 }
                                             }
                                         }
@@ -1270,9 +1283,8 @@ ShellRoot {
                 id: startMenu
                 screen: surface.modelData
                 visible: surface.isPrimaryScreen && surface.mode === "desktop" && panel.startMenuOpen
-                readonly property int gridColumns: 4
-                readonly property int rows: Math.ceil(panel.appEntries.length / gridColumns)
-                readonly property int gridHeight: Math.min(rows * 92, 300)
+                readonly property int gridHeight: Math.min(Math.max(startApplications.implicitHeight, 56),
+                    Math.max(56, Math.min(360, surface.modelData.height - surface.navHeight - 126)))
                 anchors {
                     bottom: true
                     left: true
@@ -1291,9 +1303,8 @@ ShellRoot {
                 onVisibleChanged: {
                     if (visible) Qt.callLater(() => {
                         if (!startMenu.visible) return;
-                        const first = startApplications.itemAt(0);
-                        if (first) first.forceActiveFocus();
-                        else startContent.forceActiveFocus();
+                        startContent.forceActiveFocus();
+                        startApplications.focusApp(startApplications.focusedAppId);
                     });
                 }
                 HyprlandFocusGrab {
@@ -1343,29 +1354,27 @@ ShellRoot {
                             }
                         }
                         ScrollView {
+                            id: startScroll
                             Layout.fillWidth: true
                             Layout.preferredHeight: startMenu.gridHeight
                             clip: true
                             contentWidth: availableWidth
-                            GridLayout {
-                                width: parent.width
-                                columns: startMenu.gridColumns
-                                columnSpacing: 8
-                                rowSpacing: 8
-                                Repeater {
-                                    id: startApplications
-                                    model: panel.appEntries
-                                    delegate: StartMenuTile {
-                                        required property var modelData
-                                        text: modelData.name
-                                        symbol: "browser"
-                                        iconSource: Quickshell.iconPath(modelData.icon, true)
-                                        accentColor: root.accentColor
-                                        onClicked: {
-                                            panel.startMenuOpen = false;
-                                            modelData.execute();
-                                        }
-                                    }
+                            StartAppGrid {
+                                id: startApplications
+                                width: startScroll.availableWidth
+                                applications: panel.appEntries
+                                accentColor: root.accentColor
+                                iconPath: name => Quickshell.iconPath(name, true)
+                                onLaunchRequested: appId => {
+                                    panel.startMenuOpen = false;
+                                    root.launchApplication(appId);
+                                }
+                                onTileFocused: tile => {
+                                    const view = startScroll.contentItem;
+                                    const top = tile.mapToItem(startApplications, 0, 0).y;
+                                    if (top < view.contentY) view.contentY = top;
+                                    else if (top + tile.height > view.contentY + view.height)
+                                        view.contentY = top + tile.height - view.height;
                                 }
                             }
                         }
