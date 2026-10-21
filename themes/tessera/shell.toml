@@ -1,6 +1,7 @@
 # Tessa-only semantic overrides; optional for any Omarchy palette.
 # Qt color strings use #AARRGGBB for translucent fills.
 [tessera]
+wheel_glow = "#72cfff"
 glass = "#501c2c43"
 glass_border = "#504d687d"
 glass_strong = "#c2101b30"

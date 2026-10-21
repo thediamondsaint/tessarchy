@@ -424,13 +424,24 @@ ColumnLayout {
         Layout.fillWidth: true
         wrapMode: Text.WordWrap
     }
+    Text { text: "WINDOW WHEEL"; color: page.accentColor; Layout.fillWidth: true }
+    Repeater {
+        model: [{label: "Bottom slider", value: "bottom"}, {label: "Left edge wheel", value: "left"}, {label: "Right edge wheel", value: "right"}]
+        delegate: TouchButton {
+            required property var modelData
+            Layout.fillWidth: true
+            text: modelData.label
+            selected: page.preferences.wheelStyle === modelData.value
+            onClicked: page.preferences.wheelStyle = modelData.value
+        }
+    }
     TouchButton {
         text: "Try Window Tape"
         Layout.fillWidth: true
         onClicked: page.tapeRequested()
     }
     Text {
-        text: "Preview: new apps open side by side in a separate scrolling workspace. Drag the tape handle to browse. Super+T returns here; use workspace controls to leave."
+        text: "Preview: new apps open side by side in a separate scrolling workspace. Drag the illuminated wheel to browse. Super+T returns here; use workspace controls to leave."
         color: Theme.textMuted
         font.pixelSize: 12
         Layout.fillWidth: true

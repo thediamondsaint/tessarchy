@@ -14,6 +14,13 @@ TestCase {
         WindowTapeControl {
             width: implicitWidth
             height: implicitHeight
+        }
+    }
+    Component {
+        id: wheelFactory
+        EdgeWheel {
+            width: implicitWidth
+            height: implicitHeight
             property var movements: []
             property int finishes: 0
             onMoved: delta => movements = movements.concat([delta])
@@ -36,7 +43,7 @@ TestCase {
         compare(control.implicitWidth, 304);
     }
     function test_drag_coalesces_and_settles_without_reversing() {
-        const control = createTemporaryObject(factory, test, {expanded: true});
+        const control = createTemporaryObject(wheelFactory, test);
         const area = findChild(control, "tapeDrag");
         mousePress(area, 120, 24);
         mouseMove(area, 90, 24, 5);
@@ -48,25 +55,32 @@ TestCase {
         compare(control.movements.reduce((sum, value) => sum + value, 0), -60);
     }
     function test_hidden_control_discards_pending_movement() {
-        const control = createTemporaryObject(factory, test, {expanded: true});
+        const control = createTemporaryObject(wheelFactory, test);
         control.pending = 99;
         control.visible = false;
         wait(30);
         compare(control.pending, 0);
         compare(control.movements.length, 0);
-        compare(control.expanded, false);
     }
-    function test_idle_does_not_hide_under_finger() {
-        const control = createTemporaryObject(factory, test, {expanded: true, hideDelay: 80});
+    function test_vertical_drag_and_rotation_cancel() {
+        const control = createTemporaryObject(wheelFactory, test, {placement: "left"});
         const area = findChild(control, "tapeDrag");
-        mousePress(area, 80, 24);
-        wait(180);
-        compare(control.expanded, true);
-        mouseRelease(area, 80, 24);
-        tryCompare(control, "expanded", false, 500);
+        mousePress(area, 24, 120);
+        mouseMove(area, 24, 60, 5);
+        mouseRelease(area, 24, 60);
+        compare(control.movements.reduce((sum, value) => sum + value, 0), -60);
+        compare(control.finishes, 1);
+        mousePress(area, 24, 120);
+        mouseMove(area, 24, 90, 1);
+        control.placement = "right";
+        compare(control.pending, 0);
+        mouseMove(area, 24, 60, 1);
+        mouseRelease(area, 24, 60);
+        compare(control.finishes, 1);
+        compare(control.movements.reduce((sum, value) => sum + value, 0), -60);
     }
     function test_touch_drag_preserves_direction_and_releases_once() {
-        const control = createTemporaryObject(factory, test, {expanded: true});
+        const control = createTemporaryObject(wheelFactory, test);
         const area = findChild(control, "tapeDrag");
         const sequence = touchEvent(control);
         sequence.press(0, area, 120, 24).commit();

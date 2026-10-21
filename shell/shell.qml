@@ -93,6 +93,7 @@ ShellRoot {
         // "gestures" swipes for Back/Home/Recents on Phone and Tablet;
         // "buttons" keeps them in the dock.
         property string navigation: "gestures"
+        property string wheelStyle: "bottom"
         // The gesture handle pill above the bottom edge.
         property bool showGestureHandle: true
         property bool use24Hour: true
@@ -849,9 +850,11 @@ ShellRoot {
                 screen: surface.modelData
                 visible: surface.tapeActive && !panel.expanded
                 anchors.bottom: true
+                anchors.left: !tapeControl.expanded
+                margins.left: 8
                 implicitWidth: tapeControl.implicitWidth
                 implicitHeight: tapeControl.implicitHeight
-                margins.bottom: 8
+                margins.bottom: tapeControl.expanded ? 88 : 16
                 exclusiveZone: 0
                 color: "transparent"
                 WlrLayershell.namespace: "tessera-tape"
@@ -870,11 +873,6 @@ ShellRoot {
                     }
                     canPan: surface.tapeWorkspace !== null && surface.tapeWorkspace.toplevels.values.filter(w => w.lastIpcObject && !w.lastIpcObject.floating).length > 1
                     onLauncherRequested: panel.showPage("apps")
-                    onStarted: surface.tapeCommand("begin")
-                    onCanceled: surface.tapeCommand("cancel")
-                    onMoved: delta => surface.tapeCommand(delta)
-                    onStepped: direction => surface.tapeCommand(direction)
-                    onSettled: surface.tapeCommand("settle")
                     onLeaveRequested: Hyprland.dispatch('TessarchyTape.close_request()')
                 }
                 Connections {
@@ -886,6 +884,44 @@ ShellRoot {
                     target: Hyprland
                     function onFocusedWorkspaceChanged() { tapeControl.cancel(); }
                     function onFocusedMonitorChanged() { tapeControl.cancel(); }
+                }
+            }
+            PanelWindow {
+                id: wheelPanel
+                screen: surface.modelData
+                readonly property string placement: ["left", "right"].indexOf(shellPreferences.wheelStyle) >= 0 ? shellPreferences.wheelStyle : "bottom"
+                visible: surface.tapeActive && !panel.expanded
+                anchors.bottom: placement === "bottom"
+                anchors.left: placement === "left"
+                anchors.right: placement === "right"
+                margins.bottom: placement === "bottom" ? 12 : 0
+                implicitWidth: placement === "bottom" ? Math.min(280, surface.modelData.width - 144) : 64
+                implicitHeight: placement === "bottom" ? 64 : Math.min(440, surface.modelData.height - 160)
+                exclusiveZone: 0
+                color: "transparent"
+                WlrLayershell.namespace: "tessera-wheel"
+                WlrLayershell.layer: WlrLayer.Overlay
+                WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
+                EdgeWheel {
+                    id: edgeWheel
+                    anchors.fill: parent
+                    placement: wheelPanel.placement
+                    reducedMotion: shellPreferences.reducedMotion
+                    canPan: tapeControl.canPan
+                    onStarted: surface.tapeCommand("begin")
+                    onCanceled: surface.tapeCommand("cancel")
+                    onMoved: delta => surface.tapeCommand(delta)
+                    onSettled: surface.tapeCommand("settle")
+                }
+                Connections {
+                    target: surface.modelData
+                    function onWidthChanged() { edgeWheel.cancel(); }
+                    function onHeightChanged() { edgeWheel.cancel(); }
+                }
+                Connections {
+                    target: Hyprland
+                    function onFocusedWorkspaceChanged() { edgeWheel.cancel(); }
+                    function onFocusedMonitorChanged() { edgeWheel.cancel(); }
                 }
             }
             // Gesture navigation: thin edge strips catch swipes that start at

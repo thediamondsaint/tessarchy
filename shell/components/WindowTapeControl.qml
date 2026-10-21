@@ -14,8 +14,6 @@ Item {
     property bool tessaCube: true
     property int maxControlWidth: 10000
     signal launcherRequested()
-    property real pending: 0
-    readonly property bool dragging: dragArea.pressed
     signal started()
     signal canceled()
     signal moved(int delta)
@@ -23,20 +21,13 @@ Item {
     signal settled()
     signal leaveRequested()
     implicitWidth: Math.min(maxControlWidth, radialOpen ? 280 : expanded ? (tessaCube ? 384 : 336) : (tessaCube ? 56 : 128))
-    implicitHeight: radialOpen ? 280 : expanded ? 112 : 56
+    implicitHeight: radialOpen ? 280 : 56
 
     function cancel() {
         radialOpen = false;
-        pending = 0;
-        frame.stop();
         expanded = false;
         idle.stop();
         canceled();
-    }
-    function flush() {
-        const delta = Math.round(pending);
-        pending -= delta;
-        if (delta !== 0) moved(delta);
     }
     onVisibleChanged: if (!visible) cancel()
     onCanPanChanged: if (!canPan) cancel()
@@ -45,15 +36,9 @@ Item {
         id: idle
         interval: control.hideDelay
         onTriggered: {
-            if (control.dragging || previous.down || next.down || leave.down || control.activeFocus) restart();
+            if (previous.down || next.down || leave.down || control.activeFocus) restart();
             else { control.expanded = false; control.radialOpen = false; }
         }
-    }
-    Timer {
-        id: frame
-        interval: 16
-        repeat: true
-        onTriggered: control.flush()
     }
     Rectangle {
         anchors.fill: parent
@@ -130,45 +115,6 @@ Item {
             onClicked: control.leaveRequested()
         }
     }
-        Rectangle {
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.bottom: parent.bottom
-            anchors.margins: 4
-            height: 48
-            visible: control.expanded && !control.radialOpen
-            radius: Theme.radius("button", 12, height)
-            color: Theme.glassStrong
-            Text { anchors.centerIn: parent; text: control.dragging ? "‹  Moving windows  ›" : "‹  Slide windows  ›"; color: Theme.accent; font.pixelSize: 14 }
-            MouseArea {
-                id: dragArea
-                objectName: "tapeDrag"
-                anchors.fill: parent
-                preventStealing: true
-                enabled: control.canPan
-                property real lastX: 0
-                Accessible.name: "Drag to move window tape"
-                onPressed: mouse => {
-                    lastX = mouse.x;
-                    control.started();
-                    control.pending = 0;
-                    frame.start();
-                }
-                onPositionChanged: mouse => {
-                    if (!pressed) return;
-                    control.pending += mouse.x - lastX;
-                    lastX = mouse.x;
-                }
-                onReleased: {
-                    frame.stop();
-                    control.flush();
-                    control.pending = 0;
-                    control.settled();
-                    idle.restart();
-                }
-                onCanceled: control.cancel()
-            }
-        }
     RadialActions {
         anchors.centerIn: parent
         visible: control.radialOpen

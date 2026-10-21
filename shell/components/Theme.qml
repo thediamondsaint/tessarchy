@@ -27,6 +27,7 @@ QtObject {
         return value === undefined ? fallback : Math.min(value, Math.max(0, height / 2));
     }
     function borderWidth(fallback) { return token("border_width", fallback); }
+    readonly property color wheelGlow: token("wheel_glow", "#72cfff")
     readonly property color glass: token("glass", Qt.alpha(surface, 0.31))
     readonly property color glassBorder: token("glass_border", Qt.alpha(selection, 0.31))
     readonly property color glassStrong: token("glass_strong", Qt.alpha(background, 0.76))
@@ -96,7 +97,7 @@ QtObject {
         shellOverrides = ({});
         const overrides = {};
         const shapeKeys = ["radius_card", "radius_tile", "radius_field", "radius_button", "border_width"];
-        const allowed = ["glass", "glass_border", "glass_strong", "switcher_glass", "bar_tint", "danger_surface",
+        const allowed = ["wheel_glow", "glass", "glass_border", "glass_strong", "switcher_glass", "bar_tint", "danger_surface",
             "start_header_top", "start_header_bottom", "start_header_text", "tile_glass", "tile_selected", "tile_pressed",
             "tile_border", "tile_icon_glass", "tile_icon_border", "switcher_card", "switcher_button", "switcher_button_border",
             "tray_glass", "tray_border", "task_idle", "task_border", "task_bevel", "task_pressed_bevel",

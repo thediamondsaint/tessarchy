@@ -52,3 +52,4 @@ WindowTapeControl 1.0 WindowTapeControl.qml
 AppLauncher 1.0 AppLauncher.qml
 RadialActions 1.0 RadialActions.qml
 StartAppGrid 1.0 StartAppGrid.qml
+EdgeWheel 1.0 EdgeWheel.qml
