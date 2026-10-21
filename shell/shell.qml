@@ -320,6 +320,7 @@ ShellRoot {
             }
             PanelWindow {
                 id: panel
+                visible: !surface.tapeActive || expanded
                 screen: surface.modelData
                 readonly property var appEntries: root.appEntries
                 property string page: ""
@@ -335,6 +336,7 @@ ShellRoot {
                         Quickshell.execDetached(["tessarchy-osk", "hide"]);
                 }
                 anchors {
+                    top: panel.page === "apps"
                     bottom: true
                     // Desktop uses a full-width taskbar, open page or not; touch
                     // layouts keep the floating centred dock sized to its content.
@@ -343,7 +345,7 @@ ShellRoot {
                 }
                 implicitWidth: expanded ? Policy.panelWidth(surface.mode, surface.modelData.width) : surface.dock.width
                 implicitHeight: expanded && surface.isPhone && page === "windows" ? surface.modelData.height - 48 : expanded ? Math.min(page === "windows" ? surface.modelData.height - 60 : page === "apps" ? surface.launcherRows * 124 + 156 : surface.mode === "tablet" ? 740 : 640, surface.modelData.height - 64) : surface.navHeight
-                exclusiveZone: surface.navHeight
+                exclusiveZone: surface.tapeActive ? 0 : surface.navHeight
                 color: "transparent"
                 Rectangle {
                     anchors.top: parent.top
@@ -363,7 +365,7 @@ ShellRoot {
                 }
                 WlrLayershell.namespace: "tessera"
                 WlrLayershell.layer: WlrLayer.Top
-                WlrLayershell.keyboardFocus: ["phone", "messages", "cellular", "settings", "sounds"].indexOf(panel.page) >= 0 ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
+                WlrLayershell.keyboardFocus: ["apps", "phone", "messages", "cellular", "settings", "sounds"].indexOf(panel.page) >= 0 ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
 
                 function showPage(name) {
                     if (name === "windows" && page !== "windows") switcher.selectActive();
@@ -495,9 +497,18 @@ ShellRoot {
                             onDismissed: panel.page = ""
                             onCloseRequested: target => { if (target) target.close(); }
                         }
+                        AppLauncher {
+                            iconPath: name => Quickshell.iconPath(name, true)
+                            visible: panel.page === "apps"
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true
+                            applications: panel.appEntries
+                            onLaunched: appId => { panel.page = ""; root.launchApplication(appId); }
+                            onDismissed: panel.page = ""
+                        }
                         ScrollView {
                             id: pageScroll
-                            visible: panel.page !== "windows"
+                            visible: panel.page !== "windows" && panel.page !== "apps"
                             Layout.fillWidth: true
                             Layout.fillHeight: true
                             clip: true
@@ -505,55 +516,6 @@ ShellRoot {
                             ColumnLayout {
                                 width: parent.width
                                 spacing: 8
-                                ColumnLayout {
-                                    visible: panel.page === "apps"
-                                    Layout.fillWidth: true
-                                    GridLayout {
-                                        columns: Policy.columns(surface.mode, width)
-                                        columnSpacing: 12
-                                        Layout.fillWidth: true
-                                        Repeater {
-                                            model: panel.appEntries
-                                            delegate: AppTile {
-                                                required property var modelData
-                                                text: modelData.name
-                                                symbol: "browser"
-                                                iconSource: Quickshell.iconPath(modelData.icon, true)
-                                                accentColor: root.accentColor
-                                                onClicked: {
-                                                    panel.page = "";
-                                                    root.launchApplication(modelData.id);
-                                                }
-                                            }
-                                        }
-                                        AppTile { text: "Phone"; symbol: "call"; accentColor: root.accentColor; onClicked: panel.showPage("phone") }
-                                        AppTile { text: "Messages"; symbol: "messages"; accentColor: root.accentColor; onClicked: panel.showPage("messages") }
-                                        AppTile {
-                                            text: "Settings"
-                                            symbol: "settings"
-                                            accentColor: root.accentColor
-                                            onClicked: panel.showPage("settings")
-                                        }
-                                        AppTile {
-                                            text: "Controls"
-                                            symbol: "controls"
-                                            accentColor: root.accentColor
-                                            onClicked: statusBar.toggleDrawer()
-                                        }
-                                        AppTile {
-                                            text: "Alerts"
-                                            symbol: "bell"
-                                            accentColor: root.accentColor
-                                            onClicked: panel.showPage("notifications")
-                                        }
-                                    }
-                                    Text {
-                                        text: root.oskAvailable ? "Prototype · The keyboard opens for text fields; Keyboard shows or hides it." : "Prototype · Physical keyboard needed for text input."
-                                        color: Theme.textSecondary
-                                        wrapMode: Text.WordWrap
-                                        Layout.fillWidth: true
-                                    }
-                                }
                                 Loader {
                                     visible: active
                                     active: panel.page === "phone"
@@ -887,7 +849,8 @@ ShellRoot {
                 visible: surface.tapeActive && !panel.expanded
                 anchors.bottom: true
                 implicitWidth: tapeControl.implicitWidth
-                implicitHeight: 48
+                implicitHeight: tapeControl.implicitHeight
+                margins.bottom: 8
                 exclusiveZone: 0
                 color: "transparent"
                 WlrLayershell.namespace: "tessera-tape"
@@ -897,6 +860,13 @@ ShellRoot {
                     id: tapeControl
                     anchors.fill: parent
                     maxControlWidth: Math.max(192, surface.modelData.width - 16)
+                    reducedMotion: shellPreferences.reducedMotion
+                    onActionRequested: action => {
+                        if (action === "leave") Hyprland.dispatch("TessarchyTape.close_request()");
+                        else if (action === "controls") statusBar.toggleDrawer();
+                        else if (action === "keyboard") Quickshell.execDetached(["tessarchy-osk", "toggle"]);
+                        else panel.showPage(action);
+                    }
                     canPan: surface.tapeWorkspace !== null && surface.tapeWorkspace.toplevels.values.filter(w => w.lastIpcObject && !w.lastIpcObject.floating).length > 1
                     onLauncherRequested: panel.showPage("apps")
                     onStarted: surface.tapeCommand("begin")
@@ -924,7 +894,7 @@ ShellRoot {
             PanelWindow {
                 id: bottomGesture
                 screen: surface.modelData
-                visible: surface.gestures
+                visible: surface.gestures && (!surface.tapeActive || panel.expanded)
                 anchors {
                     bottom: true
                     left: true
@@ -960,7 +930,7 @@ ShellRoot {
                     id: sideGesture
                     required property string modelData
                     screen: surface.modelData
-                    visible: surface.gestures
+                    visible: surface.gestures && (!surface.tapeActive || panel.expanded)
                     anchors {
                         top: true
                         bottom: true
@@ -1484,7 +1454,7 @@ ShellRoot {
                     }
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
-                        text: "TESSARCHY"
+                        text: "TESSA · TESSARCHY"
                         color: root.accentColor
                         font {
                             pixelSize: 12

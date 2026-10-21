@@ -68,3 +68,13 @@ test('large inventory remains complete and repeated updates do not duplicate row
     assert.equal(m.count, 501);
     assert.equal(new Set(m.rows.map(r => r.key)).size, m.count);
 });
+
+test('launcher ranks substrings, supports fuzzy metadata and refreshes input', () => {
+    const apps = [entry('org.editor', 'Text Editor'), entry('org.firefox', 'Firefox'),
+        {...entry('org.settings', 'Preferences'), keywords: ['display']}];
+    assert.deepEqual(plain(policy.search(apps, 'ffx')).map(a => a.id), ['org.firefox']);
+    assert.deepEqual(plain(policy.search(apps, 'display')).map(a => a.id), ['org.settings']);
+    assert.equal(policy.search(apps, 'impossible').length, 0);
+    assert.equal(policy.search(apps.slice(0, 1), '').length, 1);
+    assert.equal(policy.search([], 'x').length, 0);
+});

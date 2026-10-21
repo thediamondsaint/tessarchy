@@ -6,7 +6,10 @@ Item {
     id: control
     property bool expanded: false
     property bool canPan: true
-    property int hideDelay: 1500
+    property int hideDelay: 5000
+    property bool reducedMotion: false
+    property bool radialOpen: false
+    signal actionRequested(string action)
     // Tessa's compact cube mode uses the existing native tape gestures.
     property bool tessaCube: true
     property int maxControlWidth: 10000
@@ -19,10 +22,11 @@ Item {
     signal stepped(string direction)
     signal settled()
     signal leaveRequested()
-    implicitWidth: Math.min(maxControlWidth, expanded ? (tessaCube ? 384 : 336) : (tessaCube ? 56 : 128))
-    implicitHeight: 48
+    implicitWidth: Math.min(maxControlWidth, radialOpen ? 280 : expanded ? (tessaCube ? 384 : 336) : (tessaCube ? 56 : 128))
+    implicitHeight: radialOpen ? 280 : expanded ? 112 : 56
 
     function cancel() {
+        radialOpen = false;
         pending = 0;
         frame.stop();
         expanded = false;
@@ -42,7 +46,7 @@ Item {
         interval: control.hideDelay
         onTriggered: {
             if (control.dragging || previous.down || next.down || leave.down || control.activeFocus) restart();
-            else control.expanded = false;
+            else { control.expanded = false; control.radialOpen = false; }
         }
     }
     Timer {
@@ -51,21 +55,41 @@ Item {
         repeat: true
         onTriggered: control.flush()
     }
+    Rectangle {
+        anchors.fill: parent
+        radius: Theme.radius("card", control.radialOpen ? height / 2 : 20, height)
+        color: Theme.glassStrong
+        border.color: Qt.alpha(Theme.accent, 0.65)
+        border.width: Theme.borderWidth(1)
+    }
     TouchButton {
         anchors.fill: parent
         visible: !control.expanded
-        text: control.tessaCube ? "◈" : "Window tape"
+        text: control.tessaCube ? "" : "Window tape"
+        BrandMark {
+            anchors.centerIn: parent
+            width: 44; height: 44
+            enabled: false
+            playOnStart: false
+            reducedMotion: control.reducedMotion
+        }
         Accessible.name: control.tessaCube ? "Open Tessa window controls" : "Window tape"
         onClicked: control.expanded = true
     }
     RowLayout {
-        anchors.fill: parent
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.top: parent.top
+        height: 56
         spacing: 0
-        visible: control.expanded
+        visible: control.expanded && !control.radialOpen
+        opacity: visible ? 1 : 0
+        Behavior on opacity { NumberAnimation { duration: control.reducedMotion ? 0 : 160 } }
         TouchButton {
             visible: control.tessaCube
             Layout.minimumWidth: 48
             text: "Apps"
+            padding: 4
             Accessible.name: "Open Tessa launcher"
             Layout.preferredWidth: 56
             Layout.fillHeight: true
@@ -80,12 +104,42 @@ Item {
             enabled: control.canPan
             onClicked: { control.stepped("previous"); idle.restart(); }
         }
-        Rectangle {
+        TouchButton {
+            Layout.preferredWidth: 64
             Layout.fillWidth: true
             Layout.fillHeight: true
+            text: "Menu"
+            Accessible.name: "Open radial actions"
+            onClicked: { control.radialOpen = true; idle.restart(); }
+        }
+        TouchButton {
+            id: next
+            text: "›"
+            Accessible.name: "Next window"
+            Layout.preferredWidth: 48
+            Layout.fillHeight: true
+            enabled: control.canPan
+            onClicked: { control.stepped("next"); idle.restart(); }
+        }
+        TouchButton {
+            id: leave
+            text: "×"
+            Accessible.name: "Leave window tape"
+            Layout.preferredWidth: 48
+            Layout.fillHeight: true
+            onClicked: control.leaveRequested()
+        }
+    }
+        Rectangle {
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.bottom: parent.bottom
+            anchors.margins: 4
+            height: 48
+            visible: control.expanded && !control.radialOpen
             radius: Theme.radius("button", 12, height)
             color: Theme.glassStrong
-            GestureHandle { anchors.centerIn: parent; implicitWidth: 72 }
+            Text { anchors.centerIn: parent; text: control.dragging ? "‹  Moving windows  ›" : "‹  Slide windows  ›"; color: Theme.accent; font.pixelSize: 14 }
             MouseArea {
                 id: dragArea
                 objectName: "tapeDrag"
@@ -115,22 +169,16 @@ Item {
                 onCanceled: control.cancel()
             }
         }
-        TouchButton {
-            id: next
-            text: "›"
-            Accessible.name: "Next window"
-            Layout.preferredWidth: 48
-            Layout.fillHeight: true
-            enabled: control.canPan
-            onClicked: { control.stepped("next"); idle.restart(); }
+    RadialActions {
+        anchors.centerIn: parent
+        visible: control.radialOpen
+        width: Math.min(parent.width, 280)
+        height: 280
+        onTriggered: action => {
+            control.radialOpen = false;
+            control.expanded = false;
+            control.actionRequested(action);
         }
-        TouchButton {
-            id: leave
-            text: "×"
-            Accessible.name: "Leave window tape"
-            Layout.preferredWidth: 48
-            Layout.fillHeight: true
-            onClicked: control.leaveRequested()
-        }
+        onDismissed: { control.radialOpen = false; idle.restart(); }
     }
 }

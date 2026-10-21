@@ -1,3 +1,4 @@
+pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Layouts
 import "../AppPolicy.js" as Apps
@@ -6,7 +7,7 @@ GridLayout {
     id: grid
     property var applications: []
     property var iconPath: function(name) { return ""; }
-    property color accentColor: "#a9e8d5"
+    property color accentColor: Theme.accent
     property string focusedAppId: ""
     property bool ready: false
     signal launchRequested(string appId)
@@ -17,7 +18,7 @@ GridLayout {
     function refresh() {
         let hadFocus = false;
         for (let i = 0; i < tiles.count; ++i) {
-            const cell = tiles.itemAt(i);
+            const cell = tiles.itemAt(i) as AppCell;
             if (cell && cell.item && cell.item.activeFocus) hadFocus = true;
         }
         const previous = focusedAppId;
@@ -27,17 +28,17 @@ GridLayout {
     function focusApp(appId) {
         let first = null;
         for (let i = 0; i < tiles.count; ++i) {
-            const tile = tiles.itemAt(i);
+            const tile = tiles.itemAt(i) as AppCell;
             if (!tile || tile.heading || !tile.item) continue;
             if (!first) first = tile.item;
             if (tile.appId === appId) {
-                tile.item.forceActiveFocus();
+                (tile.item as Item).forceActiveFocus();
                 grid.tileFocused(tile.item);
                 return;
             }
         }
         if (first) {
-            first.forceActiveFocus();
+            (first as Item).forceActiveFocus();
             grid.tileFocused(first);
         } else grid.forceActiveFocus();
     }
@@ -47,7 +48,9 @@ GridLayout {
     Repeater {
         id: tiles
         model: rows
-        delegate: Loader {
+        delegate: AppCell {}
+    }
+    component AppCell: Loader {
             id: cell
             required property bool heading
             required property string appId
@@ -86,7 +89,6 @@ GridLayout {
                     onClicked: grid.launchRequested(cell.appId)
                 }
             }
-        }
     }
     Text {
         visible: rows.count === 0

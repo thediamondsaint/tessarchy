@@ -30,6 +30,7 @@ TouchButton {
             }
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter
+                textFormat: Text.PlainText
                 text: control.text
                 width: parent.width
                 horizontalAlignment: Text.AlignHCenter

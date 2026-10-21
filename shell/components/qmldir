@@ -49,3 +49,6 @@ TrayButton 1.0 TrayButton.qml
 WeatherBackend 1.0 WeatherBackend.qml
 WeatherChip 1.0 WeatherChip.qml
 WindowTapeControl 1.0 WindowTapeControl.qml
+AppLauncher 1.0 AppLauncher.qml
+RadialActions 1.0 RadialActions.qml
+StartAppGrid 1.0 StartAppGrid.qml

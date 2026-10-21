@@ -74,3 +74,23 @@ function syncRows(model, rows) {
     }
     return changed;
 }
+
+// Rank contiguous matches first, then ordered characters across app metadata.
+function search(entries, query) {
+    const needle = String(query).trim().toLowerCase();
+    if (!needle) return entries;
+    return entries.map(entry => {
+        const name = String(entry.name).toLowerCase();
+        const text = [entry.name, entry.genericName || "", entry.id, (entry.keywords || []).join(" ")].join(" ").toLowerCase();
+        const exact = text.indexOf(needle);
+        if (exact >= 0) return {entry: entry, score: exact};
+        let at = -1, span = 0;
+        for (const letter of needle) {
+            const next = name.indexOf(letter, at + 1);
+            if (next < 0) return {entry: entry, score: Infinity};
+            span += next - at;
+            at = next;
+        }
+        return {entry: entry, score: 1000 + span};
+    }).filter(match => Number.isFinite(match.score)).sort((a, b) => a.score - b.score || String(a.entry.name).localeCompare(String(b.entry.name))).map(match => match.entry);
+}
