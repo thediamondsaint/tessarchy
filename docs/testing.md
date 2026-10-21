@@ -2522,3 +2522,20 @@ Existing software-Mesa/SHM and absent-BlueZ warnings remain.
 [Three real screenshots and the updated scrolling GIF](../assets/screenshots/tessa-wheel-styles/README.md)
 record the implementation. The GIF uses captured QMP frames and real frame
 durations. Physical touchscreen feel remains untested.
+
+
+## Tablet wheel preview — 2026-10-21
+
+Runtime `a8e6a45` was captured in the actual 1024×768 QEMU guest with automatic
+Tablet layout. A phone-distance drag initially snapped back on the wider output;
+wheel movement now scales with output width. The original per-pixel behavior is
+retained at phone width. A new Qt regression verifies tablet distance scaling.
+
+`./scripts/check.sh` passed: 221 Python, 95 Qt Quick and 11 Node results; focused
+wheel tests and QML lint also passed. Virtual touch switched real Files/Calculator
+windows in both directions for left, right and bottom placement. The app windows
+remained 1024px wide; the bottom wheel measured 280×64 and side wheels 64×440.
+Config errors were empty. Tablet launcher, three placements and a real scrolling
+GIF are in [tessa-tablet-preview](../assets/screenshots/tessa-tablet-preview/README.md).
+The VM was left at 1024×768; its previous phone preference was backed up first.
+Physical tablet input remains untested.

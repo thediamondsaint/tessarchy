@@ -20,7 +20,9 @@ Settings → Window Wheel selects Bottom slider, Left edge wheel or Right edge
 wheel. The curved dark-glass rail, illuminated ticks and bright center marker
 follow the supplied wheel-style reference. The bottom rail takes horizontal
 drags; the side rails map up/down drags to the same native horizontal tape.
-The cube and wheel remain separate, with no reserved bottom dock.
+Thumb travel scales with the output width so tablet and desktop windows remain
+reachable with the same short gesture. The cube and wheel remain separate,
+with no reserved bottom dock.
 
 The cube does not request keyboard focus. Apps and Settings request it on demand.
 Radial actions use the existing launcher, Settings, Recents, Quick Settings and
