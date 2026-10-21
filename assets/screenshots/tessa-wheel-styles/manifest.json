@@ -1,0 +1,49 @@
+{
+  "source_revision": "d6f30ee60db5db08041ce1b056e1d25abd4838e8",
+  "kind": "actual-vm-captures",
+  "environment": "Existing QEMU/KVM guest, 400x800, Hyprland 0.56.2, Quickshell 0.3.2",
+  "capture": "PNG screenshots captured inside guest with grim. GIF encoded from 132 direct QMP PNG frames, preserving captured frame durations. No generated imagery or synthetic motion.",
+  "actions": "Real virtual touch dragged Files to Calculator and back in all three placements. GIF records the bottom wheel.",
+  "files": [
+    {
+      "file": "left.png",
+      "sha256": "07204e1b3cc2434fb6a54adb1226a6cbdfabd26eefcdecc9b246dacd51b58200",
+      "dimensions": [
+        400,
+        800
+      ],
+      "frames": 1,
+      "captured_utc": "2026-10-21T18:34:39.587255+00:00"
+    },
+    {
+      "file": "right.png",
+      "sha256": "e56b6109a615e27c96a51edbd119efa3af46766caaccb51421338f2fd7423114",
+      "dimensions": [
+        400,
+        800
+      ],
+      "frames": 1,
+      "captured_utc": "2026-10-21T18:34:55.116576+00:00"
+    },
+    {
+      "file": "bottom.png",
+      "sha256": "a42f2d231dec213defa9814e458fc56278c0d8e78fd8d3751e54fc82be0315e4",
+      "dimensions": [
+        400,
+        800
+      ],
+      "frames": 1,
+      "captured_utc": "2026-10-21T18:35:13.510957+00:00"
+    },
+    {
+      "file": "scrolling.gif",
+      "sha256": "1ed3d794d53374dcc59be4df0f400f1d73ef77782de9295b6b6f2de68900aef8",
+      "dimensions": [
+        400,
+        800
+      ],
+      "frames": 132,
+      "captured_utc": "2026-10-21T18:35:43.257575+00:00"
+    }
+  ]
+}

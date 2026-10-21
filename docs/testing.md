@@ -2495,3 +2495,30 @@ Arch CI on `49b9807` passed Python and Qt checks but failed ShellCheck SC2046
 in the inherited bridge build script. Replaced unquoted `pkg-config` expansion
 with a Bash argument array; the native bridge rebuilt successfully. The separate
 400×800 direct QEMU capture is saved with the other evidence (23 PNGs total).
+
+
+## Reference wheel styling — 2026-10-21
+
+Runtime source `d6f30ee` replaces the labelled drag strip with the supplied
+reference's dark glass, blue edge light, graded ticks and center indicator.
+Settings → Window Wheel persists bottom, left or right placement. Input is
+extracted from the prototype into EdgeWheel.qml; coalescing, native IPC,
+release snapping and fallback remain compositor-owned. No dependency added.
+The cube remains a separate focus-preserving control. Glow is a theme token.
+
+`./scripts/check.sh` passed (221 Python, 94 Qt Quick, 11 Node); focused wheel
+checks and QML lint passed after the visual refinements. The existing FilePicker
+warning remains; Fish/ShellCheck are unavailable locally. Qt regression checks
+cover horizontal/vertical touch and mouse movement, coalescing, release and
+cancellation without a later stale release committing movement.
+
+Actual 400×800 guest with real Files and Calculator: genuine virtual-touch drags
+in both directions switched to Calculator then Home for bottom, left and right
+placements. Windows retained full width; config errors were empty. Side wheels
+occupied only the selected 64×440 edge surface; the bottom wheel was 256×64,
+with no keyboard grab or exclusive zone. The selection survived shell restarts.
+Existing software-Mesa/SHM and absent-BlueZ warnings remain.
+
+[Three real screenshots and the updated scrolling GIF](../assets/screenshots/tessa-wheel-styles/README.md)
+record the implementation. The GIF uses captured QMP frames and real frame
+durations. Physical touchscreen feel remains untested.

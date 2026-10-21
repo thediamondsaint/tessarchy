@@ -16,6 +16,12 @@ previous/next windows, a radial Menu and exit. Drag the lower edge wheel to move
 real windows; release snaps through the existing #61 bridge. Without the optional
 bridge, the existing 120px stepped fallback remains available. The × action and
 Super+T return to the preceding normal workspace. Apps stay on the tape for reentry.
+Settings → Window Wheel selects Bottom slider, Left edge wheel or Right edge
+wheel. The curved dark-glass rail, illuminated ticks and bright center marker
+follow the supplied wheel-style reference. The bottom rail takes horizontal
+drags; the side rails map up/down drags to the same native horizontal tape.
+The cube and wheel remain separate, with no reserved bottom dock.
+
 The cube does not request keyboard focus. Apps and Settings request it on demand.
 Radial actions use the existing launcher, Settings, Recents, Quick Settings and
 on-screen keyboard. Reduced motion disables the control reveal animation.
