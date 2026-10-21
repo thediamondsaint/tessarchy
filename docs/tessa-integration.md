@@ -35,12 +35,21 @@ Actual upstream files and repository license files were inspected on 2026-10-21:
 | Source | Inspected file | Decision |
 | --- | --- | --- |
 | [end-4/dots-hyprland](https://github.com/end-4/dots-hyprland) | `dots/.config/quickshell/ii/modules/common/widgets/FloatingActionButton.qml`, GPL-3.0 | Retain existing TouchButton; use compact/expanded sizing and reveal pattern without importing its theme/widget framework |
-| [doannc2212/quickshell-config](https://github.com/doannc2212/quickshell-config) | `app-launcher/AppLauncher.qml`; no root license file found | No code copied; retain DesktopEntries, add metadata search and grid keyboard navigation |
+| [doannc2212/quickshell-config](https://github.com/doannc2212/quickshell-config) | `app-launcher/AppLauncher.qml`; no root license file found | No code copied; retain DesktopEntries, retain metadata search and keyboard navigation |
 | [caelestia-dots/shell](https://github.com/caelestia-dots/shell) | `modules/launcher/services/Apps.qml`, GPL-3.0 | Retain native entries and execution; avoid its database and search dependencies |
 | [neruson27/hypr-radial-menu](https://github.com/neruson27/hypr-radial-menu) | `daemon.py`, GPL-3.0 | Use standard circular placement and center cancellation in QML; no daemon or source copied |
 | Hyprland 0.56.2 | installed native scrolling headers and #61 bridge | Keep compositor-owned layout, focus and snapping; matching ABI required |
-| [Qt Quick Controls ScrollBar](https://doc.qt.io/qt-6/qml-qtquick-controls-scrollbar.html) | attached/non-attached API | Use for launcher GridView. Its normalized position has no compositor connection; retain #61 relative drag signals for the edge wheel |
+| [Qt Quick Controls ScrollBar](https://doc.qt.io/qt-6/qml-qtquick-controls-scrollbar.html) | attached/non-attached API | Use for launcher ListView. Its normalized position has no compositor connection; retain #61 relative drag signals for the edge wheel |
 
-No upstream source was copied and no dependency was added. The existing MIT
-license and existing #61 bridge attribution remain intact. Runtime acceptance
+The compact launcher replaces the large app grid with a search-first list.
+GitHub popularity on inspection: end-4 about 16.4k stars, Caelestia 13k, and
+DMS/Dux 8.5k. Stars describe each shell repository, not a standalone menu.
+[DMS, now Dux Shell](https://github.com/duxlabs-dev/dux-shell) was also inspected:
+`quickshell/Modals/DLauncherV2/{Components/LauncherRow.qml,Components/LauncherSearchField.qml,ResultsList.qml,SpotlightLauncherContent.qml}`
+at revision `1b59a474dd0d33f4aeb71d1f5b545629f80eef16`.
+The MIT application-row layout is adapted in `LauncherRow.qml`, with the
+[upstream license and attribution](../shell/third-party/dms/NOTICE.md) preserved.
+Its controller, Go backend and shell services are not required; Tessa keeps
+DesktopEntries, application policies and execution. No dependency was added.
+The existing #61 bridge attribution remains intact. Runtime acceptance
 and limitations are recorded in [testing.md](testing.md).

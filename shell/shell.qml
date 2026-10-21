@@ -278,7 +278,6 @@ ShellRoot {
             // Bar geometry comes from Policy.barGeometry; do not add literals here.
             readonly property var bar: Policy.barGeometry(mode, dock.rows)
             readonly property int navHeight: bar.height
-            readonly property int launcherRows: Math.ceil((panel.appEntries.length + 4) / Policy.columns(mode, Policy.panelWidth(mode, modelData.width) - 32))
             readonly property bool showWorkspaces: Policy.showWorkspaces(mode, modelData.width)
             readonly property var workspaceIds: {
                 const ids = [];
@@ -322,7 +321,7 @@ ShellRoot {
             }
             PanelWindow {
                 id: panel
-                visible: !surface.tapeActive || expanded
+                visible: (!surface.tapeActive || expanded) && page !== "apps"
                 screen: surface.modelData
                 readonly property var appEntries: root.appEntries
                 property string page: ""
@@ -338,7 +337,6 @@ ShellRoot {
                         Quickshell.execDetached(["tessarchy-osk", "hide"]);
                 }
                 anchors {
-                    top: panel.page === "apps"
                     bottom: true
                     // Desktop uses a full-width taskbar, open page or not; touch
                     // layouts keep the floating centred dock sized to its content.
@@ -346,7 +344,7 @@ ShellRoot {
                     right: surface.mode === "desktop"
                 }
                 implicitWidth: expanded ? Policy.panelWidth(surface.mode, surface.modelData.width) : surface.dock.width
-                implicitHeight: expanded && surface.isPhone && page === "windows" ? surface.modelData.height - 48 : expanded ? Math.min(page === "windows" ? surface.modelData.height - 60 : page === "apps" ? surface.launcherRows * 124 + 156 : surface.mode === "tablet" ? 740 : 640, surface.modelData.height - 64) : surface.navHeight
+                implicitHeight: expanded && surface.isPhone && page === "windows" ? surface.modelData.height - 48 : expanded ? Math.min(page === "windows" ? surface.modelData.height - 60 : surface.mode === "tablet" ? 740 : 640, surface.modelData.height - 64) : surface.navHeight
                 exclusiveZone: surface.tapeActive ? 0 : surface.navHeight
                 color: "transparent"
                 Rectangle {
@@ -498,15 +496,6 @@ ShellRoot {
                             onActivated: panel.page = ""
                             onDismissed: panel.page = ""
                             onCloseRequested: target => { if (target) target.close(); }
-                        }
-                        AppLauncher {
-                            iconPath: name => Quickshell.iconPath(name, true)
-                            visible: panel.page === "apps"
-                            Layout.fillWidth: true
-                            Layout.fillHeight: true
-                            applications: panel.appEntries
-                            onLaunched: appId => { panel.page = ""; root.launchApplication(appId); }
-                            onDismissed: panel.page = ""
                         }
                         ScrollView {
                             id: pageScroll
@@ -843,6 +832,30 @@ ShellRoot {
                             }
                         }
                     }
+                }
+            }
+            PanelWindow {
+                id: appPopup
+                screen: surface.modelData
+                visible: panel.page === "apps"
+                onVisibleChanged: if (visible) Qt.callLater(() => compactLauncher.resetSearchAndFocus())
+                anchors { top: true; bottom: true; left: true; right: true }
+                exclusiveZone: 0
+                color: "transparent"
+                WlrLayershell.namespace: "tessera-launcher"
+                WlrLayershell.layer: WlrLayer.Overlay
+                WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
+                Rectangle { anchors.fill: parent; color: Qt.alpha(Theme.darkerBackground, 0.38) }
+                MouseArea { anchors.fill: parent; onClicked: panel.page = "" }
+                AppLauncher {
+                    id: compactLauncher
+                    anchors.centerIn: parent
+                    width: Math.min(560, parent.width - 24)
+                    height: Math.min(implicitHeight, parent.height - 24)
+                    iconPath: name => Quickshell.iconPath(name, true)
+                    applications: panel.appEntries
+                    onLaunched: appId => { panel.page = ""; root.launchApplication(appId); }
+                    onDismissed: panel.page = ""
                 }
             }
             PanelWindow {
