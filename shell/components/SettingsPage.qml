@@ -498,7 +498,7 @@ ColumnLayout {
         onClicked: page.endSessionRequested()
     }
     Text {
-        text: "Tessera 0.1 · Experimental Arch session"
+        text: "Tessa 0.1 · Running on Tessarchy"
         color: Theme.textMuted
         font.pixelSize: 12
         Layout.fillWidth: true

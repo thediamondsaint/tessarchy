@@ -54,7 +54,7 @@ class Workflows(unittest.TestCase):
             offenders = [number for number, line in enumerate(path.read_text().splitlines(), 1)
                          if pattern.search(line)]
             self.assertEqual(offenders, [], f'{path.name}: colour literals')
-        # Every semantic token is loadable from shell.toml and pinned by Tessera.
+        # Every semantic token is loadable from shell.toml and pinned by Tessa.
         theme = (ROOT / 'shell/components/Theme.qml').read_text()
         tokens = re.findall(r'property color \w+: token\("([a-z_]+)"', theme)
         self.assertGreater(len(tokens), 50)

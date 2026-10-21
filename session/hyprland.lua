@@ -55,9 +55,9 @@ hl.config({
              key_press_enables_dpms = true, mouse_move_enables_dpms = true },
 })
 hl.workspace_rule({ workspace = "name:tessarchy-tape", layout = "scrolling" })
--- Frost only Tessera glass surfaces; leave applications unchanged.
+-- Frost only Tessa glass surfaces; leave applications unchanged.
 hl.layer_rule({ match = { namespace = "tessera(-status|-start)?" }, blur = surface.blur_enabled, ignore_alpha = 0.01 })
--- Read the same saved mode as Tessera when a new ordinary app opens.
+-- Read the same saved mode as Tessa when a new ordinary app opens.
 -- Existing windows and floating dialogs are left alone when modes change.
 local function shell_mode(monitor)
     local config = os.getenv("XDG_CONFIG_HOME") or (os.getenv("HOME") .. "/.config")
@@ -258,7 +258,7 @@ hl.bind("SUPER + SHIFT + up", hl.dsp.window.move({ direction = "up" }))
 hl.bind("SUPER + SHIFT + down", hl.dsp.window.move({ direction = "down" }))
 hl.bind("SUPER + mouse:272", hl.dsp.window.drag(), { mouse = true })
 hl.bind("SUPER + mouse:273", hl.dsp.window.resize(), { mouse = true })
--- Volume keys mirror the Tessera controls page when PipeWire is running.
+-- Volume keys mirror the Tessa controls page when PipeWire is running.
 hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+"), { locked = true, repeating = true })
 hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"), { locked = true, repeating = true })
 hl.bind("XF86AudioMute", hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"), { locked = true, repeating = true })

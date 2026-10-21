@@ -27,7 +27,7 @@ checkpoints, not permanent branch positions.
 
 ## Product and design
 
-Tessarchy is a touch-first Arch Linux session. Tessera is its Quickshell/QML UI.
+Tessarchy is a touch-first Arch Linux session. Tessa is its Quickshell/QML UI.
 Hyprland provides compositing and window management. The development target is
 an x86_64 QEMU/KVM guest; the next product milestone is one physical reference
 device, followed by a tablet pilot and phone-specific integration.

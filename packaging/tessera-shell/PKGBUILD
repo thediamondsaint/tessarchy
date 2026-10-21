@@ -1,7 +1,7 @@
 pkgname=tessera-shell
 pkgver=0.1.0
 pkgrel=4
-pkgdesc='Tessera touch-first Quickshell prototype'
+pkgdesc='Tessa touch-first Quickshell prototype'
 arch=('any')
 license=('MIT')
 depends=('quickshell>=0.3.1' 'qt6-declarative' 'qt6-wayland' 'python' 'python-gobject' 'ffmpeg' 'util-linux')

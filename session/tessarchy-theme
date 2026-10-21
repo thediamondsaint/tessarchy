@@ -200,7 +200,7 @@ EOF
         printf 'darker_background = "#%s"\nlighter_background = "#%s"\naccent = "#%s"\n' "$ddbg" "$lbg" "$accent"
         printf 'light_foreground = "#%s"\ndark_foreground = "#%s"\nbright_foreground = "#%s"\n' "$fg2" "$fg3" "$fgb"
         printf 'red = "#%s"\n' "${ansi[0]}"
-        # Optional Tessera-only semantic layer; palette-only Omarchy themes
+        # Optional Tessa-only semantic layer; palette-only Omarchy themes
         # still receive glass derived from their colours in Theme.qml.
         if [[ -f $dir/shell.toml ]]; then
             printf '\n'

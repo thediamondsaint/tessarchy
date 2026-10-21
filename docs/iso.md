@@ -17,7 +17,7 @@ which copies the running live system onto an internal disk — see
 The live user `tess` is created through systemd-sysusers with a locked password,
 no sudo grant, tty1 autologin, and fish as the login shell (`fish` is added to
 the package list). tmpfiles and `file_permissions` establish home ownership for
-the Bash and fish login profiles; both start Tessera once on tty1 and return to
+the Bash and fish login profiles; both start Tessa once on tty1 and return to
 the TTY on exit. Nothing in the fish profile is needed for development installs
 where Bash starts the session. No secure locking or
 login protection is provided. Releng's root rescue account remains available
@@ -55,7 +55,7 @@ releases.
 [Download Alpha 4](https://github.com/thediamondsaint/tessarchy/releases/tag/v0.1.0-alpha.4).
 Actions run [39144935780](https://github.com/thediamondsaint/tessarchy/actions/runs/39144935780)
 built source `0f71636a0aecb20cd76359a71d2e911eb082cb57` with archiso 91-1.
-Both diskless BIOS and non-Secure-Boot UEFI boots reached Tessera and the curated
+Both diskless BIOS and non-Secure-Boot UEFI boots reached Tessa and the curated
 launcher; no NIC was present. It carries Alpha 3 plus the desktop tray-icon fix,
 on-screen keys at the 48 px height floor, five-minute idle blanking, the
 notification center, display rotation, the Desktop-mode keyboard suppression and
@@ -70,7 +70,7 @@ Physical tablet and installed-disk acceptance remain pending.
 [Download Alpha 3](https://github.com/thediamondsaint/tessarchy/releases/tag/v0.1.0-alpha.3).
 Actions run [39127243527](https://github.com/thediamondsaint/tessarchy/actions/runs/39127243527)
 built source `566a4385432697ffbb21147355476bed5727d9f5` with archiso 91-1.
-Both diskless BIOS and non-Secure-Boot UEFI boots reached Tessera without a NIC;
+Both diskless BIOS and non-Secure-Boot UEFI boots reached Tessa without a NIC;
 the supplied animation and curated launcher were inspected in the captures.
 A blank interval remains between the animation and desktop during boot.
 Physical tablet and installed-disk acceptance remain pending.
@@ -126,7 +126,7 @@ GitHub Actions run [38997819650](https://github.com/thediamondsaint/tessarchy/ac
 built the image with archiso 91-1 from commit
 `90c5eee58f8be68ae9b9a670c3479f0ff453449b`. The checksum passed in CI and matches
 the GitHub asset digest. The agent inspected final captures of both diskless
-BIOS and non-Secure-Boot UEFI QEMU/KVM boots: Tessera's GUI was running after
+BIOS and non-Secure-Boot UEFI QEMU/KVM boots: Tessa's GUI was running after
 live-user autologin. These used 2 GiB RAM, 2 vCPUs and virtio graphics.
 
 To create a new tester draft, dispatch `Build Tessarchy ISO` on the desired
@@ -159,7 +159,7 @@ the checksum to distinguish images. Alpha 2 SHA-256:
 ```
 
 The checksum passed in CI and matches the release asset digest. Both final
-BIOS and non-Secure-Boot UEFI captures were inspected: Tessera reached its
+BIOS and non-Secure-Boot UEFI captures were inspected: Tessa reached its
 graphical home screen with the current glass status bar and floating dock.
 The disposable QEMU/KVM guests had 2 GiB RAM, 2 vCPUs, virtio graphics, no
 guest disk and no network adapter. Boot screenshots, capture commands, package

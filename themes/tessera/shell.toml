@@ -1,4 +1,4 @@
-# Tessera-only semantic overrides; optional for any Omarchy palette.
+# Tessa-only semantic overrides; optional for any Omarchy palette.
 # Qt color strings use #AARRGGBB for translucent fills.
 [tessera]
 glass = "#501c2c43"

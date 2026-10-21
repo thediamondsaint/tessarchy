@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Reads or sets the first backlight device for Tessera's brightness control.
+# Reads or sets the first backlight device for Tessa's brightness control.
 # Exit codes: 0 success, 3 no usable backlight, 64 invalid arguments.
 set -euo pipefail
 

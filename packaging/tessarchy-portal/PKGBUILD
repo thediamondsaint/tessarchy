@@ -1,7 +1,7 @@
 pkgname=tessarchy-portal
 pkgver=0.1.0
 pkgrel=1
-pkgdesc='Tessarchy file dialogs: portal backend drawn by Tessera on Phone/Tablet, GTK3 module'
+pkgdesc='Tessarchy file dialogs: portal backend drawn by Tessa on Phone/Tablet, GTK3 module'
 arch=('x86_64' 'aarch64')
 license=('MIT')
 depends=('glib2' 'gtk3' 'xdg-desktop-portal' 'xdg-desktop-portal-gtk' 'tessera-shell=0.1.0')

@@ -197,7 +197,7 @@ maximized apps; application UI and exclusive fullscreen escape remain constraint
 ## Basic guest conversion workflow, 2026-10-16
 
 The user reports that the official Basic image boots. This is user-reported
-Arch boot success, not an agent-observed Tessera GUI pass. Added a launcher for
+Arch boot success, not an agent-observed Tessa GUI pass. Added a launcher for
 that existing image, fresh read-only source sharing, guest-only setup, and a
 reversible tty1 login hook. All nine workflow tests pass, including a QEMU stub
 that checks disk selection/share contents and preserves the guest image, plus
@@ -205,12 +205,12 @@ login-hook roundtrip, idempotence and modified/symlinked profile refusal.
 The real launcher command was inspected using `run-basic-vm.sh plan`.
 Hyprland config parsing and QML static checks still pass (same known tooling
 warning); shellcheck remains unavailable. The actual guest has not been changed
-by the agent. Dependency installation, Tessera graphics, tty1 login startup and
+by the agent. Dependency installation, Tessa graphics, tty1 login startup and
 VM graphics compatibility still require running the documented guest commands.
 
 ## First graphical smoke test, 2026-10-16
 
-The user confirms Tessera runs in the Basic Arch QEMU guest and its dock is
+The user confirms Tessa runs in the Basic Arch QEMU guest and its dock is
 visible and working. This is a user-reported graphical smoke test; the agent
 has not observed the guest screen. Exact guest package versions and detailed
 results for switching/maximize/close/focus/scaling were not captured. The full
@@ -332,7 +332,7 @@ Actually performed:
   launcher columns, scrollable controls, and a Desktop override at phone size.
   The final launcher uses row-based height rather than a mostly empty drawer.
 - Used guest uinput to select Desktop/Automatic and Iris appearance. The actual
-  `shell.ini` changed and the mode/accent loaded again after restarting Tessera.
+  `shell.ini` changed and the mode/accent loaded again after restarting Tessa.
   Inspected the longer Settings page after scrolling, including appearance,
   branded sliders, clock, labels, and motion controls.
 - Guest `hyprctl reload` succeeds and `configerrors` is empty with the new Lua
@@ -352,7 +352,7 @@ Actually performed:
 
 - Added `fish` to `iso/packages.x86_64`, changed the sysusers shell for `tess`
   to `/usr/bin/fish`, and gave the skel tree a fish profile: greeting off, two
-  abbreviations, and the same gated tty1 one-shot Tessera start as
+  abbreviations, and the same gated tty1 one-shot Tessa start as
   `.bash_profile` (interactive only, tty1 only, no DISPLAY/WAYLAND_DISPLAY).
 - `scripts/stage-iso.sh` now copies the whole skel tree to `/home/tess` and
   records `file_permissions` for the fish config; tmpfiles keeps the `.config`
@@ -454,7 +454,7 @@ Actually performed:
   Verification passed in CI and matches GitHub's uploaded asset digest.
 - Two diskless QEMU/KVM VMs (2 GiB, 2 vCPUs, virtio-vga, no NIC) booted the
   exact image through BIOS and non-Secure-Boot UEFI. The agent visually
-  inspected both final screenshots at 90 seconds: each shows the Tessera GUI,
+  inspected both final screenshots at 90 seconds: each shows the Tessa GUI,
   wallpaper, clock, logo, status bar, mode badge and navigation after autologin.
   The first 120-second TCG attempts only reached Linux userspace, so they were
   not treated as graphical boot passes. Full capture evidence is attached.
@@ -520,7 +520,7 @@ Actual validation:
   no host Hyprland/Omarchy configuration files were changed.
 - Verified installed Quickshell QML type metadata for screencopy, desktop entries,
   IPC and layer keyboard focus, and Hyprland Lua metadata for layer rules/binds.
-  Guest reload/configerrors was clean with the Tessera-only frosted layer rule.
+  Guest reload/configerrors was clean with the Tessa-only frosted layer rule.
 - Visually inspected status bar, floating navigation, launcher, settings and
   card switcher. Switcher headings/instructions are absent; return/close actions
   are glass icon controls with accessible names and >=48px targets. App names
@@ -615,7 +615,7 @@ Actual validation:
 - Actions run 39063437439 built the ISO from
   `aa8b59a73a8d5d6b1d3fab6c17272e68e0bfac58`, verified its checksum,
   and captured diskless BIOS and non-Secure-Boot UEFI QEMU/KVM boots.
-- Inspected both final 1280×800 screenshots: Tessera's graphical home screen,
+- Inspected both final 1280×800 screenshots: Tessa's graphical home screen,
   current wallpaper/logo, glass status bar and floating dock are visible.
   Each guest used 2 GiB RAM, 2 vCPUs and virtio graphics, with no disk or NIC.
 - Downloaded the published Alpha 2 ISO and verified its complete local SHA-256
@@ -921,7 +921,7 @@ Actual validation after explicit owner approval:
 - One VM reboot completed. Because QEMU used -no-reboot it exited; the old process
   was confirmed gone before relaunching the same disk. The removed temporary
   read-only share was recreated; no concurrent disk writer or image rebuild.
-- Real PAM rejected an incorrect PIN, with no Tessera process started. The chosen
+- Real PAM rejected an incorrect PIN, with no Tessa process started. The chosen
   PIN opened the authenticated desktop. The real session-exit confirmation was
   used and the phone greeter returned. Fixed a follow-up backend error overwriting
   the rejection message; confirmed the corrected message in the VM.
@@ -1267,7 +1267,7 @@ locking and native network association remain separate work.
 
 Actions run 39127243527 built source `566a4385432697ffbb21147355476bed5727d9f5`
 using archiso 91-1. The diskless BIOS and non-Secure-Boot UEFI QEMU/KVM captures
-were inspected: both reached Tessera and opened the curated main-app picker.
+were inspected: both reached Tessa and opened the curated main-app picker.
 The guests had 2 GiB RAM, 2 vCPUs, no NIC and software virtio graphics, at 1280×800.
 The supplied Plymouth video is visible in the early captures; a blank interval
 remains during compositor handoff before the desktop appears. No physical tablet
@@ -1403,7 +1403,7 @@ Actually performed:
 - Guest cycle on the build 10 debug line (QEMU x86_64, Hyprland 0.56.2, 1280x800):
   with the session live, the generated `display.lua` carrying `transform = 1`
   reloaded through Hyprland and `hyprctl monitors` reported `transform: 1`; the
-  Tessera shell re-laid out to the portrait canvas (capture
+  Tessa shell re-laid out to the portrait canvas (capture
   `rotate-applied-90deg.png`). Running `tessera-rotate` itself as the live user
   then uncovered a real reload race: the helper writes `display.lua` inside the
   watched config directory, Hyprland's own watcher starts a reload, and the
@@ -1497,7 +1497,7 @@ Built by Actions run 39144935780 from `main` = `0f71636a0aecb20cd76359a71d2e911e
   identical to the digest GitHub reports for the uploaded asset and to the
   checksum the workflow verified before upload. The download URL returns HTTP 200.
 - Boot captures were inspected, not just collected: both `boot-bios.png` and
-  `boot-uefi.png` show the live image reaching the graphical Tessera desktop
+  `boot-uefi.png` show the live image reaching the graphical Tessa desktop
   (workspace strip, notification bell, tray indicator, dock, wallpaper and the
   Tessarchy mark), and both `launcher-bios.png` and `launcher-uefi.png` show the
   curated "Your space" picker with Firefox, Files, Text Editor, Document Viewer,
@@ -2144,7 +2144,7 @@ and Mesa 26.2.4.
 - `setup-guest.sh --autostart` ran inside the guest after accepting
   `ID=archarm`: 89 Python tests passed (one skipped for missing disk tools),
   49 Qt Quick results passed, and both Hyprland config checks passed.
-- With tty1 autologin, the guest started Tessera through the login hook.
+- With tty1 autologin, the guest started Tessa through the login hook.
   QMP screenshots at 3 and 10 minutes showed the 1280x800 status bar,
   workspaces 1-5, pull-down handle, status icons, clock, Tessarchy mark,
   wallpaper and dock; the clock advanced between them.
@@ -2161,7 +2161,7 @@ on aarch64. This guest does not establish support for any physical ARM device.
 Actually performed by an agent in the development QEMU
 guest (720x1440, Hyprland 0.56.2, Quickshell 0.3.2, squeekboard, foot 1.28.0):
 
-- `tessarchy-theme apply` staged Tessera; shell icons and colours rendered as before.
+- `tessarchy-theme apply` staged Tessa; shell icons and colours rendered as before.
 - Copied Omarchy's stock `catppuccin` directory unchanged into
   `~/.config/tessarchy/themes`; `tessarchy-theme set catppuccin` recoloured the
   running shell live, used its Totoro wallpaper, restarted squeekboard with
@@ -2192,7 +2192,7 @@ input fields retained hard-coded blue/white from upstream. Light mode kept
 those blues and white glyphs on a pale panel. The rebased TouchButton's
 destructive fill additionally re-alpha'd an already-translucent danger tint.
 Fixed: desktop surface colours now resolve through Theme semantic tokens;
-Tessera's optional `shell.toml` reproduces the upstream dark glass, while
+Tessa's optional `shell.toml` reproduces the upstream dark glass, while
 unlayered light/Omarchy palettes derive translucent colours. The Start header
 gradient, taskbar bevel and compositor blur rules are unchanged. Quick radio
 glyphs and tray indicators tint to the foreground on light backgrounds.
@@ -2211,9 +2211,9 @@ Moved the last 85 literal-colour lines (sign-in, Messages, Phone, SIM & cellular
 Sounds, notifications, audio/display/power/rotation controls, Settings, file
 picker, greeter) to Theme tokens. Values equal to the palette use it directly
 (`accent`, `text`, `textMuted`, `textSecondary`, `glass`, `input_*`); 18 new
-semantic tokens carry the rest, and Tessera's `shell.toml` pins their previous
+semantic tokens carry the rest, and Tessa's `shell.toml` pins their previous
 values. Near-identical literals in the same role now share one token, so a few
-Tessera colours moved by at most 7/255 per channel (e.g. Sounds row titles,
+Tessa colours moved by at most 7/255 per channel (e.g. Sounds row titles,
 display-control errors, Messages compose text/placeholder). The sign-in
 backspace glyph is now tinted with the theme text colour instead of fixed white.
 
@@ -2225,10 +2225,10 @@ guest-only IPC hook), the Power panel by scrolling Quick Settings with the
 guest touch helper, and the sign-in screen through `login-preview.qml`; sent one
 normal and one critical notification first. Captured pre-change and changed
 builds under `tessera` and `tessera-light`; comparison in ignored
-`vm/theme-subpages.png` (columns: pre-change light, changed Tessera, changed
+`vm/theme-subpages.png` (columns: pre-change light, changed Tessa, changed
 light).
 
-- Tessera: every page matched the pre-change capture to within 7/255 per
+- Tessa: every page matched the pre-change capture to within 7/255 per
   channel, apart from the clock and text anti-aliasing. Subpixel versus
   greyscale anti-aliasing varied between shell sessions in both directions
   (Phone had fewer colour-fringed pixels after, Power more) on untouched
@@ -2238,7 +2238,7 @@ light).
 - Light, changed: all page text readable, notification cards and popups light
   with a red urgent edge, sign-in screen light over the artwork.
 - Greeter: launched `greeter.qml` while the user theme was `tessera-light`; it
-  rendered the dark bundled Tessera, and the scrim pixels matched the
+  rendered the dark bundled Tessa, and the scrim pixels matched the
   pre-change sign-in screen. Not run under greetd.
 
 ## Touch file dialogs, 2026-10-17
@@ -2255,7 +2255,7 @@ In Desktop mode the shell answers `desktop` and the request goes to
 xdg-desktop-portal-gtk unchanged.
 
 Validated:
-- Ctrl+S in Firefox: the Tessera picker opened with Firefox's suggested name
+- Ctrl+S in Firefox: the Tessa picker opened with Firefox's suggested name
   (Untitled.html) and folder (~/Downloads); no GTK dialog appeared. Save wrote
   ~/Downloads/Untitled.html.
 - Cancel: the picker closed, Firefox kept no dialog, nothing was written.
@@ -2355,7 +2355,7 @@ methods. The bridge compiled without diagnostics against installed Hyprland
 0.56.2 headers and uses the standard client/server plugin ABI hash check.
 
 Actual runtime checks used an isolated nested Hyprland 0.56.2 compositor, private
-runtime/config/state directories and a private session bus, with the real Tessera
+runtime/config/state directories and a private session bus, with the real Tessa
 shell and two live Foot windows. At 900×700, scale 1, a Wayland virtual pointer
 verified reveal, continuous drag, retained application focus during movement,
 destination focus on release, previous/next, fallback dragging after unloading

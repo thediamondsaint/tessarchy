@@ -35,7 +35,7 @@ Continue developing Tessarchy into a polished, touch-first Linux experience for 
 - Evaluate exact OnePlus 7 and OnePlus 8 models first. If unsuitable, evaluate OnePlus 6 and 6T.
 - Verify current device-specific Linux support, bootloader unlocking, display, touch, accelerated graphics, Wi-Fi, charging, suspend, audio, and cellular functionality.
 - Select hardware based on verified compatibility, rather than processor name or generation alone.
-- Preserve as much Tessera QML/interface code as possible. Identify packaging, dependency, kernel, firmware and boot-image work separately.
+- Preserve as much Tessa QML/interface code as possible. Identify packaging, dependency, kernel, firmware and boot-image work separately.
 
 ### 6. WebUSB phone flasher
 - Investigate a browser-based installer that can flash a supported phone and install Tessarchy.

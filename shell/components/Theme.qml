@@ -1,7 +1,7 @@
 pragma Singleton
 import QtQuick
 
-// Omarchy palette plus optional Tessera shell.toml semantic overrides.
+// Omarchy palette plus optional Tessa shell.toml semantic overrides.
 // Every value derives from the active palette when no shell layer is present.
 QtObject {
     id: theme

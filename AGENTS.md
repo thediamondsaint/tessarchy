@@ -1,6 +1,6 @@
 # Tessarchy development
 
-Tessarchy is an Arch session; Tessera is its Quickshell UI. Source is in `shell/`
+Tessarchy is an Arch session; Tessa is its Quickshell UI. Source is in `shell/`
 and `session/`, integration checks in `tests/`, assets in `assets/`, packaging in
 `packaging/`, and the live-image overlay in `iso/`. Generated output belongs in
 `build/`, `dist/`, and `vm/` (ignored).

@@ -4,7 +4,7 @@
  *
  * A GTK3 module that sends GtkFileChooserDialog through the file chooser
  * portal, so GTK3 apps (Firefox, wxWidgets ones like PrusaSlicer) get the
- * Tessera picker on Phone/Tablet instead of a dialog wider than the screen. GTK3 only uses the portal for
+ * Tessa picker on Phone/Tablet instead of a dialog wider than the screen. GTK3 only uses the portal for
  * GtkFileChooserNative; most apps make a plain dialog.
  *
  * The dialog is never shown: its show asks the portal instead, the picked

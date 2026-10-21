@@ -10,6 +10,6 @@ trap 'rm -f -- "$file"' EXIT
 grim "$file"
 trap - EXIT
 if command -v notify-send >/dev/null; then
-    notify-send -a Tessera "Screenshot saved" "$(basename -- "$file")" || true
+    notify-send -a Tessa "Screenshot saved" "$(basename -- "$file")" || true
 fi
 printf '%s\n' "$file"

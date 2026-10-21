@@ -1,4 +1,4 @@
-# Tessera shell themes
+# Tessa shell themes
 
 The system theme uses an unmodified Omarchy `colors.toml` as its palette. To
 customize the shell *look* as well as its palette, optionally place a separate
@@ -45,7 +45,7 @@ tints rather than retaining dark blue. Spacing remains component geometry.
 ## Surface shape
 
 Add an optional `[surface]` table in the same `shell.toml`; this keeps both
-Tessera-only colour and shape data out of Omarchy's `colors.toml`. Values are
+Tessa-only colour and shape data out of Omarchy's `colors.toml`. Values are
 passive data, never QML or theme-supplied Lua. For example:
 
 ```toml
@@ -69,7 +69,7 @@ window_border_inactive = "#3388ff"
 | `radius_card`, `radius_tile`, `radius_field`, `radius_button` | Existing cards/panels, tiles/chips, fields, buttons | Each component's original radius (not a shared number) |
 | `border_width` | Shell surface borders | Each component's original width (usually 1 px, slider handle 3 px) |
 | `window_rounding` | Hyprland decoration | 18 |
-| `blur_enabled`, `blur_size`, `blur_passes` | Hyprland window blur and Tessera layer blur | `true`, 4, 2 |
+| `blur_enabled`, `blur_size`, `blur_passes` | Hyprland window blur and Tessa layer blur | `true`, 4, 2 |
 | `window_border` | Hyprland window border width, also used for grouped windows | 0 (no border) |
 | `window_border_active`, `window_border_inactive` | Focused and unfocused window border colour, also the group border colours | Palette `accent` and `selection` |
 
@@ -112,5 +112,5 @@ Shell QML holds no colour literals outside `Theme.qml`;
 `test_shell_colors_live_in_theme_tokens` enforces this and requires every token to
 be loadable and pinned in `themes/tessera/shell.toml`. The greeter runs as the
 `greeter` account before any user theme is readable, so it loads the bundled
-Tessera theme; `login-preview.qml` previews the sign-in screen under the active
+Tessa theme; `login-preview.qml` previews the sign-in screen under the active
 staged theme.

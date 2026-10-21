@@ -6,7 +6,7 @@ import Quickshell.Services.Greetd
 import "components"
 
 ShellRoot {
-    // The greeter account cannot read a user's staged theme; use bundled Tessera.
+    // The greeter account cannot read a user's staged theme; use bundled Tessa.
     ThemeLoader {
         palettePath: Quickshell.shellPath("../themes/tessera/colors.toml")
         layerPath: Quickshell.shellPath("../themes/tessera/shell.toml")

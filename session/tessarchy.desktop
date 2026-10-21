@@ -1,6 +1,6 @@
 [Desktop Entry]
-Name=Tessarchy (prototype)
-Comment=Tessera touch-first development session
+Name=Tessa on Tessarchy
+Comment=Tessa touch-first development session
 Exec=start-tessarchy
 TryExec=start-tessarchy
 Type=Application
