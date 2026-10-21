@@ -1,5 +1,57 @@
 # Validation and manual acceptance
 
+## Desktop Start keyboard shortcut — issue #69, 2026-10-21
+
+Scope-first draft PR #76. On `origin/main`, Super+Space was unassigned in
+`session/hyprland.lua`; the QEMU guest's live `hyprctl -i 0 binds -j` also had
+no Space binding before staging. The feature branch adds the named
+`startMenu toggle` IPC endpoint and Super+Space binding; the Start taskbar
+share `panel.toggleStartMenu()`. The existing `tessera-start` layer, Escape,
+and the integrated `panel.launchEntry()` remain the launch/dismiss path.
+
+`./scripts/check.sh` on the feature branch: 215 Python tests OK (one skip),
+76 Qt tests passed. Integrated scratch branch `verify/desktop-launcher-shortcut`
+on `sync/upstream-20261021` (`5431512`): 228 Python tests OK (one skip),
+88 Qt tests passed. Fish and shellcheck unavailable; QML lint runs in check.sh.
+
+QEMU, Virtual-1 1280×800 at scale 1, Hyprland 0.56.2: staged the integrated
+shell tree (per-file atomic replace, `shell.qml` last), Lua, app launcher, and
+app target after backing up the installed tree/preferences. `touch shell.qml`
+triggered `Reloading configuration...` then `Configuration Loaded`: PID 77767
+and pre-existing Foot processes 829/5305/5437 stayed alive. `hyprctl reload`
+registered Super+Space (`modmask=64`, key `Space`) without restarting the shell.
+Actual QEMU monitor `sendkey meta_l-spc` opened `tessera-start` (452×170),
+`sendkey esc` dismissed it, and two successive `sendkey meta_l-spc` inputs
+opened then closed it. These are real VM keyboard events, not IPC-only tests.
+After reopening from the shortcut, `sendkey ret` activated the Firefox Start
+tile; Firefox PID 78077 mapped on workspace 7 in transient unit
+`run-p78075-i80898.service`, with `PartOf=tessarchy-apps.target`, distinct
+from the shell's cgroup. Firefox was stopped after inspection. Right-arrow
+selection of Foot was *not* demonstrated; the first tile launched instead.
+Do not infer that directional navigation was accepted from the static test.
+
+One Phone and one Tablet smoke: after VM-only mode-change shell restarts,
+Super+Space produced no `tessera-start` layer, and the touch Recents dock
+remained visible. `hyprctl -i 0 configerrors` stayed empty and screenshots had
+no red compositor banner. The VM logged its existing missing-network-backend,
+UPower, brightness/nightlight and SHM-fallback warnings; no new QML
+configuration load failure. No physical device was touched.
+
+Restore: stopped the test Firefox unit; guest script compared SHA256 of every
+shell file plus Lua, preference, launcher and target presence to the original
+backup and reported byte-identical restoration. After a VM-only shell restart
+to re-read original Phone preference, Virtual-1 name, resolution, position,
+scale, transform, workspace 7 and reserved `[0,48,0,76]` matched baseline;
+the original three Foot PIDs remained, configerrors empty and no transient test
+unit active. Evidence: [open](evidence/desktop-launcher-shortcut/issue69-key-open-settled.jpg),
+[Escape](evidence/desktop-launcher-shortcut/issue69-key-escape.jpg),
+[toggle](evidence/desktop-launcher-shortcut/issue69-key-toggle.jpg),
+[menu before Enter](evidence/desktop-launcher-shortcut/issue69-key-launch2-menu.jpg),
+[launched Firefox](evidence/desktop-launcher-shortcut/issue69-firefox-launched.jpg),
+[Phone](evidence/desktop-launcher-shortcut/issue69-phone-key-settled.jpg),
+[Tablet](evidence/desktop-launcher-shortcut/issue69-tablet-key-settled.jpg),
+[restored](evidence/desktop-launcher-shortcut/issue69-restored.jpg).
+
 ## Theme picker layout fix, 2026-10-19
 
 Branch `feat/theme-extras` on `49728ce`. Executed by an agent in the running

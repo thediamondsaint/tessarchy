@@ -11,6 +11,21 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class Workflows(unittest.TestCase):
+    def test_desktop_start_shortcut_reuses_taskbar_menu(self):
+        shell = (ROOT / 'shell/shell.qml').read_text()
+        hyprland = (ROOT / 'session/hyprland.lua').read_text()
+        self.assertIn('hl.bind("SUPER + Space", hl.dsp.exec_cmd("tessera-shell ipc call startMenu toggle"))', hyprland)
+        self.assertIn('hl.bind("ALT + Tab", hl.dsp.exec_cmd("tessera-shell ipc call switcher next"), { locked = true })', hyprland)
+        self.assertIn('target: "startMenu"\n        function toggle(): void { root.startMenuRequested(); }', shell)
+        self.assertIn('if (surface.isPrimaryScreen) panel.toggleStartMenu();', shell)
+        self.assertIn('onClicked: panel.toggleStartMenu()', shell)
+        self.assertIn('if (surface.mode !== "desktop") return;\n                    page = "";\n                    startMenuOpen = !startMenuOpen;', shell)
+        self.assertIn('visible: surface.isPrimaryScreen && surface.mode === "desktop" && panel.startMenuOpen', shell)
+        self.assertIn('Keys.onEscapePressed: panel.startMenuOpen = false', shell)
+        self.assertIn('startApplications.itemAt(keyboardIndex).forceActiveFocus()', shell)
+        self.assertIn('if (tile) tile.clicked();', shell)
+        self.assertTrue('panel.launchEntry(modelData);' in shell or 'modelData.execute();' in shell)
+
     def test_shell_shape_literals_live_in_theme_tokens(self):
         # Tiny decorative marks and circular avatars retain fixed geometry.
         legacy = {'StatusIcon.qml': 1, 'ContactAvatar.qml': 1, 'shell.qml': 2}

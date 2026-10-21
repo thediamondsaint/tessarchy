@@ -216,6 +216,7 @@ hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("tessera-brightness down"))
 -- These bindings remain available while the switcher has an exclusive layer grab.
 hl.bind("ALT + Tab", hl.dsp.exec_cmd("tessera-shell ipc call switcher next"), { locked = true })
 hl.bind("ALT + SHIFT + Tab", hl.dsp.exec_cmd("tessera-shell ipc call switcher previous"), { locked = true })
+hl.bind("SUPER + Space", hl.dsp.exec_cmd("tessera-shell ipc call startMenu toggle"))
 hl.bind("code:64", hl.dsp.exec_cmd("tessera-shell ipc call switcher accept"), { release = true, ignore_mods = true, locked = true })
 hl.bind("code:108", hl.dsp.exec_cmd("tessera-shell ipc call switcher accept"), { release = true, ignore_mods = true, locked = true })
 hl.bind("Print", hl.dsp.exec_cmd("tessera-screenshot"))
