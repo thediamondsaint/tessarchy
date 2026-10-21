@@ -8,6 +8,9 @@ inventory. #84 is a design audit. #63's tablet split policy and #64's general
 dock hiding are independent work and are not merged here. Only the experimental
 scrolling workspace hides its dock and app-edge gesture interception.
 
+Super+Space opens the launcher; type to search, arrows select, Enter launches and
+Escape dismisses it.
+
 Enter Settings → Try Window Tape or Super+T. Tap the floating cube for Apps,
 previous/next windows, a radial Menu and exit. Drag the lower edge wheel to move
 real windows; release snaps through the existing #61 bridge. Without the optional

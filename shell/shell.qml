@@ -39,6 +39,7 @@ ShellRoot {
     signal openAppRequested(string page)
     IpcHandler {
         target: "apps"
+        function launcher(): void { root.openAppRequested("apps"); }
         function phone(): void { root.openAppRequested("phone"); }
         function messages(): void { root.openAppRequested("messages"); }
         function cellular(): void { root.openAppRequested("cellular"); }
@@ -365,7 +366,7 @@ ShellRoot {
                 }
                 WlrLayershell.namespace: "tessera"
                 WlrLayershell.layer: WlrLayer.Top
-                WlrLayershell.keyboardFocus: ["apps", "phone", "messages", "cellular", "settings", "sounds"].indexOf(panel.page) >= 0 ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
+                WlrLayershell.keyboardFocus: panel.page === "apps" ? WlrKeyboardFocus.Exclusive : ["phone", "messages", "cellular", "settings", "sounds"].indexOf(panel.page) >= 0 ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
 
                 function showPage(name) {
                     if (name === "windows" && page !== "windows") switcher.selectActive();

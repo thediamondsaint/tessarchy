@@ -11,7 +11,7 @@ ColumnLayout {
     readonly property var matches: Apps.search(applications, search.text)
     signal launched(string appId)
     signal dismissed()
-    onVisibleChanged: if (visible) { search.text = ""; grid.currentIndex = grid.count ? 0 : -1; }
+    onVisibleChanged: if (visible) { search.text = ""; grid.currentIndex = grid.count ? 0 : -1; Qt.callLater(() => grid.forceActiveFocus()); }
     spacing: 8
     TextField {
         id: search
@@ -39,6 +39,13 @@ ColumnLayout {
         cellHeight: 108
         model: launcher.matches
         keyNavigationEnabled: true
+        Keys.onPressed: event => {
+            if (event.text.length === 1 && !(event.modifiers & (Qt.ControlModifier | Qt.AltModifier | Qt.MetaModifier))) {
+                search.forceActiveFocus();
+                search.text += event.text;
+                event.accepted = true;
+            }
+        }
         currentIndex: count ? 0 : -1
         onCurrentIndexChanged: if (currentIndex >= 0) positionViewAtIndex(currentIndex, GridView.Contain)
         Keys.onEscapePressed: launcher.dismissed()

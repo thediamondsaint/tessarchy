@@ -29,6 +29,11 @@ TestCase {
         launcher.visible = true;
         compare(input.text, "");
         compare(launcher.matches.length, 2);
+        wait(1);
+        keyClick(Qt.Key_F); keyClick(Qt.Key_F); keyClick(Qt.Key_X);
+        compare(input.text, "ffx");
+        compare(launcher.matches.length, 1);
+        input.text = "";
         input.forceActiveFocus();
         keyClick(Qt.Key_Down);
         keyClick(Qt.Key_Right);

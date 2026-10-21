@@ -67,6 +67,14 @@ assert(tape.contains({workspace={name="tessarchy-tape"}}))
 assert(not tape.contains({workspace={name="1"}}))
 ''')
 
+    def test_toggle_leaves_and_reenters_previous_workspace(self):
+        self.run_lua('''
+workspace={id=3,name="3"}; tape.toggle()
+assert(requests[1].workspace=="name:tessarchy-tape")
+workspace={id=7,name="tessarchy-tape"}; tape.toggle()
+assert(requests[2].workspace==3)
+''')
+
     def test_drag_stops_at_content_edges_and_ignores_dialogs(self):
         self.run_lua('''
 tiled={{at={x=-100},size={x=400}}, {at={x=300},size={x=400}},

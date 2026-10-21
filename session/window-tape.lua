@@ -85,4 +85,9 @@ function tape.close()
     hl.dispatch(tape.close_request())
 end
 
+function tape.toggle()
+    local current = hl.get_active_workspace()
+    if current and current.name == tape.name then tape.close() else tape.open() end
+end
+
 return tape
