@@ -116,12 +116,24 @@ class Workflows(unittest.TestCase):
         # Buttons and gestures call the same panel action; no copied logic.
         for action in ('back', 'home', 'recents'):
             self.assertIn(f'onClicked: panel.navigate("{action}")', shell)
-        self.assertEqual(shell.count('onGesture: action => panel.navigate(action)'), 2)
+        self.assertIn('if (surface.gestures) panel.navigate(action);', shell)
+        self.assertEqual(shell.count('onGesture: action => panel.navigate(action)'), 1)
         self.assertEqual(shell.count('visible: !surface.gestures'), 3)
-        self.assertIn('shown: shellPreferences.showGestureHandle', shell)
+        self.assertIn('shown: surface.gestures && shellPreferences.showGestureHandle', shell)
         self.assertIn('visible: surface.gestures', shell)
         self.assertIn('value: "buttons"', settings)
         self.assertIn('page.preferences.navigation = modelData.value', settings)
+
+    def test_hidden_touch_dock_has_independent_reveal_layer(self):
+        shell = (ROOT / 'shell/shell.qml').read_text()
+        policy = (ROOT / 'shell/LayoutPolicy.js').read_text()
+        self.assertIn('Policy.dockState(mode, hasApp, panel.expanded, dockRevealed, navHeight)', shell)
+        self.assertIn('visible: surface.dockState.visible', shell)
+        self.assertIn('exclusiveZone: surface.dockState.exclusiveZone', shell)
+        self.assertIn('visible: surface.gestures || surface.dockState.reveal', shell)
+        self.assertIn('onTapped: if (surface.dockState.reveal) surface.revealDock()', shell)
+        self.assertIn('shown: surface.gestures && shellPreferences.showGestureHandle', shell)
+        self.assertIn('function dockState(mode, hasApp, expanded, revealed, barHeight)', policy)
 
     def test_components_qmldir_lists_every_component(self):
         # An explicit qmldir hides any component it omits ("X is not a type").

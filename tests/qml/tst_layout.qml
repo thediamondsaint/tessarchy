@@ -48,6 +48,34 @@ TestCase {
         verify(!Policy.gestureNavigation("desktop", "gestures"));
         compare(Policy.dockLayout("desktop", 1280, true, true).rows, 1);
     }
+    function test_auto_hide_dock_preserves_pages_and_desktop() {
+        for (const mode of ["phone", "tablet"]) {
+            for (const choice of ["gestures", "buttons"]) {
+                for (const keyboard of [false, true]) {
+                    const bar = Policy.barGeometry(mode, Policy.dockLayout(mode, 400, keyboard,
+                        Policy.gestureNavigation(mode, choice)).rows);
+                    const empty = Policy.dockState(mode, false, false, false, bar.height);
+                    compare(empty.visible, true);
+                    compare(empty.exclusiveZone, bar.height);
+                    const hidden = Policy.dockState(mode, true, false, false, bar.height);
+                    compare(hidden.visible, false);
+                    compare(hidden.exclusiveZone, 0);
+                    compare(hidden.reveal, true);
+                    const shown = Policy.dockState(mode, true, false, true, bar.height);
+                    compare(shown.visible, true);
+                    compare(shown.exclusiveZone, 0);
+                    compare(shown.reveal, false);
+                    const page = Policy.dockState(mode, true, true, false, bar.height);
+                    compare(page.visible, true);
+                    compare(page.exclusiveZone, 0);
+                }
+            }
+        }
+        const desktop = Policy.dockState("desktop", true, false, false, 56);
+        compare(desktop.visible, true);
+        compare(desktop.exclusiveZone, 56);
+        compare(desktop.reveal, false);
+    }
     function test_bottom_swipe_needs_distance_and_hold_for_recents() {
         const d = Policy.GESTURE_DISTANCE;
         const hold = Policy.GESTURE_HOLD;

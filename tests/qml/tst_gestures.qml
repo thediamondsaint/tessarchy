@@ -16,12 +16,14 @@ TestCase {
         id: bottomFactory
         EdgeSwipeArea {
             property var actions: []
+            property int taps: 0
             x: 0
             y: 780
             width: 400
             height: 20
             edge: "bottom"
             onGesture: action => actions = actions.concat([action])
+            onTapped: taps++
         }
     }
     Component {
@@ -63,6 +65,9 @@ TestCase {
         const area = createTemporaryObject(bottomFactory, test);
         mouseClick(area, 200, 10);
         compare(area.actions, []);
+        compare(area.taps, 1);
+        swipe(area, 200, 10, 200, 10 - 2 * Policy.GESTURE_DISTANCE, 8, 0);
+        compare(area.taps, 1);
     }
     function test_inward_side_swipes_are_back() {
         const left = createTemporaryObject(sideFactory, test, {edge: "left", x: 0});

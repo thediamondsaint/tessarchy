@@ -254,6 +254,28 @@ ShellRoot {
             // Bar geometry comes from Policy.barGeometry; do not add literals here.
             readonly property var bar: Policy.barGeometry(mode, dock.rows)
             readonly property int navHeight: bar.height
+            // Only windows on this output's active workspace hide its dock.
+            readonly property bool hasApp: Hyprland.toplevels.values.some(window => {
+                const workspace = window.workspace;
+                const monitor = workspace && workspace.monitor;
+                return window.wayland && monitor && monitor.name === modelData.name
+                    && monitor.activeWorkspace && monitor.activeWorkspace.id === workspace.id;
+            })
+            property bool dockRevealed: false
+            readonly property var dockState: Policy.dockState(mode, hasApp, panel.expanded, dockRevealed, navHeight)
+            onHasAppChanged: {
+                dockRevealed = false;
+                dockHideTimer.stop();
+            }
+            Timer {
+                id: dockHideTimer
+                interval: 5000
+                onTriggered: surface.dockRevealed = false
+            }
+            function revealDock() {
+                dockRevealed = true;
+                dockHideTimer.restart();
+            }
             readonly property int launcherRows: Math.ceil((panel.appEntries.length + 4) / Policy.columns(mode, Policy.panelWidth(mode, modelData.width) - 32))
             readonly property bool showWorkspaces: Policy.showWorkspaces(mode, modelData.width)
             readonly property var workspaceIds: {
@@ -299,6 +321,7 @@ ShellRoot {
             PanelWindow {
                 id: panel
                 screen: surface.modelData
+                visible: surface.dockState.visible
                 readonly property var appEntries: Apps.majorApplications(DesktopEntries.applications.values)
                 property string page: ""
                 // Desktop Start menu, opened by the taskbar's Start button.
@@ -321,7 +344,7 @@ ShellRoot {
                 }
                 implicitWidth: expanded ? Policy.panelWidth(surface.mode, surface.modelData.width) : surface.dock.width
                 implicitHeight: expanded && surface.isPhone && page === "windows" ? surface.modelData.height - 48 : expanded ? Math.min(page === "windows" ? surface.modelData.height - 60 : page === "apps" ? surface.launcherRows * 124 + 156 : surface.mode === "tablet" ? 740 : 640, surface.modelData.height - 64) : surface.navHeight
-                exclusiveZone: surface.navHeight
+                exclusiveZone: surface.dockState.exclusiveZone
                 color: "transparent"
                 Rectangle {
                     anchors.top: parent.top
@@ -858,33 +881,39 @@ ShellRoot {
             // Gesture navigation: thin edge strips catch swipes that start at
             // the screen edge. Touches inside a strip do not reach the app below,
             // so the strips stay a few pixels wide. The bottom strip covers the
-            // gap under the dock row and spans the screen.
+            // gap under the dock row and spans the screen. A tap on the hidden
+            // strip reveals the dock over apps in either navigation mode.
             PanelWindow {
                 id: bottomGesture
                 screen: surface.modelData
-                visible: surface.gestures
+                visible: surface.gestures || surface.dockState.reveal
                 anchors {
                     bottom: true
                     left: true
                     right: true
                 }
-                implicitHeight: surface.gestureEdge.bottom
+                implicitHeight: surface.dockState.reveal ? surface.gestureEdge.side : surface.gestureEdge.bottom
                 exclusionMode: ExclusionMode.Ignore
+                exclusiveZone: 0
                 color: "transparent"
                 WlrLayershell.namespace: "tessera-gesture"
-                WlrLayershell.layer: WlrLayer.Top
+                WlrLayershell.layer: WlrLayer.Overlay
                 WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
                 EdgeSwipeArea {
                     id: bottomSwipe
                     anchors.fill: parent
                     edge: "bottom"
-                    onGesture: action => panel.navigate(action)
+                    onGesture: action => {
+                        if (surface.gestures) panel.navigate(action);
+                        else surface.revealDock();
+                    }
+                    onTapped: if (surface.dockState.reveal) surface.revealDock()
                 }
                 GestureHandle {
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.verticalCenter: parent.bottom
                     anchors.verticalCenterOffset: -surface.gestureEdge.handle
-                    shown: shellPreferences.showGestureHandle
+                    shown: surface.gestures && shellPreferences.showGestureHandle
                     accentColor: root.accentColor
                     reducedMotion: shellPreferences.reducedMotion
                     progress: bottomSwipe.progress

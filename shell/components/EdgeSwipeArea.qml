@@ -9,6 +9,7 @@ MouseArea {
     // "bottom", "left" or "right".
     required property string edge
     signal gesture(string action)
+    signal tapped()
     property real startX: 0
     property real startY: 0
     property real dx: 0
@@ -52,6 +53,8 @@ MouseArea {
         if (!fired) {
             const action = Policy.classifyGesture(edge, mouse.x - startX, mouse.y - startY, heldMs());
             if (action !== "none") gesture(action);
+            else if (edge === "bottom" && Math.abs(mouse.x - startX) < Policy.GESTURE_STILL
+                     && Math.abs(mouse.y - startY) < Policy.GESTURE_STILL) tapped();
         }
         dx = 0;
         dy = 0;

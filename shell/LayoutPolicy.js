@@ -84,6 +84,13 @@ function gestureNavigation(mode, choice) {
     return mode !== "desktop" && choice !== "buttons";
 }
 
+// Hidden touch docks reserve nothing; temporary reveals overlay the app.
+function dockState(mode, hasApp, expanded, revealed, barHeight) {
+    const hidden = mode !== "desktop" && hasApp && !expanded && !revealed;
+    return {visible: !hidden, exclusiveZone: mode === "desktop" || !hasApp ? barHeight : 0,
+            reveal: hidden};
+}
+
 // edge: "bottom", "left" or "right"; dx/dy: travel since the touch began
 // (screen axes, y down); heldMs: time the finger has been still at the end.
 function classifyGesture(edge, dx, dy, heldMs) {
