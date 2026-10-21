@@ -206,6 +206,10 @@ release assets. Generated build output stays in `build/`, `dist/` and `vm/`.
 | `assets/`, `website/` | Actual captures, roadmap and GitHub Pages source |
 | `docs/` | Architecture, operating guides, roadmap and evidence |
 
+The [window tape proposal](docs/window-tape-proposal.md) researches live scrolling
+windows with an auto-hiding touch control while retaining Hyprland. It includes
+implementation gates and difficulty estimates.
+
 ## Roadmap, branding and sharing
 
 The [project site](https://thediamondsaint.github.io/tessarchy/) contains twenty-one

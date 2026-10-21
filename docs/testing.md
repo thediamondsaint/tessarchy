@@ -2334,3 +2334,13 @@ restored 18/true/0, with empty configerrors. Ubuntu source CI now uses the
 supported 26.04 runner for QtQuick.Effects; every source/build job declares the
 portal's GTK/GLib build dependencies. Terminal Fn exposes navigation/F1–F12
 without adding short key rows.
+
+## Window tape research RFC — 2026-10-20
+
+Documentation-only proposal on baseline `e52ff9e`; Hyprland remains the compositor.
+Reviewed upstream scrolling/gesture/IPC documentation and current session/shell
+integration. `./scripts/check.sh` passed: 214 Python tests, 76 Qt Quick results
+and 4 website tests; Hyprland config verification passed. Fish and ShellCheck
+were unavailable. QML lint emitted a FilePicker PanelWindow creatability warning.
+No tape implementation, runtime interaction or physical-touch test was performed.
+See [the proposal](window-tape-proposal.md) for planned implementation acceptance.

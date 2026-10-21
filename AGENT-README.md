@@ -168,6 +168,7 @@ after the last assigned ID; preserve existing IDs when reorganizing sections.
 
 | Task ID | Status | Owner | Branch / PR | Next action or evidence |
 | --- | --- | --- | --- | --- |
+| T79 | Review | Codex | docs/touch-window-tape | Research and design RFC for live scrolling windows and an auto-hiding touch scrubber; implementation and device gates in docs/window-tape-proposal.md |
 | T78 | Review | Codex | integrate/vm-accepted-20261020 | Reconcile and merge VM-accepted #9/#10/#38/#47/#49/#50 with current regressions checked |
 | T77 | Done | Codex | feat/osk-super-key | T-cube Mod4 key; actual guest Super+Return and layout parser passed |
 | T73 | Done | Codex | review/audit-2026-10-19 | PR #52 merged; small PRs integrated, shell/site defects fixed, CI and live Pages verified |
