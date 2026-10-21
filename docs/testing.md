@@ -2633,3 +2633,35 @@ themed cube/terminal, light picker and phone grid. Theme-card palette previews
 are native UI widgets, not wallpaper downloads. Physical-device latency and
 application-specific GTK/Qt styling beyond existing launcher policies remain
 unverified; previous broader validation limitations still apply.
+
+
+## Icon-only glass cube — 2026-10-21
+
+Runtime `0dc2061` replaces the cube's preview/text shelf with the existing
+QuickSwitcher in glass mode. App icons, a selection dot and themed SVG actions
+replace visible captions; accessible names remain. The radial menu is also
+icon-only. The 408×208 tablet shelf clamps to 384×208 on the 400px phone. Touch
+targets remain at least 48px, with reduced-motion-aware press feedback. Native
+Hyprland blur now includes `tessera-tape`; glass surfaces use theme-derived tint,
+translucency and highlights. Normal Recents and Alt+Tab remain available.
+
+`./scripts/check.sh` passed: 223 Python, 101 Qt Quick and 11 Node results,
+including QML lint and compositor config validation. Existing FilePicker warning
+and unavailable Fish/ShellCheck remain. Qt checks exercise icon touch activation,
+horizontal flicking without accidental activation and preserved focus. A Lua
+regression checks focus-before-fit for tape windows and unchanged normal-layout
+and floating-dialog behavior.
+
+Actual VM at 400×800 and 1024×768: virtual touch opened the cube without taking
+application focus, activated a real window and collapsed the shelf, flicked the
+icon rail, and opened/returned from radial actions. Visual checking caught focus
+changing without revealing the selected window. The existing Lua activation
+helper now focuses and fits tape windows into view in one compositor operation;
+the shell uses it for tape activation. Retesting revealed the real Calculator,
+and actual Files captures show compositor blur through the glass. Config errors
+were empty; existing software Mesa/SHM and absent-BlueZ warnings remain. The VM
+was returned to Tablet with OSK enabled and Tessa Night active.
+
+[Five actual captures](../assets/screenshots/tessa-glass-icons/README.md) show the
+phone/tablet cube, revealed Calculator, touch flick and icon radial menu. Physical
+touchscreen latency remains untested; prior broader limitations still apply.
