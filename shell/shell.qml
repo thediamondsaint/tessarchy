@@ -50,7 +50,7 @@ ShellRoot {
         if (!window || !window.wayland) return;
         const workspace = window.workspace || (window.lastIpcObject && window.lastIpcObject.workspace);
         const address = String(window.address).replace(/^0x/i, "");
-        if (Hyprland.usingLua && workspace && workspace.name.startsWith("special:tessarchy-minimized-")
+        if (Hyprland.usingLua && workspace && (workspace.name === "tessarchy-tape" || workspace.name.startsWith("special:tessarchy-minimized-"))
                 && /^[0-9a-f]+$/i.test(address)) {
             Quickshell.execDetached(["hyprctl", "eval", "TessarchyWindows.activate(\"address:0x" + address + "\")"]);
         } else window.wayland.activate();
@@ -885,27 +885,18 @@ ShellRoot {
                     id: tapeControl
                     anchors.fill: parent
                     maxControlWidth: Math.max(192, surface.modelData.width - 16)
-                    recentsComponent: AppSwitcher {
-                        compactMode: true
+                    recentsComponent: QuickSwitcher {
+                        glassMode: true
                         accentColor: Theme.wheelGlow
                         windows: root.switcherWindows
-                        activeWindow: root.activeWindow
-                        screenSize: Qt.size(surface.modelData.width, surface.modelData.height - 48)
                         iconForWindow: window => {
                             const entry = window.wayland ? DesktopEntries.heuristicLookup(window.wayland.appId) : null;
                             return entry && entry.icon ? Quickshell.iconPath(entry.icon, true) : "";
                         }
-                        nameForWindow: window => {
-                            const entry = window.wayland ? DesktopEntries.heuristicLookup(window.wayland.appId) : null;
-                            return entry ? entry.name : window.title || "Application";
-                        }
-                        activateTarget: target => root.activateHandle(target)
                         reducedMotion: shellPreferences.reducedMotion
-                        emptyHint: "No recent apps yet. Tap Apps to open one."
                         Component.onCompleted: selectActive()
-                        onActivated: tapeControl.cancel()
+                        onWindowRequested: window => { tapeControl.cancel(); root.activateWindow(window); }
                         onDismissed: tapeControl.cancel()
-                        onCloseRequested: target => { if (target) target.close(); }
                     }
                     reducedMotion: shellPreferences.reducedMotion
                     onExpandedChanged: if (expanded && root.oskAvailable) Quickshell.execDetached(["tessarchy-osk", "hide"])

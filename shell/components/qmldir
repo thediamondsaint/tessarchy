@@ -54,3 +54,5 @@ RadialActions 1.0 RadialActions.qml
 StartAppGrid 1.0 StartAppGrid.qml
 EdgeWheel 1.0 EdgeWheel.qml
 LauncherRow 1.0 LauncherRow.qml
+
+GlassIconButton 1.0 GlassIconButton.qml

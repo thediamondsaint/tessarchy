@@ -22,8 +22,8 @@ Item {
     signal stepped(string direction)
     signal settled()
     signal leaveRequested()
-    implicitWidth: Math.min(maxControlWidth, radialOpen ? 280 : expanded ? (tessaCube ? 560 : 336) : (tessaCube ? 56 : 128))
-    implicitHeight: radialOpen ? 280 : expanded && tessaCube ? 300 : 56
+    implicitWidth: Math.min(maxControlWidth, radialOpen ? 280 : expanded ? (tessaCube ? 408 : 336) : (tessaCube ? 56 : 128))
+    implicitHeight: radialOpen ? 280 : expanded && tessaCube ? 208 : 56
 
     function cancel() {
         radialOpen = false;
@@ -45,7 +45,10 @@ Item {
     Rectangle {
         anchors.fill: parent
         radius: Theme.radius("card", control.radialOpen ? height / 2 : 20, height)
-        color: Qt.alpha(Theme.background, 0.96)
+        gradient: Gradient {
+            GradientStop { position: 0; color: Qt.alpha(Theme.surface, Theme.mode === "light" ? 0.84 : 0.68) }
+            GradientStop { position: 1; color: Qt.alpha(Theme.background, Theme.mode === "light" ? 0.76 : 0.52) }
+        }
         border.color: Qt.alpha(Theme.wheelGlow, 0.65)
         border.width: Theme.borderWidth(1)
     }
@@ -89,16 +92,11 @@ Item {
             reducedMotion: control.reducedMotion
             enabled: false
         }
-        Text {
-            text: "Recent apps"
-            color: Theme.text
-            font.pixelSize: 18
-            font.weight: Font.DemiBold
-            Layout.fillWidth: true
-        }
-        TouchButton {
+        Item { Layout.fillWidth: true }
+        GlassIconButton {
             objectName: "collapseCube"
-            text: "⌄"
+            symbol: "close"
+            reducedMotion: control.reducedMotion
             Accessible.name: "Collapse recent apps"
             Layout.preferredWidth: 48
             Layout.fillHeight: true
@@ -111,7 +109,7 @@ Item {
         active: control.tessaCube
         visible: control.expanded && !control.radialOpen
         anchors { top: parent.top; left: parent.left; right: parent.right; topMargin: 48; leftMargin: 12; rightMargin: 12 }
-        height: Math.max(188, control.height - 112)
+        height: Math.max(104, control.height - 104)
         opacity: visible ? 1 : 0
         scale: visible ? 1 : 0.96
         Behavior on opacity { NumberAnimation { duration: control.reducedMotion ? 0 : 160 } }
@@ -119,15 +117,17 @@ Item {
         sourceComponent: control.recentsComponent
     }
     RowLayout {
-        anchors.left: parent.left
-        anchors.right: parent.right
+        anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
+        width: Math.min(parent.width - 24, 344)
         height: 56
-        spacing: 0
+        spacing: 8
         visible: control.expanded && !control.radialOpen
         opacity: visible ? 1 : 0
         Behavior on opacity { NumberAnimation { duration: control.reducedMotion ? 0 : 160 } }
-        TouchButton {
+        GlassIconButton {
+            symbol: "dialpad"
+            reducedMotion: control.reducedMotion
             visible: control.tessaCube
             Layout.minimumWidth: 48
             text: "Apps"
@@ -137,7 +137,9 @@ Item {
             Layout.fillHeight: true
             onClicked: { control.launcherRequested(); control.expanded = false; }
         }
-        TouchButton {
+        GlassIconButton {
+            symbol: "back"
+            reducedMotion: control.reducedMotion
             id: previous
             text: "‹"
             Accessible.name: "Previous window"
@@ -146,7 +148,9 @@ Item {
             enabled: control.canPan
             onClicked: { control.stepped("previous"); idle.restart(); }
         }
-        TouchButton {
+        GlassIconButton {
+            symbol: "controls"
+            reducedMotion: control.reducedMotion
             Layout.preferredWidth: 64
             Layout.fillWidth: true
             Layout.fillHeight: true
@@ -154,7 +158,9 @@ Item {
             Accessible.name: "Open radial actions"
             onClicked: { control.radialOpen = true; idle.restart(); }
         }
-        TouchButton {
+        GlassIconButton {
+            symbol: "return"
+            reducedMotion: control.reducedMotion
             id: next
             text: "›"
             Accessible.name: "Next window"
@@ -163,7 +169,9 @@ Item {
             enabled: control.canPan
             onClicked: { control.stepped("next"); idle.restart(); }
         }
-        TouchButton {
+        GlassIconButton {
+            symbol: "desktop"
+            reducedMotion: control.reducedMotion
             id: leave
             text: "×"
             Accessible.name: "Leave window tape"
@@ -177,6 +185,7 @@ Item {
         visible: control.radialOpen
         width: Math.min(parent.width, 280)
         height: 280
+        reducedMotion: control.reducedMotion
         onTriggered: action => {
             control.radialOpen = false;
             control.expanded = false;

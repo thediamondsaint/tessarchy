@@ -56,7 +56,7 @@ hl.config({
 })
 hl.workspace_rule({ workspace = "name:tessarchy-tape", layout = "scrolling" })
 -- Frost only Tessa glass surfaces; leave applications unchanged.
-hl.layer_rule({ match = { namespace = "tessera(-status|-start)?" }, blur = surface.blur_enabled, ignore_alpha = 0.01 })
+hl.layer_rule({ match = { namespace = "tessera(-status|-start|-tape)?" }, blur = surface.blur_enabled, ignore_alpha = 0.01 })
 -- Read the same saved mode as Tessa when a new ordinary app opens.
 -- Existing windows and floating dialogs are left alone when modes change.
 local function shell_mode(monitor)

@@ -12,10 +12,10 @@ Super+Space opens the launcher; type to search, arrows select, Enter launches an
 Escape dismisses it.
 
 Enter Settings → Try Window Tape or Super+T. Tap the floating cube for recent apps in most-recently-used order, Apps,
-previous/next windows, a radial Menu and exit. Swipe the recent shelf horizontally
-and tap a preview to switch. Available native previews fall back to app icons and
-titles when unavailable. The shelf dismisses the keyboard and hides the edge wheel
-to keep its touch controls clear, then collapses on selection, the header chevron
+previous/next windows, a radial Menu and exit. Swipe the recent app icons horizontally
+and tap an icon to switch. The cube and radial menu use icons throughout;
+labels remain available to assistive technology. The shelf dismisses the keyboard and hides the edge wheel
+to keep its touch controls clear, then collapses on selection, the close icon
 or inactivity. Browsing postpones idle collapse. Drag the lower edge wheel to move
 real windows; release snaps through the existing #61 bridge. Without the optional
 bridge, the existing 120px stepped fallback remains available. The × action and
@@ -91,3 +91,30 @@ Imported from [Omarchy](https://github.com/omacom/omarchy), revision
 it. Wallpapers, icon packs and executable Hyprland configurations are not copied.
 Custom compatible palettes can still be placed under
 `$XDG_CONFIG_HOME/tessarchy/themes/<name>/colors.toml` (default `~/.config`).
+
+
+## Icon-only glass cube
+
+The current cube uses the existing QuickSwitcher in glass mode: large app icons,
+translucent circular plates and a selection dot. Text headings, app captions and
+action captions are removed. All actions use existing themed SVGs via Icon and
+TouchButton, retaining accessible names and 48px minimum touch targets. Normal
+Alt+Tab and full Recents keep their existing behavior. Hyprland now blurs the
+`tessera-tape` layer too; Qt gradients and thin highlights form the glass surfaces.
+
+Inspected actual source and licensing for
+[MacShell](https://github.com/0-ss/MacShell), revision
+`94f3b3b1b5239162a8a20ac2ba088bbb3a6d59e8`: `GlassSlab.qml`,
+`GlassSegmented.qml` and `MacLock/Glass.qml`, MIT; and
+[KDE Quickshell Dock](https://github.com/IFtiger-hu-hub/kde-quickshell-dock),
+revision `08a36f98fc5f79971dd296d5bcf460afc32f44cb`: `DockIcon.qml`,
+`FolderDockIcon.qml`, `UtilityCell.qml`, no declared license/root LICENSE found.
+Their per-icon glass plates, press feedback and frosted fallback patterns informed
+the design. Tessa reuses its own components and compositor blur; no upstream
+source, shader, KDE service or new dependency is imported.
+
+
+Activating a scrolling window uses the existing Lua window-control helper to
+focus and then `fit_into_view` in one compositor operation. This also serves
+normal Recents/taskbar activation of tape windows. Floating dialogs and normal
+workspaces keep their previous behavior.
