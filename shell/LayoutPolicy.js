@@ -35,7 +35,7 @@ const BAR_COLUMN_GAP = 4;
 const BAR_MODES = {
     desktop: {inset: 4, gap: 8, side: 0, padding: 10, maxWidth: 448},
     tablet: {inset: 12, gap: 12, side: 16, padding: 16, maxWidth: 448},
-    phone: {inset: 8, gap: 12, side: 16, padding: 12, maxWidth: 376}
+    phone: {inset: 8, gap: 12, side: 16, padding: 10, maxWidth: 376}
 };
 // Open pages keep their own frame margins, flush with the screen bottom.
 const BAR_PAGE = {top: 12, desktopTop: 8, bottom: 12};
@@ -105,16 +105,22 @@ function gestureEdgeSize(mode, expanded) {
     return {side: GESTURE_EDGE, bottom: bottom, handle: Math.min(bar.gap, bottom) / 2};
 }
 
-// Touch docks: Phone, Messages and the optional Keyboard, plus Back, Home and
-// Recents when gestures are off. Settings lives in the status bar and pull-down.
+// Touch docks never wrap: overflow scrolls with every target at least 48 px.
+// Gestures shrink the frame to the full six-button dock's slot width.
+const DOCK_FULL_BUTTONS = 6;
 function dockLayout(mode, width, keyboard, gestures) {
     const bar = barGeometry(mode, 1);
     const navigation = gestures && mode !== "desktop" ? 0 : 3;
     const count = 2 + navigation + (keyboard && mode !== "desktop" ? 1 : 0);
-    const dockWidth = Math.min(Math.max(0, width - 2 * bar.side), bar.maxWidth);
-    const capacity = Math.max(1, Math.floor((dockWidth - 2 * bar.padding + bar.columnGap) / (bar.row + bar.columnGap)));
-    const columns = capacity >= count ? count : Math.min(3, capacity);
-    return {width: dockWidth, columns: columns, rows: Math.ceil(count / columns)};
+    let dockWidth = Math.min(Math.max(0, width - 2 * bar.side), bar.maxWidth);
+    if (navigation === 0) {
+        const full = (dockWidth - 2 * bar.padding - (DOCK_FULL_BUTTONS - 1) * bar.columnGap) / DOCK_FULL_BUTTONS;
+        const slot = Math.max(bar.row, full);
+        dockWidth = Math.min(dockWidth, Math.ceil(count * slot + (count - 1) * bar.columnGap + 2 * bar.padding));
+    }
+    const inner = Math.max(0, dockWidth - 2 * bar.padding);
+    const rowWidth = Math.max(inner, count * bar.row + (count - 1) * bar.columnGap);
+    return {width: dockWidth, columns: count, rows: 1, rowWidth: rowWidth, scrolls: rowWidth > inner};
 }
 
 // Desktop keeps numbered workspaces one tap away; landscape tablets only once

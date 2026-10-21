@@ -12,10 +12,10 @@ TestCase {
                     for (const gestures of [true, false]) {
                         const dock = Policy.dockLayout(mode, width, keyboard, gestures);
                         const bar = Policy.barGeometry(mode, dock.rows);
-                        const available = dock.width - 2 * bar.padding;
-                        verify((available - (dock.columns - 1) * bar.columnGap) / dock.columns >= 48);
+                        verify((dock.rowWidth - (dock.columns - 1) * bar.columnGap) / dock.columns >= 48);
                         verify(dock.width <= width);
-                        verify(dock.rows >= 1);
+                        compare(dock.rows, 1);
+                        compare(dock.scrolls, dock.rowWidth > dock.width - 2 * bar.padding);
                     }
                 }
             }
@@ -47,6 +47,16 @@ TestCase {
         verify(Policy.gestureNavigation("tablet", "other"));
         verify(!Policy.gestureNavigation("desktop", "gestures"));
         compare(Policy.dockLayout("desktop", 1280, true, true).rows, 1);
+        for (const [mode, width] of [["phone", 360], ["tablet", 800]]) {
+            const fit = Policy.dockLayout(mode, width, true, false);
+            const compact = Policy.dockLayout(mode, width, true, true);
+            const bar = Policy.barGeometry(mode, 1);
+            const slot = dock => (dock.rowWidth - (dock.columns - 1) * bar.columnGap) / dock.columns;
+            verify(compact.width < fit.width);
+            verify(Math.abs(slot(compact) - slot(fit)) < 1);
+        }
+        verify(!Policy.dockLayout("phone", 360, true, false).scrolls);
+        verify(Policy.dockLayout("phone", 320, true, false).scrolls);
     }
     function test_bottom_swipe_needs_distance_and_hold_for_recents() {
         const d = Policy.GESTURE_DISTANCE;

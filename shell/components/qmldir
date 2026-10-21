@@ -36,6 +36,7 @@ RecentsBackdrop 1.0 RecentsBackdrop.qml
 RotationControl 1.0 RotationControl.qml
 SettingsPage 1.0 SettingsPage.qml
 SoundSettings 1.0 SoundSettings.qml
+SplitDivider 1.0 SplitDivider.qml
 StartButton 1.0 StartButton.qml
 StartMenuTile 1.0 StartMenuTile.qml
 StatusIcon 1.0 StatusIcon.qml

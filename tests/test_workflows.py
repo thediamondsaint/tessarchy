@@ -98,7 +98,7 @@ class Workflows(unittest.TestCase):
         self.assertGreaterEqual(len(margins), 5, margins)
         for line in margins:
             self.assertNotRegex(line.replace('panel.expanded ? 0 :', ''), r'\d', line)
-        dock = panel[panel.index('columns: surface.dock.columns') - 200:]
+        dock = panel[panel.index('columns: surface.dock.columns') - 800:]
         dock = dock[:dock.index('NavButton {')]
         for key in ('Layout.preferredHeight', 'columnSpacing', 'rowSpacing'):
             line = re.search(key + r':.*', dock).group(0)
@@ -122,6 +122,14 @@ class Workflows(unittest.TestCase):
         self.assertIn('visible: surface.gestures', shell)
         self.assertIn('value: "buttons"', settings)
         self.assertIn('page.preferences.navigation = modelData.value', settings)
+
+    def test_sender_close_removes_popup_before_notification_destruction(self):
+        shell = (ROOT / 'shell/shell.qml').read_text()
+        registration = shell[shell.index('onNotification: notification => {'):]
+        self.assertIn('notification.closed.connect(() => root.hidePopup(notification));',
+                      registration[:450])
+        self.assertLess(registration.index('notification.closed.connect('),
+                        registration.index('if (shellPreferences.doNotDisturb)'))
 
     def test_components_qmldir_lists_every_component(self):
         # An explicit qmldir hides any component it omits ("X is not a type").

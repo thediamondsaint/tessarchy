@@ -214,6 +214,8 @@ ShellRoot {
         persistenceSupported: false
         onNotification: notification => {
             notification.tracked = true;
+            // Withdrawn or replaced notifications must leave the popup before destruction.
+            notification.closed.connect(() => root.hidePopup(notification));
             if (shellPreferences.doNotDisturb)
                 return;
             root.queuePopup(notification);
@@ -295,6 +297,11 @@ ShellRoot {
             SystemClock {
                 id: clock
                 precision: SystemClock.Minutes
+            }
+            SplitDivider {
+                screen: surface.modelData
+                allowed: surface.mode === "tablet" && !panel.expanded
+                accentColor: root.accentColor
             }
             PanelWindow {
                 id: panel
@@ -463,6 +470,7 @@ ShellRoot {
                             // Phone previews match the app area between the status bar and dock.
                             screenSize: Qt.size(surface.modelData.width, Math.max(1, surface.modelData.height - surface.navHeight - 48))
                             fillApp: surface.mode !== "desktop"
+                            tabletMode: surface.mode === "tablet"
                             emptyHint: surface.mode === "desktop"
                                 ? "Your open apps will appear here.\nOpen one from the Start menu."
                                 : "Your open apps will appear here.\nTap Home to launch your first."
@@ -472,6 +480,11 @@ ShellRoot {
                             onActivated: panel.page = ""
                             onDismissed: panel.page = ""
                             onCloseRequested: target => { if (target) target.close(); }
+                            onSplitRequested: (first, second) => {
+                                if (!first || !second || !first.lastIpcObject || !second.lastIpcObject) return;
+                                Quickshell.execDetached(["hyprctl", "eval", "tessarchy.split(\"address:" + first.lastIpcObject.address + "\", \"address:" + second.lastIpcObject.address + "\")"]);
+                                panel.page = "";
+                            }
                         }
                         ScrollView {
                             id: pageScroll
@@ -661,12 +674,22 @@ ShellRoot {
                             opacity: pageScroll.ScrollBar.vertical.size < 1 && pageScroll.ScrollBar.vertical.position + pageScroll.ScrollBar.vertical.size < 0.999 ? 1 : 0
                         }
                     }
-                    GridLayout {
-                        layer.enabled: panel.page === "windows"
+                    // Touch docks remain one row; narrow frames scroll sideways.
+                    Flickable {
                         visible: surface.mode !== "desktop"
                         Layout.fillWidth: true
                         Layout.fillHeight: false
                         Layout.preferredHeight: surface.bar.rowsHeight
+                        clip: surface.dock.scrolls
+                        interactive: surface.dock.scrolls
+                        flickableDirection: Flickable.HorizontalFlick
+                        boundsBehavior: Flickable.StopAtBounds
+                        contentWidth: Math.max(width, surface.dock.rowWidth)
+                        contentHeight: height
+                        GridLayout {
+                        layer.enabled: panel.page === "windows"
+                        width: Math.max(parent.width, surface.dock.rowWidth)
+                        height: surface.bar.rowsHeight
                         columns: surface.dock.columns
                         columnSpacing: surface.bar.columnGap
                         rowSpacing: surface.bar.rowGap
@@ -720,6 +743,7 @@ ShellRoot {
                             accentColor: root.accentColor
                             selected: panel.page === "windows"
                             onClicked: panel.navigate("recents")
+                        }
                         }
                     }
                     // Desktop taskbar in the spirit of Windows XP, rendered as

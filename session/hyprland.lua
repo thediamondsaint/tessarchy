@@ -113,8 +113,17 @@ local function phone_window(window)
     end
     return false
 end
+local function is_split(window)
+    local tags = window and window.tags
+    if type(tags) == "string" then return tags:find("%f[%w]split%f[%W]") ~= nil end
+    if type(tags) == "table" then
+        for _, tag in ipairs(tags) do if tag == "split" then return true end end
+    end
+    return false
+end
 local function maximize_if_mobile(window)
     if not window or window.fullscreen ~= 0 or not window.monitor then return end
+    if is_split(window) then return end
     if window.floating and not phone_window(window) then return end
     if shell_mode(window.monitor) == "phone" then
         local monitor = window.monitor
@@ -134,6 +143,105 @@ local function maximize_if_mobile(window)
         hl.dispatch(hl.dsp.window.fullscreen({ window = window, mode = "maximized", action = "set" }))
     end
 end
+-- Split pairs occupy their own workspace; keep the divider-width gap on reload.
+local function split_windows(workspace)
+    local found = {}
+    for _, window in ipairs(hl.get_windows and hl.get_windows() or {}) do
+        if window.mapped and is_split(window) and window.workspace
+            and (not workspace or window.workspace.id == workspace) then
+            found[#found + 1] = window
+        end
+    end
+    table.sort(found, function(a, b)
+        if a.at.x ~= b.at.x then return a.at.x < b.at.x end
+        return a.at.y < b.at.y
+    end)
+    return found
+end
+local split_rules = {}
+local function split_layout(workspace, on)
+    local key = tostring(workspace)
+    if not split_rules[key] then
+        if not on then return end
+        split_rules[key] = hl.workspace_rule({ workspace = key, gaps_in = 24, no_rounding = true })
+    end
+    split_rules[key]:set_enabled(on)
+end
+for _, window in ipairs(split_windows()) do split_layout(window.workspace.id, true) end
+local function untag(window)
+    hl.dispatch(hl.dsp.window.tag({ window = "address:" .. window.address, tag = "-split" }))
+    if window.workspace then split_layout(window.workspace.id, false) end
+end
+tessarchy = tessarchy or {}
+function tessarchy.split(a, b)
+    local first, second = hl.get_window(a), hl.get_window(b)
+    if not first or not second or first.address == second.address then return end
+    -- Phone apps are floating surfaces: restore tiling before pairing them.
+    for _, window in ipairs({ first, second }) do
+        if is_split(window) then
+            for _, other in ipairs(split_windows(window.workspace.id)) do untag(other) end
+        end
+    end
+    for _, sel in ipairs({ a, b }) do
+        hl.dispatch(hl.dsp.window.tag({ window = sel, tag = "+split" }))
+        hl.dispatch(hl.dsp.window.fullscreen({ window = sel, mode = "maximized", action = "unset" }))
+        if hl.get_window(sel).floating then hl.dispatch(hl.dsp.window.float({ window = sel, action = "unset" })) end
+    end
+    hl.dispatch(hl.dsp.window.move({ window = a, workspace = "emptynm" }))
+    local workspace = hl.get_window(a).workspace.id
+    split_layout(workspace, true)
+    hl.dispatch(hl.dsp.window.move({ window = b, workspace = tostring(workspace) }))
+    local pair = split_windows(workspace)
+    if #pair == 2 and pair[1].address ~= first.address then
+        hl.dispatch(hl.dsp.focus({ window = a }))
+        hl.dispatch(hl.dsp.layout("swapsplit"))
+    end
+    hl.dispatch(hl.dsp.focus({ window = a }))
+end
+function tessarchy.ratio(ratio)
+    local workspace = hl.get_active_workspace()
+    local pair = workspace and split_windows(workspace.id) or {}
+    if #pair ~= 2 then return end
+    ratio = math.max(0.2, math.min(0.8, tonumber(ratio) or 0.5))
+    local first, second = pair[1], pair[2]
+    local sel = "address:" .. first.address
+    if first.at.x ~= second.at.x then
+        local total = second.at.x + second.size.x - first.at.x
+        local gap = second.at.x - first.at.x - first.size.x
+        hl.dispatch(hl.dsp.window.resize({ window = sel, x = math.floor(total * ratio - gap / 2), y = first.size.y }))
+    else
+        local total = second.at.y + second.size.y - first.at.y
+        local gap = second.at.y - first.at.y - first.size.y
+        hl.dispatch(hl.dsp.window.resize({ window = sel, x = first.size.x, y = math.floor(total * ratio - gap / 2) }))
+    end
+end
+function tessarchy.swap()
+    local workspace = hl.get_active_workspace()
+    local pair = workspace and split_windows(workspace.id) or {}
+    if #pair ~= 2 then return end
+    hl.dispatch(hl.dsp.focus({ window = "address:" .. pair[1].address }))
+    hl.dispatch(hl.dsp.layout("swapsplit"))
+end
+function tessarchy.unsplit()
+    local workspace = hl.get_active_workspace()
+    if not workspace then return end
+    for _, window in ipairs(split_windows(workspace.id)) do untag(window) end
+    maximize_if_mobile(hl.get_active_window())
+end
+local function away_from_split(window)
+    if not window or window.floating or is_split(window) or not window.workspace or not window.monitor then return end
+    if shell_mode(window.monitor) == "desktop" or #split_windows(window.workspace.id) == 0 then return end
+    hl.dispatch(hl.dsp.window.move({ window = "address:" .. window.address, workspace = "emptynm" }))
+end
+hl.on("window.close", function(window)
+    if not is_split(window) or not window.workspace then return end
+    for _, other in ipairs(split_windows(window.workspace.id)) do
+        if other.address ~= window.address then
+            untag(other)
+            maximize_if_mobile(other)
+        end
+    end
+end)
 -- Request usable dimensions while respecting application minimum sizes.
 local function fit_dialog(window)
     if not window or not window.floating or window.fullscreen ~= 0 or not window.monitor then return end
@@ -151,6 +259,7 @@ local function fit_dialog(window)
     hl.dispatch(hl.dsp.window.center({ window = window }))
 end
 hl.on("window.open", function(window)
+    away_from_split(window)
     -- Windowed desktop: ordinary windows open floating at a conventional size
     -- and are centred, instead of joining the tile layout.
     if window and not window.floating and window.fullscreen == 0 and window.monitor

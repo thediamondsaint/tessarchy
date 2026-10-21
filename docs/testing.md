@@ -1,5 +1,16 @@
 # Validation and manual acceptance
 
+## UI/runtime carry-forward onto upstream, 2026-10-21
+
+Ported tablet split policy, gap reapplication on Lua reload, divider/Recents
+controls, sender-withdraw popup cleanup, and one-row scrolling touch dock.
+`./scripts/check.sh`: 216 Python tests OK (one skipped), 76 QML tests passed;
+`Hyprland --verify-config` reported `config ok`; fish and shellcheck unavailable.
+The focused Lua stub covers pair, gap, ratio, reload and close; offscreen
+Quickshell switcher test passed. `qmllint` exited 0 on changed QML with
+existing PanelWindow metadata warnings. No VM, touchscreen or device deployment
+or visual validation was performed for this carry-forward.
+
 ## Theme picker layout fix, 2026-10-19
 
 Branch `feat/theme-extras` on `49728ce`. Executed by an agent in the running

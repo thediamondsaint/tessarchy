@@ -13,6 +13,9 @@ FocusScope {
     property bool reducedMotion: false
     property bool fillApp: false
     property bool phoneMode: false
+    property bool tabletMode: false
+    property var splitFirst: null
+    onVisibleChanged: if (!visible) splitFirst = null
     property var iconForWindow: window => ""
     property var nameForWindow: window => window.title || "Untitled window"
     property string emptyHint: "No open apps"
@@ -30,8 +33,10 @@ FocusScope {
     signal activated
     signal dismissed
     signal closeRequested(var target)
+    signal splitRequested(var first, var second)
 
     onWindowsChanged: {
+        if (windows.indexOf(splitFirst) < 0) splitFirst = null;
         if (windows.indexOf(selection) < 0) selectActive();
         else cards.currentIndex = windows.indexOf(selection);
         Qt.callLater(() => { cards.currentIndex = control.windows.indexOf(control.selection); });
@@ -94,6 +99,7 @@ FocusScope {
         id: cards
         objectName: "appSwitcherCards"
         anchors.fill: parent
+        anchors.bottomMargin: control.tabletMode ? 64 : 0
         // Keep the requested app stable while the sheet resizes underneath it.
         onWidthChanged: Qt.callLater(() => { if (control.selection && !moving) currentIndex = control.windows.indexOf(control.selection); })
         property bool browsing: false
@@ -134,7 +140,10 @@ FocusScope {
                 if (!control.visible || closing || control.windows.indexOf(modelData) < 0) return;
                 cards.currentIndex = index;
                 control.selection = modelData;
-                control.activateCurrent();
+                if (control.splitFirst && control.splitFirst !== modelData) {
+                    control.splitRequested(control.splitFirst, modelData);
+                    control.splitFirst = null;
+                } else if (!control.splitFirst) control.activateCurrent();
             }
             function closeCard() {
                 if (closing || !handle || control.windows.indexOf(modelData) < 0) return;
@@ -328,6 +337,33 @@ FocusScope {
             color: Theme.textSecondary
             horizontalAlignment: Text.AlignHCenter
             wrapMode: Text.WordWrap
+        }
+    }
+    Row {
+        visible: control.tabletMode && control.windows.length >= 2
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: parent.bottom
+        spacing: 12
+        TouchButton {
+            id: splitButton
+            text: control.splitFirst ? "Cancel split" : "Split apps"
+            implicitWidth: 56
+            enabled: !!(control.windows[cards.currentIndex] && control.windows[cards.currentIndex].wayland)
+            accentColor: control.accentColor
+            contentItem: Icon {
+                symbol: "split"
+                color: splitButton.enabled ? Theme.text : Theme.muted
+                anchors.centerIn: parent
+            }
+            onClicked: control.splitFirst = control.splitFirst ? null : control.windows[cards.currentIndex]
+        }
+        Text {
+            visible: !!control.splitFirst
+            width: Math.min(260, Math.max(80, control.width - 96))
+            anchors.verticalCenter: parent.verticalCenter
+            text: "Tap another app to split"
+            elide: Text.ElideRight
+            color: Theme.text
         }
     }
 }
