@@ -8,8 +8,10 @@ done
 [[ $(pkg-config --modversion hyprland) == 0.56.2 ]] || {
     echo "This bridge requires Hyprland 0.56.2 headers." >&2; exit 1
 }
+tape_flags=$(pkg-config --cflags hyprland lua)
+read -r -a tape_cflags <<< "$tape_flags"
 mkdir -p -- "$root/dist"
 c++ -std=c++23 -shared -fPIC -O2 -Wall -Wextra -Wno-unused-parameter \
-    $(pkg-config --cflags hyprland lua) "$root/plugins/window-tape/main.cpp" \
+    "${tape_cflags[@]}" "$root/plugins/window-tape/main.cpp" \
     -o "$root/dist/tessarchy-tape-0.56.2.so"
 echo "Built dist/tessarchy-tape-0.56.2.so; use only with the matching Hyprland build."
