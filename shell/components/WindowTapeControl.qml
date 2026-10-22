@@ -25,8 +25,15 @@ Item {
     signal stepped(string direction)
     signal settled()
     signal leaveRequested()
-    implicitWidth: Math.min(maxControlWidth, radialOpen ? 280 : expanded ? (tessaCube ? 408 : 336) : (tessaCube ? 56 : 128))
-    implicitHeight: radialOpen ? 280 : expanded && tessaCube ? 256 : 56
+    // Material 3's expandable FAB pattern keeps the collapsed affordance
+    // compact, then grows into a deliberate glass island with a stable action
+    // grid.  The recent shelf only consumes space when there are real windows.
+    readonly property bool hasRecents: recentView && recentView.windows !== undefined
+        ? recentView.windows.length > 0 : !!recentView
+    readonly property int expandedWidth: Math.min(maxControlWidth, tessaCube ? 360 : 336)
+    readonly property int expandedHeight: hasRecents ? 320 : 220
+    implicitWidth: Math.min(maxControlWidth, radialOpen ? 320 : expanded ? expandedWidth : (tessaCube ? 68 : 128))
+    implicitHeight: radialOpen ? 320 : expanded && tessaCube ? expandedHeight : 68
 
     function cancel() {
         radialOpen = false;
@@ -47,13 +54,20 @@ Item {
     }
     Rectangle {
         anchors.fill: parent
-        radius: Theme.radius("card", control.radialOpen ? height / 2 : 20, height)
+        radius: Theme.radius("card", control.expanded || control.radialOpen ? 30 : 28, height)
         gradient: Gradient {
-            GradientStop { position: 0; color: Qt.alpha(Theme.surface, Theme.mode === "light" ? 0.84 : 0.68) }
-            GradientStop { position: 1; color: Qt.alpha(Theme.background, Theme.mode === "light" ? 0.76 : 0.52) }
+            GradientStop { position: 0; color: Qt.alpha(Theme.surface, Theme.mode === "light" ? 0.92 : 0.82) }
+            GradientStop { position: 0.42; color: Qt.alpha(Theme.background, Theme.mode === "light" ? 0.88 : 0.70) }
+            GradientStop { position: 1; color: Qt.alpha(Theme.darkerBackground, Theme.mode === "light" ? 0.76 : 0.62) }
         }
-        border.color: Qt.alpha(Theme.wheelGlow, 0.65)
-        border.width: Theme.borderWidth(1)
+        border.color: Qt.alpha(Theme.wheelGlow, control.expanded ? 0.72 : 0.88)
+        border.width: Theme.borderWidth(control.expanded ? 1 : 2)
+        Rectangle {
+            anchors { top: parent.top; left: parent.left; right: parent.right }
+            height: 1
+            radius: 1
+            color: Qt.alpha(Theme.text, 0.28)
+        }
     }
     TouchButton {
         id: cubeButton
@@ -62,22 +76,22 @@ Item {
         text: control.tessaCube ? "" : "Window tape"
         BrandMark {
             anchors.centerIn: parent
-            width: 44; height: 44
+            width: 48; height: 48
             enabled: false
             playOnStart: false
             reducedMotion: control.reducedMotion
         }
         background: Rectangle {
-            radius: Theme.radius("card", 20, height)
-            color: cubeButton.down ? Theme.pressed(Theme.wheelGlow) : Theme.glassStrong
-            border.color: Theme.wheelGlow
-            border.width: Theme.borderWidth(1)
+            radius: Theme.radius("card", 28, height)
+            color: cubeButton.down ? Theme.pressed(Theme.wheelGlow) : Qt.alpha(Theme.glassStrong, 0.92)
+            border.color: Qt.alpha(Theme.wheelGlow, 0.92)
+            border.width: Theme.borderWidth(2)
             Rectangle {
                 anchors.fill: parent
-                anchors.margins: 3
-                radius: Theme.radius("card", 17, height)
+                anchors.margins: 4
+                radius: Theme.radius("card", 23, height)
                 color: "transparent"
-                border.color: Qt.alpha(Theme.wheelGlow, 0.20)
+                border.color: Qt.alpha(Theme.text, 0.24)
                 border.width: Theme.borderWidth(1)
             }
         }
@@ -110,22 +124,42 @@ Item {
         id: recents
         objectName: "cubeRecents"
         active: control.tessaCube
-        visible: control.expanded && !control.radialOpen
-        anchors { top: parent.top; left: parent.left; right: parent.right; topMargin: 48; leftMargin: 12; rightMargin: 12 }
-        height: Math.max(104, control.height - 104)
+        visible: control.expanded && !control.radialOpen && control.hasRecents
+        anchors { top: parent.top; left: parent.left; right: parent.right; topMargin: 58; leftMargin: 16; rightMargin: 16 }
+        height: 96
         opacity: visible ? 1 : 0
         scale: visible ? 1 : 0.96
         Behavior on opacity { NumberAnimation { duration: control.reducedMotion ? 0 : 160 } }
         Behavior on scale { NumberAnimation { duration: control.reducedMotion ? 0 : 180; easing.type: Easing.OutCubic } }
         sourceComponent: control.recentsComponent
     }
+    Item {
+        objectName: "cubeRecentsEmpty"
+        visible: control.expanded && !control.radialOpen && !control.hasRecents
+        anchors { top: parent.top; left: parent.left; right: parent.right; topMargin: 58 }
+        height: 42
+        Icon {
+            anchors.centerIn: parent
+            symbol: "recents"
+            size: 34
+            color: Qt.alpha(Theme.textSecondary, 0.42)
+        }
+        Rectangle {
+            anchors { horizontalCenter: parent.horizontalCenter; bottom: parent.bottom }
+            width: 44
+            height: 2
+            radius: 1
+            color: Qt.alpha(Theme.wheelGlow, 0.55)
+        }
+    }
     GridLayout {
         id: cubeActions
         objectName: "cubeActions"
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
-        width: Math.min(parent.width - 24, 344)
-        height: control.tessaCube ? 104 : 56
+        anchors.bottomMargin: 16
+        width: Math.min(parent.width - 32, 328)
+        height: control.tessaCube ? 136 : 64
         columns: control.tessaCube ? 4 : 5
         columnSpacing: 8
         rowSpacing: 8
@@ -140,7 +174,8 @@ Item {
             text: "Apps"
             padding: 4
             Accessible.name: "Open Tessa launcher"
-            Layout.preferredWidth: 48
+            Layout.preferredWidth: 64
+            Layout.preferredHeight: 64
             Layout.fillWidth: true
             Layout.fillHeight: true
             onClicked: { control.launcherRequested(); control.expanded = false; }
@@ -151,7 +186,8 @@ Item {
             id: previous
             text: "‹"
             Accessible.name: "Previous window"
-            Layout.preferredWidth: 48
+            Layout.preferredWidth: 64
+            Layout.preferredHeight: 64
             Layout.fillWidth: true
             Layout.fillHeight: true
             enabled: control.canPan
@@ -161,6 +197,7 @@ Item {
             symbol: "controls"
             reducedMotion: control.reducedMotion
             Layout.preferredWidth: 64
+            Layout.preferredHeight: 64
             Layout.fillWidth: true
             Layout.fillHeight: true
             text: "Menu"
@@ -173,7 +210,8 @@ Item {
             id: next
             text: "›"
             Accessible.name: "Next window"
-            Layout.preferredWidth: 48
+            Layout.preferredWidth: 64
+            Layout.preferredHeight: 64
             Layout.fillWidth: true
             Layout.fillHeight: true
             enabled: control.canPan
@@ -186,7 +224,8 @@ Item {
             visible: control.tessaCube
             text: "Phone"
             Accessible.name: "Open Phone"
-            Layout.preferredWidth: 48
+            Layout.preferredWidth: 64
+            Layout.preferredHeight: 64
             Layout.fillWidth: true
             Layout.fillHeight: true
             onClicked: { control.phoneRequested(); control.expanded = false; }
@@ -198,7 +237,8 @@ Item {
             visible: control.tessaCube
             text: "Messages"
             Accessible.name: "Open Messages"
-            Layout.preferredWidth: 48
+            Layout.preferredWidth: 64
+            Layout.preferredHeight: 64
             Layout.fillWidth: true
             Layout.fillHeight: true
             onClicked: { control.messagesRequested(); control.expanded = false; }
@@ -210,7 +250,8 @@ Item {
             visible: control.tessaCube
             text: "Keyboard"
             Accessible.name: "Toggle on-screen keyboard"
-            Layout.preferredWidth: 48
+            Layout.preferredWidth: 64
+            Layout.preferredHeight: 64
             Layout.fillWidth: true
             Layout.fillHeight: true
             onClicked: { control.keyboardRequested(); control.expanded = false; }
@@ -221,7 +262,8 @@ Item {
             id: leave
             text: "×"
             Accessible.name: "Leave window tape"
-            Layout.preferredWidth: 48
+            Layout.preferredWidth: 64
+            Layout.preferredHeight: 64
             Layout.fillWidth: true
             Layout.fillHeight: true
             onClicked: control.leaveRequested()

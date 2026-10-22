@@ -36,7 +36,7 @@ TestCase {
     }
     function test_tessa_cube_and_narrow_screen() {
         const control = createTemporaryObject(factory, test, {maxControlWidth: 304});
-        compare(control.implicitWidth, 56);
+        compare(control.implicitWidth, 68);
         control.expanded = true;
         compare(control.implicitWidth, 304);
         control.tessaCube = false;
@@ -87,7 +87,7 @@ TestCase {
         verify(phone.visible);
         verify(messages.visible);
         verify(keyboard.visible);
-        compare(control.implicitHeight, 256);
+        compare(control.implicitHeight, 220);
     }
     function test_drag_coalesces_and_settles_without_reversing() {
         const control = createTemporaryObject(wheelFactory, test);

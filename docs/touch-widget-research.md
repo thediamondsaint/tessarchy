@@ -31,6 +31,11 @@ touch behavior in Tessa's QML layer. No external widget code was copied.
   documents configurable floating bars, blur, spacing, and attached menus.
   Tessa reuses the architecture pattern and existing service bindings rather
   than importing its shell or dependencies.
+- [end-4/dots-hyprland](https://github.com/end-4/dots-hyprland) ships a
+  Material 3-style `FloatingActionButton.qml` under GPL-3.0. Tessa adapts its
+  compact-to-expanded FAB behavior and touch sizing in `WindowTapeControl.qml`,
+  while retaining Tessa's cube mark, native Hyprland tape bridge, radial menu,
+  and local theme tokens. No source file was copied.
 
 ## Current implementation
 
