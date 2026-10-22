@@ -46,6 +46,47 @@ ShellRoot {
         function cellular(): void { root.openAppRequested("cellular"); }
         function sounds(): void { root.openAppRequested("sounds"); }
     }
+    // Local AI control surface. It deliberately exposes named desktop
+    // operations instead of an arbitrary shell evaluator: ChatGPT/Codex can
+    // drive every Tessa surface, launcher, theme, radio, audio, tape and
+    // keyboard action without receiving an unbounded root command channel.
+    IpcHandler {
+        target: "ai"
+        function open(page: string): void {
+            const pages = ["apps", "windows", "settings", "chatgpt", "phone", "messages", "cellular", "sounds", "notifications"];
+            if (pages.indexOf(String(page)) >= 0) root.openAppRequested(String(page));
+        }
+        function close(): void { root.openAppRequested(""); }
+        function launch(appId: string): void { root.launchApplication(appId); }
+        function theme(name: string): void { root.setTheme(name); }
+        function controls(): void { root.controlsRequested(); }
+        function radio(name: string): void { radioBackend.toggle(name); }
+        function window(direction: string): void {
+            const action = direction;
+            if (["next", "previous", "accept", "cancel"].indexOf(action) >= 0) root.switcherCommand(action);
+        }
+        function tape(action: string): void {
+            const value = action;
+            if (["previous", "next", "settle", "begin", "cancel"].indexOf(value) >= 0)
+                Hyprland.dispatch('TessarchyTape.request("' + value + '")');
+        }
+        function keyboard(action: string): void {
+            const value = action;
+            if (["show", "hide", "toggle"].indexOf(value) >= 0)
+                Quickshell.execDetached(["tessarchy-osk", value]);
+        }
+        function screenshot(): void { Quickshell.execDetached(["tessera-screenshot"]); }
+        function volume(value: real): void {
+            if (!root.audioAvailable || !root.audioSink || !root.audioSink.audio) return;
+            root.audioSink.audio.volume = Math.max(0, Math.min(1, Number(value)));
+        }
+        function mute(): void {
+            if (root.audioAvailable && root.audioSink && root.audioSink.audio)
+                root.audioSink.audio.muted = !root.audioSink.audio.muted;
+        }
+        function cube(action: string): void { root.cubeCommand(action); }
+    }
+    signal cubeCommand(string action)
     signal replayBrand
     function activateWindow(window) {
         if (!window || !window.wayland) return;
@@ -905,6 +946,17 @@ ShellRoot {
                     onLeaveRequested: Hyprland.dispatch('TessarchyTape.close_request()')
                 }
                 Connections {
+                    target: root
+                    function onCubeCommand(action) {
+                        if (action === "open") tapeControl.expanded = true;
+                        else if (action === "close") tapeControl.cancel();
+                        else if (action === "radial") {
+                            tapeControl.expanded = true;
+                            tapeControl.radialOpen = true;
+                        }
+                    }
+                }
+                Connections {
                     target: surface.modelData
                     function onWidthChanged() { tapeControl.cancel(); }
                     function onHeightChanged() { tapeControl.cancel(); }
@@ -1226,10 +1278,17 @@ ShellRoot {
                         Layout.preferredWidth: surface.mode === "desktop" ? 66 : 72
                         implicitHeight: surface.mode === "desktop" ? 48 : 56
                         padding: 0
-                        background: Item {}
+                        background: Rectangle {
+                            radius: Theme.radius("button", 20, height)
+                            color: Qt.alpha(Theme.text, 0.08)
+                            border.width: Theme.borderWidth(1)
+                            border.color: Qt.alpha(root.accentColor, 0.16)
+                        }
                         contentItem: Text {
+                            anchors.fill: parent
                             text: mobileClock.text
                             color: Theme.text
+                            horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
                             font { pixelSize: 16; weight: Font.DemiBold; letterSpacing: 0.2 }
                         }
@@ -1244,14 +1303,17 @@ ShellRoot {
                         text: "Quick controls"
                         Accessible.name: statusBar.drawerOpen ? "Collapse quick controls" : "Open quick controls, or swipe down"
                         padding: 0
-                        background: Item {}
-                        contentItem: Image {
-                            source: "icons/" + (statusBar.drawerOpen ? "close" : "controls") + ".svg"
-                            sourceSize.width: 22
-                            sourceSize.height: 22
-                            width: 22
-                            height: 22
-                            fillMode: Image.PreserveAspectFit
+                        background: Rectangle {
+                            radius: Theme.radius("button", 20, height)
+                            color: statusBar.drawerOpen ? Qt.alpha(root.accentColor, 0.22) : Qt.alpha(Theme.text, 0.08)
+                            border.width: Theme.borderWidth(1)
+                            border.color: Qt.alpha(statusBar.drawerOpen ? root.accentColor : Theme.text, statusBar.drawerOpen ? 0.66 : 0.16)
+                        }
+                        contentItem: Icon {
+                            anchors.centerIn: parent
+                            symbol: statusBar.drawerOpen ? "close" : "controls"
+                            size: 22
+                            color: statusBar.drawerOpen ? root.accentColor : Theme.textSecondary
                         }
                         onClicked: statusBar.toggleDrawer()
                     }
@@ -1298,7 +1360,6 @@ ShellRoot {
                         onNotificationsRequested: panel.showPage("notifications")
                         onPanelRequested: statusBar.toggleDrawer()
                         onMuteToggled: root.audioSink.audio.muted = !root.audioSink.audio.muted
-                        onSettingsRequested: { statusBar.drawerOpen = false; panel.showPage("settings"); }
                     }
                 }
                 }
@@ -1329,7 +1390,6 @@ ShellRoot {
                         mediaPlayer: root.activePlayer
                         onCellularRequested: { statusBar.drawerOpen = false; panel.page = "cellular"; }
                         onDismissed: statusBar.drawerOpen = false
-                        onSettingsRequested: { statusBar.drawerOpen = false; panel.showPage("settings"); }
                     }
                 }
                 TouchButton {

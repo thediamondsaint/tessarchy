@@ -21,25 +21,30 @@ Item {
     Layout.preferredHeight: 48
     Accessible.name: label + (reported || fallback ? " connected" : " unavailable")
     Accessible.role: Accessible.Button
-    Image {
-        anchors.centerIn: parent
-        width: indicator.uniform ? 20 : 18
-        height: width
-        source: indicator.fallback
-            ? "../icons/" + indicator.symbol + "-" + indicator.fallbackLevel + ".svg"
-            : "../icons/" + indicator.symbol + ".svg"
-        sourceSize.width: indicator.uniform ? 20 : 18
-        sourceSize.height: indicator.uniform ? 20 : 18
-        opacity: indicator.uniform || indicator.reported || indicator.fallback ? 1 : 0.35
-    }
     Rectangle {
-        visible: !indicator.reported && !indicator.fallback
         anchors.centerIn: parent
-        width: 22
-        height: 1.5
-        radius: 1
-        rotation: -45
-        color: indicator.uniform ? Theme.textSecondary : Theme.muted
+        width: 44
+        height: 44
+        radius: Theme.radius("button", 20, height)
+        color: Qt.alpha(indicator.uniform ? Theme.text : Theme.surface, indicator.uniform ? 0.09 : 0.06)
+        border.width: Theme.borderWidth(1)
+        border.color: Qt.alpha(indicator.uniform ? Theme.text : Theme.accent, indicator.uniform ? 0.14 : 0.10)
+        Icon {
+            anchors.centerIn: parent
+            symbol: indicator.fallback ? indicator.symbol + "-" + indicator.fallbackLevel : indicator.symbol
+            size: indicator.uniform ? 20 : 18
+            color: indicator.reported || indicator.fallback ? Theme.textSecondary : Theme.muted
+            opacity: indicator.uniform || indicator.reported || indicator.fallback ? 1 : 0.55
+        }
+        Rectangle {
+            visible: !indicator.reported && !indicator.fallback
+            anchors.centerIn: parent
+            width: 22
+            height: 1.5
+            radius: Theme.radius("progress", 1, height)
+            rotation: -45
+            color: indicator.uniform ? Theme.textSecondary : Theme.muted
+        }
     }
     MouseArea {
         anchors.fill: parent

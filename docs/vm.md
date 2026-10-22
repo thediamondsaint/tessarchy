@@ -226,8 +226,12 @@ Use the guest password (initially `arch`). You can paste dependency installation
 9p mount and setup commands into this SSH terminal using Ctrl+Shift+V. Start
 `~/.local/bin/start-tessarchy` in the VM's local console, not over SSH. This
 explicit opt-in forwarding binds only to host loopback; no forwarding exists
-when VM_SSH_PORT is unset. If SSH is refused after the guest has finished
-booting, type `sudo systemctl start sshd` in the guest console and retry.
+when VM_SSH_PORT is unset. Validate the guest service with
+`sudo tessarchy-ssh check`, then use `sudo tessarchy-ssh enable` when remote
+access is needed. The helper creates missing host keys, validates the effective
+configuration, and enables `sshd` without allowing root login. If SSH is
+refused after the guest has finished booting, run those two commands in the
+guest console and retry.
 
 The option follows the [official QEMU user-network forwarding syntax](https://www.qemu.org/docs/master/system/invocation.html).
 

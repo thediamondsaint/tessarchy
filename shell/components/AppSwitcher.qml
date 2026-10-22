@@ -21,6 +21,9 @@ FocusScope {
     property var pendingTarget: null
     property var selection: null
     property var activateTarget: target => target.activate()
+    // Leave a breathing edge around live previews so rounded app corners and
+    // close targets never touch the panel or disappear under the dock.
+    readonly property int safeInset: phoneMode ? 12 : 10
     readonly property int currentIndex: cards.currentIndex
     /// Screen the apps are running on; keeps card previews at the real aspect
     /// so nothing is letterboxed inside a taller card.
@@ -205,9 +208,9 @@ FocusScope {
 
             ClippingRectangle {
                 id: screen
-                width: control.cardWidth
-                height: card.cardHeight
-                anchors.verticalCenter: parent.verticalCenter
+                width: Math.max(1, control.cardWidth - control.safeInset * 2)
+                height: Math.max(1, card.cardHeight - control.safeInset * 2)
+                anchors.centerIn: parent
                 anchors.verticalCenterOffset: control.compactMode ? 20 : 0
                 border.width: control.compactMode ? Theme.borderWidth(1) : 0
                 border.color: card.ListView.isCurrentItem ? control.accentColor : Theme.tileBorder

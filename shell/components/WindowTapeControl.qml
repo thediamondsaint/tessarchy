@@ -31,7 +31,7 @@ Item {
     readonly property bool hasRecents: recentView && recentView.windows !== undefined
         ? recentView.windows.length > 0 : !!recentView
     readonly property int expandedWidth: Math.min(maxControlWidth, tessaCube ? 360 : 336)
-    readonly property int expandedHeight: hasRecents ? 320 : 220
+    readonly property int expandedHeight: hasRecents ? 408 : 300
     implicitWidth: Math.min(maxControlWidth, radialOpen ? 320 : expanded ? expandedWidth : (tessaCube ? 68 : 128))
     implicitHeight: radialOpen ? 320 : expanded && tessaCube ? expandedHeight : 68
 
@@ -159,7 +159,7 @@ Item {
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 16
         width: Math.min(parent.width - 32, 328)
-        height: control.tessaCube ? 136 : 64
+        height: control.tessaCube ? 208 : 64
         columns: control.tessaCube ? 4 : 5
         columnSpacing: 8
         rowSpacing: 8
@@ -255,6 +255,32 @@ Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
             onClicked: { control.keyboardRequested(); control.expanded = false; }
+        }
+        GlassIconButton {
+            objectName: "cubeSettings"
+            symbol: "settings"
+            reducedMotion: control.reducedMotion
+            visible: control.tessaCube
+            text: "Settings"
+            Accessible.name: "Open Tessa settings"
+            Layout.preferredWidth: 64
+            Layout.preferredHeight: 64
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            onClicked: { control.actionRequested("settings"); }
+        }
+        GlassIconButton {
+            objectName: "cubeChatGPT"
+            symbol: "chatgpt"
+            reducedMotion: control.reducedMotion
+            visible: control.tessaCube
+            text: "ChatGPT"
+            Accessible.name: "Open ChatGPT"
+            Layout.preferredWidth: 64
+            Layout.preferredHeight: 64
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            onClicked: { control.actionRequested("chatgpt"); }
         }
         GlassIconButton {
             symbol: "desktop"

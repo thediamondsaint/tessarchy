@@ -35,6 +35,7 @@ RadioTile 1.0 RadioTile.qml
 RecentsBackdrop 1.0 RecentsBackdrop.qml
 RotationControl 1.0 RotationControl.qml
 SettingsPage 1.0 SettingsPage.qml
+SettingsCard 1.0 SettingsCard.qml
 SoundSettings 1.0 SoundSettings.qml
 StartButton 1.0 StartButton.qml
 StartMenuTile 1.0 StartMenuTile.qml

@@ -141,7 +141,22 @@ class Workflows(unittest.TestCase):
         settings = (ROOT / 'shell/components/SettingsPage.qml').read_text()
         self.assertIn('Accessible.role: Accessible.RadioButton', settings)
         self.assertIn('Accessible.checked: selected', settings)
-        self.assertIn('text: "THEMES"', settings)
+        self.assertIn('title: "THEMES"', settings)
+
+    def test_ai_control_surface_and_ssh_support_are_explicit_and_local(self):
+        shell = (ROOT / 'shell/shell.qml').read_text()
+        self.assertIn('target: "ai"', shell)
+        for operation in ('open(', 'launch(', 'theme(', 'radio(', 'tape(', 'screenshot()', 'volume('):
+            self.assertIn('function ' + operation, shell)
+        ai = (ROOT / 'session/tessa-ai').read_text()
+        self.assertIn('exec tessera-shell ipc call ai', ai)
+        self.assertNotIn('eval', ai)
+        ssh = (ROOT / 'session/tessarchy-ssh').read_text()
+        self.assertIn('sshd -t', ssh)
+        self.assertIn('systemctl enable --now sshd.service', ssh)
+        self.assertIn('openssh', (ROOT / 'iso/packages.x86_64').read_text().split())
+        self.assertIn('openssh', (ROOT / 'packaging/tessarchy-session/PKGBUILD').read_text())
+        self.assertIn('PermitRootLogin no', (ROOT / 'session/sshd_config.d/tessarchy.conf').read_text())
 
     def test_components_qmldir_lists_every_component(self):
         # An explicit qmldir hides any component it omits ("X is not a type").

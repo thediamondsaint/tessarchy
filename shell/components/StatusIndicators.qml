@@ -58,9 +58,18 @@ RowLayout {
     }
     Item {
         visible: control.airplaneOn
-        Layout.preferredWidth: control.compact ? 28 : 18
+        Layout.preferredWidth: control.touchMode ? 48 : control.compact ? 28 : 48
         Layout.preferredHeight: 48
-        Icon { anchors.centerIn: parent; symbol: "airplane"; size: 18; color: control.accentColor }
+        Rectangle {
+            anchors.centerIn: parent
+            width: 44
+            height: 44
+            radius: Theme.radius("button", 20, height)
+            color: Qt.alpha(Theme.text, 0.08)
+            border.width: Theme.borderWidth(1)
+            border.color: Qt.alpha(control.accentColor, 0.18)
+            Icon { anchors.centerIn: parent; symbol: "airplane"; size: 20; color: control.accentColor }
+        }
         Accessible.name: "Airplane mode on"
     }
     StatusIcon {
@@ -84,6 +93,16 @@ RowLayout {
     Item {
         Layout.preferredWidth: control.touchMode ? 48 : control.compact ? 28 : batteryRow.implicitWidth
         Layout.preferredHeight: 48
+        Rectangle {
+            visible: control.touchMode
+            anchors.centerIn: parent
+            width: 44
+            height: 44
+            radius: Theme.radius("button", 20, height)
+            color: Qt.alpha(Theme.text, 0.08)
+            border.width: Theme.borderWidth(1)
+            border.color: Qt.alpha(control.accentColor, 0.16)
+        }
         RowLayout {
             id: batteryRow
             anchors.centerIn: parent

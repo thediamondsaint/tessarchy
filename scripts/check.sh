@@ -4,7 +4,7 @@ root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 cd "$root"
 scratch=$(mktemp -d)
 trap 'rm -rf -- "$scratch"' EXIT
-for script in scripts/*.sh session/tessarchy-session-services session/start-tessarchy session/tessera-shell session/tessarchy-osk session/tessarchy-theme session/tessarchy-run session/tessera-screenshot session/tessera-brightness session/tessera-nightlight session/tessera-rotate session/tessera-update-notify session/tessarchy-greeter session/tessarchy-install-ui packaging/*/PKGBUILD; do bash -n "$script"; done
+for script in scripts/*.sh session/tessarchy-session-services session/start-tessarchy session/tessera-shell session/tessarchy-osk session/tessarchy-theme session/tessarchy-run session/tessera-screenshot session/tessera-brightness session/tessera-nightlight session/tessera-rotate session/tessera-update-notify session/tessarchy-greeter session/tessarchy-install-ui session/tessa-ai session/tessarchy-ssh packaging/*/PKGBUILD; do bash -n "$script"; done
 # Arch ships only python; Debian/Ubuntu split out python3. Accept either.
 py=$(command -v python || command -v python3 || true)
 [[ -n "$py" ]] || { echo "FAIL: neither python nor python3 is installed" >&2; exit 1; }

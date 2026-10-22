@@ -15,12 +15,16 @@ Button {
     padding: 0
     focusPolicy: Qt.NoFocus
     display: AbstractButton.IconOnly
-    icon.width: 18
-    icon.height: 18
-    icon.color: Theme.textSecondary
+    icon.width: 20
+    icon.height: 20
+    icon.color: control.enabled ? (control.selected ? control.accentColor : Theme.textSecondary) : Theme.muted
     background: Rectangle {
-        radius: Theme.radius("card", 10, height)
-        color: control.down ? Qt.alpha(control.accentColor, 0.3)
-                           : control.selected ? Qt.alpha(control.accentColor, 0.15) : "transparent"
+        radius: Theme.radius("button", 20, height)
+        border.width: Theme.borderWidth(1)
+        border.color: Qt.alpha(control.down || control.selected ? control.accentColor : Theme.text, control.down ? 0.78 : control.selected ? 0.62 : 0.16)
+        gradient: Gradient {
+            GradientStop { position: 0; color: Qt.alpha(control.down || control.selected ? control.accentColor : Theme.text, control.down ? 0.28 : control.selected ? 0.20 : 0.09) }
+            GradientStop { position: 1; color: Qt.alpha(Theme.surface, control.down || control.selected ? 0.36 : 0.20) }
+        }
     }
 }

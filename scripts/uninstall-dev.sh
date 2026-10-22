@@ -25,7 +25,7 @@ if [[ $version != tessarchy-dev-v1 ]]; then
     done
 fi
 # New installs retain the installed bytes so a source update is not a user edit.
-launchers=(start-tessarchy tessera-shell tessarchy-osk tessarchy-theme tessarchy-run tessera-screenshot tessera-chatgpt-status tessera-brightness tessera-nightlight tessera-rotate tessarchy-session-services)
+launchers=(start-tessarchy tessera-shell tessarchy-osk tessarchy-theme tessarchy-run tessera-screenshot tessera-chatgpt-status tessa-ai tessarchy-ssh tessera-brightness tessera-nightlight tessera-rotate tessarchy-session-services)
 originals=$root/session
 if [[ $version == tessarchy-dev-v3 ]]; then
     originals=$data/.tessarchy-dev-launchers
@@ -34,7 +34,7 @@ if [[ $version == tessarchy-dev-v3 ]]; then
     for relative in "${entries[@]}"; do
         if [[ $relative == .tessarchy-dev-launchers/* ]]; then
             launcher=${relative#.tessarchy-dev-launchers/}
-            [[ $launcher =~ ^(start-tessarchy|tessera-[a-z0-9-]+|tessarchy-[a-z0-9-]+)$ ]] || {
+            [[ $launcher =~ ^(start-tessarchy|tessa-[a-z0-9-]+|tessera-[a-z0-9-]+|tessarchy-[a-z0-9-]+)$ ]] || {
                 echo "Unsafe launcher snapshot entry" >&2; exit 1;
             }
             launchers+=("$launcher")

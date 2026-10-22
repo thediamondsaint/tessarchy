@@ -79,15 +79,21 @@ TestCase {
         const phone = findChild(control, "cubePhone");
         const messages = findChild(control, "cubeMessages");
         const keyboard = findChild(control, "cubeKeyboard");
+        const settings = findChild(control, "cubeSettings");
+        const chatgpt = findChild(control, "cubeChatGPT");
         verify(phone !== null);
         verify(messages !== null);
         verify(keyboard !== null);
+        verify(settings !== null);
+        verify(chatgpt !== null);
         verify(!phone.visible);
         control.expanded = true;
         verify(phone.visible);
         verify(messages.visible);
         verify(keyboard.visible);
-        compare(control.implicitHeight, 220);
+        verify(settings.visible);
+        verify(chatgpt.visible);
+        compare(control.implicitHeight, 300);
     }
     function test_drag_coalesces_and_settles_without_reversing() {
         const control = createTemporaryObject(wheelFactory, test);
