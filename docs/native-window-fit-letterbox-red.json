@@ -1,0 +1,18 @@
+{
+  "status": "EXPECTED_FAILURE",
+  "observation": {
+    "black_area_touch_events": [
+      "TOUCH_DOWN 98 0.000 0.000",
+      "TOUCH_MOTION 98 304.391 1319.023",
+      "TOUCH_UP 98"
+    ],
+    "black_then_content_buttons": [
+      "BUTTON 272 1 100.000 600.000",
+      "BUTTON 272 0 100.000 600.000",
+      "BUTTON 272 1 811.707 405.855",
+      "BUTTON 272 0 811.707 405.855"
+    ]
+  },
+  "failure": "Letterbox forwarded input to the fitted client",
+  "source": "Actual pre-fix verifier log; no synthesized event data"
+}

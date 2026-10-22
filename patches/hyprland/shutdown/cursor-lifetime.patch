@@ -1,0 +1,266 @@
+--- a/src/protocols/ImageCopyCapture.cpp
++++ b/src/protocols/ImageCopyCapture.cpp
+@@ -166,22 +166,23 @@
+     m_resource->setOnDestroy([this](CExtImageCopyCaptureCursorSessionV1* pMgr) { PROTO::imageCopyCapture->destroyResource(this); });
+ 
+     m_resource->setGetCaptureSession([this](CExtImageCopyCaptureCursorSessionV1* pMgr, uint32_t id) {
+-        if (m_session || m_sessionResource) {
++        if (m_captureSessionCreated) {
+             LOGM(Log::ERR, "Duplicate cursor copy capture session for source: \"{}\"", m_source->getName());
+             m_resource->error(EXT_IMAGE_COPY_CAPTURE_CURSOR_SESSION_V1_ERROR_DUPLICATE_SESSION, "duplicate session");
+             return;
+         }
+ 
++        m_captureSessionCreated = true;
+         m_sessionResource = makeShared<CExtImageCopyCaptureSessionV1>(pMgr->client(), pMgr->version(), id);
+ 
+         m_sessionResource->setDestroy([this](CExtImageCopyCaptureSessionV1* pMgr) { destroyCaptureSession(); });
+         m_sessionResource->setOnDestroy([this](CExtImageCopyCaptureSessionV1* pMgr) { destroyCaptureSession(); });
+ 
+         m_sessionResource->setCreateFrame([this](CExtImageCopyCaptureSessionV1* pMgr, uint32_t id) {
+-            if UNLIKELY (!m_session || !m_sessionResource)
++            if UNLIKELY (!m_captureState || !m_captureState->session || !m_sessionResource)
+                 return;
+ 
+-            if (m_frameResource) {
++            if (!m_frame.expired()) {
+                 LOGM(Log::ERR, "Duplicate frame in session for source: \"{}\"", m_source->getName());
+                 m_resource->error(EXT_IMAGE_COPY_CAPTURE_SESSION_V1_ERROR_DUPLICATE_FRAME, "duplicate frame");
+                 return;
+@@ -190,16 +191,21 @@
+             createFrame(makeShared<CExtImageCopyCaptureFrameV1>(pMgr->client(), pMgr->version(), id));
+         });
+ 
+-        m_session = Screenshare::mgr()->newCursorSession(pMgr->client(), m_pointer);
+-        if UNLIKELY (!m_session) {
++        m_captureState = makeShared<SCursorCaptureState>();
++        m_captureState->source = m_source;
++        m_captureState->session = Screenshare::mgr()->newCursorSession(pMgr->client(), m_pointer);
++        if UNLIKELY (!m_captureState->session) {
+             m_sessionResource->sendStopped();
+             return;
+         }
+ 
+         sendConstraints();
+ 
+-        m_listeners.constraintsChanged = m_session->m_events.constraintsChanged.listen([this]() { sendConstraints(); });
+-        m_listeners.stopped            = m_session->m_events.stopped.listen([this]() { destroyCaptureSession(); });
++        m_listeners.constraintsChanged = m_captureState->session->m_events.constraintsChanged.listen([this]() { sendConstraints(); });
++        m_listeners.stopped            = m_captureState->session->m_events.stopped.listen([this]() {
++            if (m_sessionResource && m_sessionResource->resource())
++                m_sessionResource->sendStopped();
++        });
+     });
+ }
+ 
+@@ -215,21 +221,26 @@
+     m_listeners.constraintsChanged.reset();
+     m_listeners.stopped.reset();
+ 
+-    m_frameDelivery.finish(EImageCaptureDelivery::FAILED_STOPPED);
+-    m_frameResource.reset();
+-
+-    m_sessionResource.reset();
+-    m_session.reset();
++    auto resource = std::move(m_sessionResource);
++    if (resource)
++        resource->setOnDestroy([](CExtImageCopyCaptureSessionV1*) {});
++    m_captureState.reset();
+ }
+ 
+ void CImageCopyCaptureCursorSession::createFrame(SP<CExtImageCopyCaptureFrameV1> resource) {
++    m_frame = PROTO::imageCopyCapture->m_cursorFrames.emplace_back(makeShared<CImageCopyCaptureCursorFrame>(resource, m_captureState, m_bufferSize));
++}
++
++SCursorCaptureState::~SCursorCaptureState() = default;
++
++CImageCopyCaptureCursorFrame::CImageCopyCaptureCursorFrame(SP<CExtImageCopyCaptureFrameV1> resource, SP<SCursorCaptureState> state, Vector2D bufferSize) : m_state(state) {
+     m_frameResource = resource;
+     m_frameDelivery = makeImageCaptureDelivery(resource);
+     m_captured      = false;
+     m_buffer.reset();
+ 
+-    m_frameResource->setDestroy([this](CExtImageCopyCaptureFrameV1* pMgr) { m_frameDelivery.cancel(); m_frameResource.reset(); });
+-    m_frameResource->setOnDestroy([this](CExtImageCopyCaptureFrameV1* pMgr) { m_frameDelivery.cancel(); m_frameResource.reset(); });
++    m_frameResource->setDestroy([this](CExtImageCopyCaptureFrameV1* pMgr) { PROTO::imageCopyCapture->destroyResource(this); });
++    m_frameResource->setOnDestroy([this](CExtImageCopyCaptureFrameV1* pMgr) { PROTO::imageCopyCapture->destroyResource(this); });
+ 
+     m_frameResource->setAttachBuffer([this](CExtImageCopyCaptureFrameV1* pMgr, wl_resource* buf) {
+         if (!m_frameDelivery.pending())
+@@ -241,7 +252,6 @@
+         if (m_captured) {
+             LOGM(Log::ERR, "Frame already captured in attach_buffer, {:x}", (uintptr_t)this);
+             m_frameResource->error(EXT_IMAGE_COPY_CAPTURE_FRAME_V1_ERROR_ALREADY_CAPTURED, "already captured");
+-            m_frameResource.reset();
+             return;
+         }
+ 
+@@ -249,7 +259,6 @@
+         if (!PBUFFERRES || !PBUFFERRES->m_buffer) {
+             LOGM(Log::ERR, "Invalid buffer in attach_buffer {:x}", (uintptr_t)this);
+             m_frameResource->error(-1, "invalid buffer");
+-            m_frameResource.reset();
+             return;
+         }
+ 
+@@ -266,13 +275,11 @@
+         if (m_captured) {
+             LOGM(Log::ERR, "Frame already captured in damage_buffer, {:x}", (uintptr_t)this);
+             m_frameResource->error(EXT_IMAGE_COPY_CAPTURE_FRAME_V1_ERROR_ALREADY_CAPTURED, "already captured");
+-            m_frameResource.reset();
+             return;
+         }
+ 
+         if (x < 0 || y < 0 || w <= 0 || h <= 0) {
+             m_frameResource->error(EXT_IMAGE_COPY_CAPTURE_FRAME_V1_ERROR_INVALID_BUFFER_DAMAGE, "invalid buffer damage");
+-            m_frameResource.reset();
+             return;
+         }
+ 
+@@ -289,34 +296,41 @@
+         if (m_captured) {
+             LOGM(Log::ERR, "Frame already captured in capture, {:x}", (uintptr_t)this);
+             m_frameResource->error(EXT_IMAGE_COPY_CAPTURE_FRAME_V1_ERROR_ALREADY_CAPTURED, "already captured");
+-            m_frameResource.reset();
+-            return;
+-        }
+-
+-        const auto PMONITOR = m_source->m_monitor.expired() ? m_source->m_window->m_monitor.lock() : m_source->m_monitor.lock();
++            return;
++        }
+ 
+         const auto frame = m_frameResource;
+         const auto delivery = m_frameDelivery;
+         m_captured = true;
+-        auto sourceBoxCallback = [source = m_source]() { return source ? source->logicalBox() : CBox(); };
+-        const auto error = m_session->share(PMONITOR, m_buffer, sourceBoxCallback, captureCallback(delivery));
++        const auto source = m_state->source;
++        if (!source || (!source->m_monitor && !source->m_window)) {
++            delivery.finish(EImageCaptureDelivery::FAILED_STOPPED);
++            return;
++        }
++        const auto PMONITOR = source->m_monitor.expired() ? source->m_window->m_monitor.lock() : source->m_monitor.lock();
++        auto sourceBoxCallback = [source = m_state->source]() { return source ? source->logicalBox() : CBox(); };
++        const auto error = m_state->session->share(PMONITOR, m_buffer, sourceBoxCallback, captureCallback(delivery));
+         captureError(error, delivery, frame);
+     });
+ 
+     // we should always copy over the entire cursor image, it doesn't cost much
+-    m_frameResource->sendDamage(0, 0, m_bufferSize.x, m_bufferSize.y);
++    m_frameResource->sendDamage(0, 0, bufferSize.x, bufferSize.y);
+ 
+     // the cursor is never transformed... probably?
+     m_frameResource->sendTransform(WL_OUTPUT_TRANSFORM_NORMAL);
+ }
+ 
++CImageCopyCaptureCursorFrame::~CImageCopyCaptureCursorFrame() {
++    m_frameDelivery.cancel();
++}
++
+ void CImageCopyCaptureCursorSession::sendConstraints() {
+-    if UNLIKELY (!m_session || !m_sessionResource)
+-        return;
+-
+-    auto format = m_session->format();
++    if UNLIKELY (!m_captureState || !m_captureState->session || !m_sessionResource)
++        return;
++
++    auto format = m_captureState->session->format();
+     if UNLIKELY (format == DRM_FORMAT_INVALID) {
+-        m_session->stop();
++        m_captureState->session->stop();
+         return;
+     }
+ 
+@@ -338,7 +352,7 @@
+     };
+     m_sessionResource->sendDmabufDevice(&deviceArr);
+ 
+-    m_bufferSize = m_session->bufferSize();
++    m_bufferSize = m_captureState->session->bufferSize();
+     m_sessionResource->sendBufferSize(m_bufferSize.x, m_bufferSize.y);
+ 
+     m_sessionResource->sendDone();
+@@ -538,3 +552,7 @@
+ void CImageCopyCaptureProtocol::destroyResource(CImageCopyCaptureFrame* resource) {
+     std::erase_if(m_frames, [&](const auto& other) { return other.get() == resource; });
+ }
++
++void CImageCopyCaptureProtocol::destroyResource(CImageCopyCaptureCursorFrame* resource) {
++    std::erase_if(m_cursorFrames, [&](const auto& other) { return other.get() == resource; });
++}
+--- a/src/protocols/ImageCopyCapture.hpp
++++ b/src/protocols/ImageCopyCapture.hpp
+@@ -73,6 +73,25 @@
+     friend class CImageCopyCaptureFrame;
+ };
+ 
++struct SCursorCaptureState {
++    ~SCursorCaptureState();
++    UP<Screenshare::CCursorshareSession> session;
++    SP<CImageCaptureSource> source;
++};
++
++class CImageCopyCaptureCursorFrame {
++  public:
++    CImageCopyCaptureCursorFrame(SP<CExtImageCopyCaptureFrameV1> resource, SP<SCursorCaptureState> state, Vector2D bufferSize);
++    ~CImageCopyCaptureCursorFrame();
++
++  private:
++    SP<CExtImageCopyCaptureFrameV1> m_frameResource;
++    SP<SCursorCaptureState> m_state;
++    CImageCaptureDelivery m_frameDelivery;
++    bool m_captured = false;
++    SP<IHLBuffer> m_buffer;
++};
++
+ class CImageCopyCaptureCursorSession {
+   public:
+     CImageCopyCaptureCursorSession(SP<CExtImageCopyCaptureCursorSessionV1> resource, SP<CImageCaptureSource> source, SP<CWLPointerResource> pointer);
+@@ -92,14 +111,12 @@
+ 
+     // capture session stuff
+     SP<CExtImageCopyCaptureSessionV1>    m_sessionResource;
+-    UP<Screenshare::CCursorshareSession> m_session;
++    SP<SCursorCaptureState>             m_captureState;
++    bool                               m_captureSessionCreated = false;
+     Vector2D                             m_bufferSize = Vector2D(0, 0);
+ 
+     // frame stuff
+-    SP<CExtImageCopyCaptureFrameV1> m_frameResource;
+-    CImageCaptureDelivery           m_frameDelivery;
+-    bool                            m_captured = false;
+-    SP<IHLBuffer>                   m_buffer;
++    WP<CImageCopyCaptureCursorFrame> m_frame;
+ 
+     struct {
+         CHyprSignalListener constraintsChanged;
+@@ -124,6 +141,7 @@
+     void         destroyResource(CImageCopyCaptureSession* resource);
+     void         destroyResource(CImageCopyCaptureCursorSession* resource);
+     void         destroyResource(CImageCopyCaptureFrame* resource);
++    void         destroyResource(CImageCopyCaptureCursorFrame* resource);
+ 
+   private:
+     std::vector<SP<CExtImageCopyCaptureManagerV1>>  m_managers;
+@@ -132,7 +150,10 @@
+ 
+     std::vector<SP<CImageCopyCaptureFrame>>         m_frames;
+ 
++    std::vector<SP<CImageCopyCaptureCursorFrame>> m_cursorFrames;
++
+     friend class CImageCopyCaptureSession;
++    friend class CImageCopyCaptureCursorSession;
+ };
+ 
+ namespace PROTO {
+--- a/src/protocols/ImageCaptureSource.hpp
++++ b/src/protocols/ImageCaptureSource.hpp
+@@ -29,6 +29,7 @@
+ 
+     friend class CImageCopyCaptureSession;
+     friend class CImageCopyCaptureCursorSession;
++    friend class CImageCopyCaptureCursorFrame;
+ };
+ 
+ class COutputImageCaptureSourceProtocol : public IWaylandProtocol {

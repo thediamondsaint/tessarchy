@@ -1,0 +1,530 @@
+--- a/src/managers/screenshare/ScreenshareManager.hpp
++++ b/src/managers/screenshare/ScreenshareManager.hpp
+@@ -197,6 +197,8 @@
+     class CScreenshareManager {
+       public:
+         CScreenshareManager();
++        void quiesceForShutdown();
++        void releaseShutdownResources();
+ 
+         struct SOutputCopyFBState {
+             uint32_t activeSessions       = 0;
+@@ -228,6 +230,7 @@
+         SOutputCopyFBState      outputCopyFBState(PHLMONITOR monitor);
+ 
+       private:
++        bool m_shutdown = false;
+         std::vector<WP<CScreenshareSession>> m_sessions;
+         std::vector<WP<CCursorshareSession>> m_cursorSessions;
+         std::vector<WP<CScreenshareFrame>>   m_pendingFrames;
+--- a/src/managers/screenshare/ScreenshareManager.cpp
++++ b/src/managers/screenshare/ScreenshareManager.cpp
+@@ -4,6 +4,7 @@
+ #include "../../desktop/view/Window.hpp"
+ #include "../../protocols/core/Seat.hpp"
+ #include "../../state/MonitorState.hpp"
++#include <cstdlib>
+ 
+ using namespace Screenshare;
+ 
+@@ -11,7 +12,72 @@
+     ;
+ }
+ 
++void CScreenshareManager::quiesceForShutdown() {
++    if (m_shutdown)
++        return;
++    m_shutdown = true;
++
++    // Mark every owner inert before destroying closures that can release or reenter peers.
++    for (auto& session : m_sessions) {
++        if (!session)
++            continue;
++        session->m_stopped = true;
++        session->m_sharing = false;
++    }
++    for (auto& session : m_cursorSessions) {
++        if (session)
++            session->m_stopped = true;
++    }
++    for (auto& frame : m_pendingFrames) {
++        if (frame)
++            frame->m_failed = true;
++    }
++    // Global cancellation is silent: emitting stopped can synchronously erase unique owners.
++    for (auto& managed : m_managedSessions)
++        managed->stoppedListener.reset();
++    for (auto& session : m_sessions) {
++        if (!session)
++            continue;
++        session->m_listeners = {};
++        if (session->m_shareStopTimer)
++            session->m_shareStopTimer->cancel();
++        session->m_shareStopTimer.reset();
++    }
++    for (auto& session : m_cursorSessions) {
++        if (!session)
++            continue;
++        session->m_listeners = {};
++    }
++    for (auto& frame : m_pendingFrames) {
++        if (frame)
++            frame->m_callback = {};
++    }
++    for (auto& session : m_cursorSessions) {
++        if (session)
++            session->m_pendingFrame = {};
++    }
++}
++
++void CScreenshareManager::releaseShutdownResources() {
++    if (!m_shutdown)
++        std::_Exit(EXIT_FAILURE);
++    // Called only after checked renderer drain, with its actual GL context still current.
++    for (auto& session : m_sessions) {
++        if (!session)
++            continue;
++        if (session->m_tempFB)
++            session->m_tempFB->release();
++        session->m_tempFB.reset();
++    }
++    m_pendingFrames.clear();
++    m_managedSessions.clear();
++    m_sessions.clear();
++    m_cursorSessions.clear();
++}
++
+ void CScreenshareManager::onOutputCommit(PHLMONITOR monitor) {
++    if (m_shutdown)
++        return;
+     std::erase_if(m_sessions, [&](const WP<CScreenshareSession>& session) { return session.expired(); });
+ 
+     // if no pending frames, and no sessions are sharing, then unblock ds
+@@ -45,6 +98,8 @@
+ }
+ 
+ UP<CScreenshareSession> CScreenshareManager::newSession(wl_client* client, PHLMONITOR monitor) {
++    if (m_shutdown)
++        return {};
+     if UNLIKELY (!monitor || !State::monitorState()->contains(monitor)) {
+         LOGM(Log::ERR, "Client requested sharing of a monitor that is gone");
+         return nullptr;
+@@ -59,6 +114,8 @@
+ }
+ 
+ UP<CScreenshareSession> CScreenshareManager::newSession(wl_client* client, PHLMONITOR monitor, CBox captureRegion) {
++    if (m_shutdown)
++        return {};
+     if UNLIKELY (!monitor || !State::monitorState()->contains(monitor)) {
+         LOGM(Log::ERR, "Client requested sharing of a monitor that is gone");
+         return nullptr;
+@@ -73,6 +130,8 @@
+ }
+ 
+ UP<CScreenshareSession> CScreenshareManager::newSession(wl_client* client, PHLWINDOW window) {
++    if (m_shutdown)
++        return {};
+     if UNLIKELY (!window || !window->m_isMapped) {
+         LOGM(Log::ERR, "Client requested sharing of window that is gone or not shareable!");
+         return nullptr;
+@@ -87,6 +146,8 @@
+ }
+ 
+ UP<CCursorshareSession> CScreenshareManager::newCursorSession(wl_client* client, WP<CWLPointerResource> pointer) {
++    if (m_shutdown)
++        return {};
+     UP<CCursorshareSession> session = UP<CCursorshareSession>(new CCursorshareSession(client, pointer));
+ 
+     session->m_self = session;
+@@ -109,6 +170,8 @@
+ }
+ 
+ WP<CScreenshareSession> CScreenshareManager::getManagedSession(eScreenshareType type, wl_client* client, PHLMONITOR monitor, PHLWINDOW window, CBox captureBox) {
++    if (m_shutdown)
++        return {};
+     if (type == SHARE_NONE)
+         return {};
+ 
+@@ -156,6 +219,8 @@
+ }
+ 
+ bool CScreenshareManager::isOutputBeingSSd(PHLMONITOR monitor) {
++    if (m_shutdown)
++        return false;
+     return std::ranges::any_of(m_sessions, [monitor](const auto& s) {
+         if (!s)
+             return false;
+@@ -168,6 +233,8 @@
+ }
+ 
+ CScreenshareManager::SOutputCopyFBState CScreenshareManager::outputCopyFBState(PHLMONITOR monitor) {
++    if (m_shutdown)
++        return {};
+     SOutputCopyFBState state;
+ 
+     for (const auto& session : m_sessions) {
+--- a/src/Compositor.hpp
++++ b/src/Compositor.hpp
+@@ -3,6 +3,7 @@
+ #include <sys/resource.h>
+ 
+ #include <ranges>
++#include "helpers/ShutdownSequence.hpp"
+ 
+ #include "helpers/math/Direction.hpp"
+ #include "managers/XWaylandManager.hpp"
+@@ -89,6 +90,7 @@
+     std::string                         m_explicitConfigPath;
+ 
+   private:
++    NativeShutdown::CShutdownSequence m_cleanupSequence;
+     void                           initAllSignals();
+     void                           removeAllSignals();
+     void                           cleanEnvironment();
+--- a/src/Compositor.cpp
++++ b/src/Compositor.cpp
+@@ -1,5 +1,6 @@
+ 
+ #include "Compositor.hpp"
++#include "managers/screenshare/ScreenshareManager.hpp"
+ #include "config/supplementary/executor/Executor.hpp"
+ #include "debug/log/Logger.hpp"
+ #include "desktop/DesktopTypes.hpp"
+@@ -233,8 +234,11 @@
+ }
+ 
+ CCompositor::~CCompositor() {
+-    if (!m_isShuttingDown && !m_onlyConfigVerification)
++    if (!m_onlyConfigVerification) {
++        if (m_wlDisplay && g_pCompositor.get() != this)
++            std::_Exit(EXIT_FAILURE);
+         cleanup();
++    }
+ }
+ 
+ void CCompositor::setRandomSplash() {
+@@ -561,83 +565,97 @@
+     if (!m_wlDisplay)
+         return;
+ 
+-    writeWatchdogFd("end");
+-
+-    signal(SIGABRT, SIG_DFL);
+-    signal(SIGSEGV, SIG_DFL);
+-
+-    removeLockFile();
+-
+-    m_isShuttingDown = true;
++    const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(2);
++    m_cleanupSequence.run(
++        deadline,
++        [this]() {
++            signal(SIGABRT, SIG_DFL);
++            signal(SIGSEGV, SIG_DFL);
++
++            removeLockFile();
++
++            m_isShuttingDown = true;
+ 
+ #ifdef USES_SYSTEMD
+-    if (NSystemd::sdBooted() > 0 && !Env::envEnabled("HYPRLAND_NO_SD_NOTIFY"))
+-        NSystemd::sdNotify(0, "STOPPING=1");
++            if (NSystemd::sdBooted() > 0 && !Env::envEnabled("HYPRLAND_NO_SD_NOTIFY"))
++                NSystemd::sdNotify(0, "STOPPING=1");
+ #endif
+ 
+-    cleanEnvironment();
+-
+-    // unload all remaining plugins while the compositor is
+-    // still in a normal working state.
+-    g_pPluginSystem->unloadAllPlugins();
+-
+-    State::workspaceState()->clear();
+-    Desktop::windowState()->clear();
+-    Desktop::layerState()->clear();
+-    Desktop::fadingOutState()->clear();
+-    Desktop::otherViewState()->clear();
+-
+-    for (auto const& m : State::monitorState()->monitors()) {
+-        g_pHyprOpenGL->destroyMonitorResources(m);
+-    }
+-
+-    g_pXWayland.reset();
+-
+-    wl_display_destroy_clients(g_pCompositor->m_wlDisplay);
+-
+-    State::monitorState()->finish();
+-    State::fallbackState().reset();
+-    State::monitorState().reset();
+-
+-    removeAllSignals();
+-
+-    g_pInputManager.reset();
+-    g_pDynamicPermissionManager.reset();
+-    g_pDecorationPositioner.reset();
+-    Pointer::Cursor::mgr().reset();
+-    g_pPluginSystem.reset();
+-    Notification::overlay().reset();
+-    Debug::overlay().reset();
+-    g_pEventManager.reset();
+-    g_pSessionLockManager.reset();
+-    g_pHyprRenderer.reset();
+-    g_pProtocolManager.reset();
+-    g_pHyprOpenGL.reset();
+-    Render::g_pShaderLoader.reset();
+-    Config::mgr().reset();
+-    g_layoutManager.reset();
+-    ErrorOverlay::overlay().reset();
+-    g_pKeybindManager.reset();
+-    g_pXWaylandManager.reset();
+-    Pointer::mgr().reset();
+-    g_pSeatManager.reset();
+-    g_pHyprCtl.reset();
+-    g_pEventLoopManager.reset();
+-    g_pVersionKeeperMgr.reset();
+-    g_pDonationNagManager.reset();
+-    g_pWelcomeManager.reset();
+-    g_pANRManager.reset();
+-    Config::watcher().reset();
+-    g_pAsyncResourceGatherer.reset();
+-
+-    if (m_aqBackend)
+-        m_aqBackend.reset();
+-
+-    if (m_critSigSource)
+-        wl_event_source_remove(m_critSigSource);
+-
+-    // this frees all wayland resources, including sockets
+-    wl_display_destroy(m_wlDisplay);
++            cleanEnvironment();
++
++            // unload all remaining plugins while the compositor is
++            // still in a normal working state.
++            if (g_pPluginSystem)
++                g_pPluginSystem->unloadAllPlugins();
++            if (Screenshare::mgr())
++                Screenshare::mgr()->quiesceForShutdown();
++        },
++        [](auto deadline) { return !g_pHyprRenderer || g_pHyprRenderer->drainSubmittedWork(deadline); },
++        []() {
++            if (Screenshare::mgr())
++                Screenshare::mgr()->releaseShutdownResources();
++        },
++        [this]() {
++            State::workspaceState()->clear();
++            Desktop::windowState()->clear();
++            Desktop::layerState()->clear();
++            Desktop::fadingOutState()->clear();
++            Desktop::otherViewState()->clear();
++
++            for (auto const &m : State::monitorState()->monitors()) {
++                g_pHyprOpenGL->destroyMonitorResources(m);
++            }
++
++            g_pXWayland.reset();
++
++            wl_display_destroy_clients(m_wlDisplay);
++
++            State::monitorState()->finish();
++            State::fallbackState().reset();
++            State::monitorState().reset();
++
++            removeAllSignals();
++
++            g_pInputManager.reset();
++            g_pDynamicPermissionManager.reset();
++            g_pDecorationPositioner.reset();
++            Pointer::Cursor::mgr().reset();
++            g_pPluginSystem.reset();
++            Notification::overlay().reset();
++            Debug::overlay().reset();
++            g_pEventManager.reset();
++            g_pSessionLockManager.reset();
++            g_pHyprRenderer.reset();
++            g_pProtocolManager.reset();
++            g_pHyprOpenGL.reset();
++            Render::g_pShaderLoader.reset();
++            Config::mgr().reset();
++            g_layoutManager.reset();
++            ErrorOverlay::overlay().reset();
++            g_pKeybindManager.reset();
++            g_pXWaylandManager.reset();
++            Pointer::mgr().reset();
++            g_pSeatManager.reset();
++            g_pHyprCtl.reset();
++            g_pEventLoopManager.reset();
++            g_pVersionKeeperMgr.reset();
++            g_pDonationNagManager.reset();
++            g_pWelcomeManager.reset();
++            g_pANRManager.reset();
++            Config::watcher().reset();
++            g_pAsyncResourceGatherer.reset();
++
++            if (m_aqBackend)
++                m_aqBackend.reset();
++
++            if (m_critSigSource)
++                wl_event_source_remove(m_critSigSource);
++
++            // this frees all wayland resources, including sockets
++            wl_display_destroy(m_wlDisplay);
++            m_wlDisplay = nullptr;
++            writeWatchdogFd("end");
++        });
+ }
+ 
+ void CCompositor::initManagers(eManagersInitStage stage) {
+--- a/src/render/GLRenderer.cpp
++++ b/src/render/GLRenderer.cpp
+@@ -42,14 +42,35 @@
+     return RT_GL;
+ }
+ 
++bool CHyprGLRenderer::checkedContext() {
++    if (!g_pHyprOpenGL || g_pHyprOpenGL->m_eglDisplay == EGL_NO_DISPLAY || g_pHyprOpenGL->m_eglContext == EGL_NO_CONTEXT)
++        return false;
++    if (eglMakeCurrent(g_pHyprOpenGL->m_eglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, g_pHyprOpenGL->m_eglContext) != EGL_TRUE)
++        return false;
++    return eglGetCurrentContext() == g_pHyprOpenGL->m_eglContext && eglGetCurrentDisplay() == g_pHyprOpenGL->m_eglDisplay && glGetGraphicsResetStatus() == GL_NO_ERROR;
++}
++
++bool CHyprGLRenderer::retireResources(SSubmittedResources& resources) {
++    if (!checkedContext())
++        return false;
++    for (auto& framebuffer : resources.explicitReleases)
++        framebuffer->release();
++    resources.explicitReleases.clear();
++    return true;
++}
++
++void CHyprGLRenderer::deferFramebufferRelease(SP<IFramebuffer> framebuffer) {
++    if (m_shutdownDrain)
++        std::_Exit(EXIT_FAILURE);
++    m_pendingFBReleases.emplace_back(std::move(framebuffer));
++}
++
+ bool CHyprGLRenderer::drainSubmittedWork(std::chrono::steady_clock::time_point deadline) {
+-    if (!g_pHyprOpenGL || g_pHyprOpenGL->m_eglDisplay == EGL_NO_DISPLAY || g_pHyprOpenGL->m_eglContext == EGL_NO_CONTEXT)
+-        return false;
+-    if (eglMakeCurrent(g_pHyprOpenGL->m_eglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, g_pHyprOpenGL->m_eglContext) != EGL_TRUE)
+-        return false;
+-    if (eglGetCurrentContext() != g_pHyprOpenGL->m_eglContext || eglGetCurrentDisplay() != g_pHyprOpenGL->m_eglDisplay || glGetGraphicsResetStatus() != GL_NO_ERROR)
+-        return false;
+-    return m_submittedWork.drain(deadline);
++    m_shutdownDrain = true;
++    m_submittedWork.cancelAllDelivery();
++    if (!checkedContext() || !m_pendingFBReleases.empty())
++        return false;
++    return m_submittedWork.drain(deadline) && checkedContext();
+ }
+ 
+ void CHyprGLRenderer::initRender() {
+@@ -92,8 +113,9 @@
+ }
+ 
+ void CHyprGLRenderer::endRender(const std::function<void()>& renderingDoneCallback) {
++    if (m_shutdownDrain)
++        std::_Exit(EXIT_FAILURE);
+     const auto  PMONITOR           = g_pHyprRenderer->m_renderData.pMonitor;
+-    static auto PNVIDIAANTIFLICKER = CConfigValue<Config::INTEGER>("opengl:nvidia_anti_flicker");
+ 
+     g_pHyprRenderer->m_renderData.damage = m_renderPass.render(g_pHyprRenderer->m_renderData.damage);
+ 
+@@ -104,6 +126,7 @@
+     resources.currentFB = m_renderData.currentFB;
+     resources.mainFB = m_renderData.mainFB;
+     resources.outFB = m_renderData.outFB;
++    resources.explicitReleases = std::move(m_pendingFBReleases);
+ 
+     auto cleanup = CScopeGuard([this]() {
+         if (m_currentRenderbuffer)
+@@ -120,27 +143,8 @@
+         g_pHyprRenderer->m_renderData.mouseZoomUseMouse = true;
+     }
+ 
+-    if (m_renderMode == RENDER_MODE_FULL_FAKE)
+-        return;
+-
+     if (m_renderMode == RENDER_MODE_NORMAL)
+         PMONITOR->m_output->state->setBuffer(m_currentBuffer);
+-
+-    if (!explicitSyncSupported()) {
+-        Log::logger->log(Log::TRACE, "renderer: Explicit sync unsupported, falling back to implicit in endRender");
+-
+-        // nvidia doesn't have implicit sync, so we have to explicitly wait here, llvmpipe and other software renderer seems to bug out as well.
+-        if ((isNvidia() && *PNVIDIAANTIFLICKER) || isSoftware())
+-            glFinish();
+-        else
+-            glFlush(); // mark an implicit sync point
+-
+-        m_usedAsyncBuffers.clear(); // release all buffer refs and hope implicit sync works
+-        if (renderingDoneCallback)
+-            renderingDoneCallback();
+-
+-        return;
+-    }
+ 
+     auto eglSync = createSyncFDManager();
+     if LIKELY (eglSync && eglSync->isValid()) {
+@@ -160,7 +164,7 @@
+         });
+         m_usedAsyncBuffers.clear();
+ 
+-        if (m_renderMode == RENDER_MODE_NORMAL) {
++        if (m_renderMode == RENDER_MODE_NORMAL && explicitSyncSupported()) {
+             PMONITOR->m_inFence = eglSync->takeFd();
+             PMONITOR->m_output->state->setExplicitInFence(PMONITOR->m_inFence.get());
+         }
+--- a/src/render/GLRenderer.hpp
++++ b/src/render/GLRenderer.hpp
+@@ -9,11 +9,12 @@
+     class CHyprGLRenderer : public Render::IHyprRenderer {
+       public:
+         CHyprGLRenderer();
+-        ~CHyprGLRenderer() { if (m_submittedWork.size()) std::terminate(); }
++        ~CHyprGLRenderer() { if (m_submittedWork.size() || !m_pendingFBReleases.empty()) std::_Exit(EXIT_FAILURE); }
+ 
+         eType                   type() override;
+         [[nodiscard]] bool      drainSubmittedWork(std::chrono::steady_clock::time_point deadline) override;
+         void                    endRender(const std::function<void()>& renderingDoneCallback = {}) override;
++        void deferFramebufferRelease(SP<IFramebuffer> framebuffer) override;
+         UP<ISyncFDManager>      createSyncFDManager() override;
+         SP<ITexture>            createStencilTexture(const int width, const int height) override;
+         SP<ITexture>            createTexture(bool opaque = false) override;
+@@ -58,8 +59,13 @@
+             SP<Aquamarine::IBuffer> destination;
+             SP<IRenderbuffer> renderbuffer;
+             SP<IFramebuffer> currentFB, mainFB, outFB;
++            std::vector<SP<IFramebuffer>> explicitReleases;
+         };
+-        NativeRetirement::CSubmittedWork<SSubmittedResources> m_submittedWork;
++        NativeRetirement::CSubmittedWork<SSubmittedResources> m_submittedWork{NativeRetirement::nativeFenceStatus, retireResources};
++        bool m_shutdownDrain = false;
++        std::vector<SP<IFramebuffer>> m_pendingFBReleases;
++        static bool checkedContext();
++        static bool retireResources(SSubmittedResources& resources);
+ 
+         SP<IRenderbuffer>    m_currentRenderbuffer;
+         UP<IElementRenderer> m_elementRenderer;
+--- a/src/render/Renderer.hpp
++++ b/src/render/Renderer.hpp
+@@ -107,6 +107,7 @@
+         virtual void                        startRenderPass() {};
+         virtual void                        endRender(const std::function<void()>& renderingDoneCallback = {}) = 0;
+         [[nodiscard]] virtual bool          drainSubmittedWork(std::chrono::steady_clock::time_point deadline) = 0;
++        virtual void deferFramebufferRelease(SP<IFramebuffer> framebuffer) = 0;
+ 
+         NColorManagement::PImageDescription workBufferImageDescription();
+         bool                                m_bBlockSurfaceFeedback = false;
+--- a/src/managers/screenshare/ScreenshareFrame.cpp
++++ b/src/managers/screenshare/ScreenshareFrame.cpp
+@@ -377,7 +377,8 @@
+     if (m_session->m_tempFB && m_session->m_tempFB->isAllocated()) {
+         CBox texbox = {{}, m_bufferSize};
+         g_pHyprRenderer->draw(CTexPassElement::SRenderData{.tex = m_session->m_tempFB->getTexture(), .box = texbox}, texbox);
+-        m_session->m_tempFB->release();
++        g_pHyprRenderer->deferFramebufferRelease(m_session->m_tempFB);
++        m_session->m_tempFB.reset();
+         return;
+     }
+ 

@@ -1,0 +1,180 @@
+{
+  "status": "PASS",
+  "compositor_pid": 2341981,
+  "client_pid": 2342165,
+  "native": [
+    832,
+    800
+  ],
+  "allocation": [
+    410,
+    800
+  ],
+  "fit_scale": 0.49278846153846156,
+  "baseline": {
+    "name": "baseline",
+    "size": [
+      410,
+      800
+    ],
+    "red_pixels": 0,
+    "cyan_pixels": 25600
+  },
+  "fitted": {
+    "name": "fitted",
+    "size": [
+      410,
+      800
+    ],
+    "red_pixels": 6177,
+    "cyan_pixels": 6304
+  },
+  "pointer_control": {
+    "screen": [
+      400,
+      200
+    ],
+    "expected_native": [
+      400,
+      200
+    ],
+    "actual_native": [
+      400.0,
+      200.0
+    ]
+  },
+  "pointer_fitted": {
+    "screen": [
+      400,
+      200
+    ],
+    "expected_native": [
+      811.7073170731707,
+      405.8536585365853
+    ],
+    "actual_native": [
+      811.707,
+      405.855
+    ]
+  },
+  "pointer_disabled": {
+    "screen": [
+      400,
+      200
+    ],
+    "expected_native": [
+      400,
+      200
+    ],
+    "actual_native": [
+      400.0,
+      200.0
+    ]
+  },
+  "repeat_captures": [
+    {
+      "name": "fitted-repeat-0",
+      "size": [
+        410,
+        800
+      ],
+      "red_pixels": 6177,
+      "cyan_pixels": 6304
+    },
+    {
+      "name": "fitted-repeat-1",
+      "size": [
+        410,
+        800
+      ],
+      "red_pixels": 6177,
+      "cyan_pixels": 6304
+    },
+    {
+      "name": "fitted-repeat-2",
+      "size": [
+        410,
+        800
+      ],
+      "red_pixels": 6177,
+      "cyan_pixels": 6304
+    },
+    {
+      "name": "fitted-repeat-3",
+      "size": [
+        410,
+        800
+      ],
+      "red_pixels": 6177,
+      "cyan_pixels": 6304
+    },
+    {
+      "name": "fitted-repeat-4",
+      "size": [
+        410,
+        800
+      ],
+      "red_pixels": 6177,
+      "cyan_pixels": 6304
+    }
+  ],
+  "disable_control": {
+    "name": "disabled-control",
+    "size": [
+      410,
+      800
+    ],
+    "red_pixels": 0,
+    "cyan_pixels": 25600
+  },
+  "unload_control": {
+    "name": "unloaded-control",
+    "size": [
+      410,
+      800
+    ],
+    "red_pixels": 0,
+    "cyan_pixels": 25600
+  },
+  "reload_fitted": {
+    "name": "reloaded-fitted",
+    "size": [
+      410,
+      800
+    ],
+    "red_pixels": 6177,
+    "cyan_pixels": 6304
+  },
+  "pointer_reloaded": {
+    "screen": [
+      400,
+      200
+    ],
+    "expected_native": [
+      811.7073170731707,
+      405.8536585365853
+    ],
+    "actual_native": [
+      811.707,
+      405.855
+    ]
+  },
+  "reload_unload_control": {
+    "name": "reloaded-unloaded-control",
+    "size": [
+      410,
+      800
+    ],
+    "red_pixels": 0,
+    "cyan_pixels": 25600
+  },
+  "not_verified": [
+    "touch",
+    "popups/subsurfaces",
+    "rotation",
+    "fractional output scale",
+    "real desktop apps",
+    "OSK/IME",
+    "incremental damage"
+  ]
+}

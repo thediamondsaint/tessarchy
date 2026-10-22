@@ -1,0 +1,125 @@
+--- a/src/render/Renderer.hpp
++++ b/src/render/Renderer.hpp
+@@ -1,4 +1,6 @@
+ #pragma once
++
++#include <chrono>
+ 
+ #include "../defines.hpp"
+ #include <cstdint>
+@@ -104,6 +106,7 @@
+         bool                                beginRenderToBuffer(PHLMONITOR pMonitor, CRegion& damage, SP<IHLBuffer> buffer, bool simple = false);
+         virtual void                        startRenderPass() {};
+         virtual void                        endRender(const std::function<void()>& renderingDoneCallback = {}) = 0;
++        [[nodiscard]] virtual bool          drainSubmittedWork(std::chrono::steady_clock::time_point deadline) = 0;
+ 
+         NColorManagement::PImageDescription workBufferImageDescription();
+         bool                                m_bBlockSurfaceFeedback = false;
+--- a/src/render/GLRenderer.hpp
++++ b/src/render/GLRenderer.hpp
+@@ -2,6 +2,8 @@
+ 
+ #include "Renderer.hpp"
+ #include "render/ElementRenderer.hpp"
++#include "../managers/eventLoop/SubmittedWork.hpp"
++#include "../protocols/types/Buffer.hpp"
+ 
+ namespace Render::GL {
+     class CHyprGLRenderer : public Render::IHyprRenderer {
+@@ -9,7 +11,8 @@
+         CHyprGLRenderer();
+-        ~CHyprGLRenderer() = default;
++        ~CHyprGLRenderer() { if (m_submittedWork.size()) std::terminate(); }
+ 
+         eType                   type() override;
++        [[nodiscard]] bool      drainSubmittedWork(std::chrono::steady_clock::time_point deadline) override;
+         void                    endRender(const std::function<void()>& renderingDoneCallback = {}) override;
+         UP<ISyncFDManager>      createSyncFDManager() override;
+         SP<ITexture>            createStencilTexture(const int width, const int height) override;
+@@ -49,6 +52,15 @@
+ 
+         SP<ITexture>         getBlurTexture(PHLMONITORREF pMonitor) override;
+ 
++        struct SSubmittedResources {
++            std::vector<CHLBufferReference> sources;
++            CHLBufferReference destinationLock;
++            SP<Aquamarine::IBuffer> destination;
++            SP<IRenderbuffer> renderbuffer;
++            SP<IFramebuffer> currentFB, mainFB, outFB;
++        };
++        NativeRetirement::CSubmittedWork<SSubmittedResources> m_submittedWork;
++
+         SP<IRenderbuffer>    m_currentRenderbuffer;
+         UP<IElementRenderer> m_elementRenderer;
+ 
+--- a/src/render/GLRenderer.cpp
++++ b/src/render/GLRenderer.cpp
+@@ -42,6 +42,16 @@
+     return RT_GL;
+ }
+ 
++bool CHyprGLRenderer::drainSubmittedWork(std::chrono::steady_clock::time_point deadline) {
++    if (!g_pHyprOpenGL || g_pHyprOpenGL->m_eglDisplay == EGL_NO_DISPLAY || g_pHyprOpenGL->m_eglContext == EGL_NO_CONTEXT)
++        return false;
++    if (eglMakeCurrent(g_pHyprOpenGL->m_eglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, g_pHyprOpenGL->m_eglContext) != EGL_TRUE)
++        return false;
++    if (eglGetCurrentContext() != g_pHyprOpenGL->m_eglContext || eglGetCurrentDisplay() != g_pHyprOpenGL->m_eglDisplay || glGetGraphicsResetStatus() != GL_NO_ERROR)
++        return false;
++    return m_submittedWork.drain(deadline);
++}
++
+ void CHyprGLRenderer::initRender() {
+     g_pHyprOpenGL->makeEGLCurrent();
+     g_pHyprRenderer->m_renderData.pMonitor = renderData().pMonitor;
+@@ -87,6 +97,14 @@
+ 
+     g_pHyprRenderer->m_renderData.damage = m_renderPass.render(g_pHyprRenderer->m_renderData.damage);
+ 
++    SSubmittedResources resources;
++    resources.destination = m_currentBuffer;
++    resources.destinationLock = CHLBufferReference(Hyprutils::Memory::dynamicPointerCast<IHLBuffer>(m_currentBuffer));
++    resources.renderbuffer = m_currentRenderbuffer;
++    resources.currentFB = m_renderData.currentFB;
++    resources.mainFB = m_renderData.mainFB;
++    resources.outFB = m_renderData.outFB;
++
+     auto cleanup = CScopeGuard([this]() {
+         if (m_currentRenderbuffer)
+             m_currentRenderbuffer->unbind();
+@@ -135,11 +153,10 @@
+         // release buffer refs with release points now, since syncReleaser handles actual buffer release based on EGLSync
+         std::erase_if(m_usedAsyncBuffers, [](const auto& buf) { return !buf->m_syncReleasers.empty(); });
+ 
+-        // release buffer refs without release points when EGLSync sync_file/fence is signalled
+-        g_pEventLoopManager->doOnReadable(eglSync->fd().duplicate(), [renderingDoneCallback, prevbfs = std::move(m_usedAsyncBuffers)]() mutable {
+-            prevbfs.clear();
+-            if (renderingDoneCallback)
+-                renderingDoneCallback();
++        resources.sources = std::move(m_usedAsyncBuffers);
++        const auto submitted = m_submittedWork.submit(std::move(resources), eglSync->fd().duplicate(), renderingDoneCallback);
++        m_submittedWork.arm(submitted, [](auto fd, auto callback) {
++            return g_pEventLoopManager->doOnReadableScoped(std::move(fd), std::move(callback));
+         });
+         m_usedAsyncBuffers.clear();
+ 
+@@ -148,7 +165,7 @@
+             PMONITOR->m_output->state->setExplicitInFence(PMONITOR->m_inFence.get());
+         }
+     } else {
+-        Log::logger->log(Log::ERR, "renderer: Explicit sync failed, falling back to implicit sync");
++        Log::logger->log(Log::ERR, "renderer: Explicit sync failed; retaining submitted resources without successful completion");
+ 
+         // Establish an implicit synchronization point without blocking the render loop.
+         glFlush();
+@@ -158,9 +175,9 @@
+             PMONITOR->m_output->state->resetExplicitFences();
+         }
+ 
++        resources.sources = std::move(m_usedAsyncBuffers);
++        m_submittedWork.submit(std::move(resources), {}, {});
+         m_usedAsyncBuffers.clear();
+-        if (renderingDoneCallback)
+-            renderingDoneCallback();
+     }
+ }
+ 

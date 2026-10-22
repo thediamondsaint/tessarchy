@@ -1,5 +1,145 @@
 # Validation and manual acceptance
 
+## Native shutdown cancellation reentrancy — CPU checkpoint
+
+Changed the production `quiesceForShutdown` overlay to mark every ordinary
+session, cursor session and pending frame inert before destroying any listener,
+timer or callback closure. The earlier interleaved order could destroy a pending
+frame's callback while its native session was still active. All producer listeners
+and timers now detach before pending completion closures are discarded. Managed
+unique owners remain retained until the existing checked-drain barrier completes.
+Ordinary parent/frame lifetime and normal eventfd/timeline behavior are unchanged.
+
+Executed `python3 tests/native-fit/verify-teardown-producers.py --source
+"$HYPRLAND_SOURCE"`:
+
+- 14 ASan/UBSan cases pass. Twelve exercise closure destruction at managed stop
+  listeners, ordinary listeners/timers, cursor listeners, ordinary completion and
+  cursor pending completion, with and without synchronous peer destruction.
+- Extracted actual manager quiesce/release methods run through the production
+  shutdown sequence, with real Hyprutils unique/weak owners and signal listeners,
+  real libwayland-server timers, and explicit CPU session/frame/framebuffer mocks.
+  Every closure observes all peers already stopped/failed. Recursive quiescence
+  is inert; signal emission and Wayland dispatch after cancellation do no work.
+- The success barrier retains managed owners and framebuffer resources through
+  the injected drain, releases framebuffers exactly once, then permits native
+  owner destruction after mocked dependency loss. Two subprocess cases reject
+  failed/throwing drains with exit 1; a pipe proves no explicit FB release,
+  native-owner destruction or dependency teardown occurred before fail-stop.
+- Three scratch RED controls delay ordinary-session stop, cursor stop and frame
+  failure marking past the first closure destruction. Each fails its exact
+  corresponding assertion, not an unrelated error or compiler failure.
+- Six actual compositor translation units syntax-check with the changed overlay;
+  thirteen original source inputs remain hash-identical. The current receipt
+  binds runner/test, extracted methods, overlay, patch and header hashes.
+
+Current receipt: `build/native-fit/teardown-producers/verification.json`; complete
+log: `build/native-fit/teardown-producers-build.log`. Older core success evidence
+is invalidated before preparation. Earlier unchanged primitive/retirement/render
+and protocol suites were not rerun as new progress. No compositor, config verifier,
+GUI/GPU workload, full compositor link, `check.sh`, VM/device or live changes ran.
+The timer/native resource model is CPU-only; this is not native fence/GPU proof.
+
+Next: execute actual generated protocol destruction paths together with the
+cleanup barrier, then expand other teardown-producer admission checks. Native
+fence availability, synchronous SHM-readback bounds and packaged-launcher exit
+status remain separate unaccepted work.
+
+## Native render-submission wiring — CPU checkpoint
+
+Implemented a focused executable fixture for the actual overlaid
+`CHyprGLRenderer::endRender` and `retireResources` method bodies, rather than a
+parallel model of submission control flow. Production shutdown patches were not
+changed at this checkpoint.
+
+Executed `python3 tests/native-fit/verify-render-submission.py --source
+"$HYPRLAND_SOURCE"`:
+
+- 96 ASan/UBSan cases pass: Normal, Full Fake, To Buffer and Read Only modes;
+  output explicit-sync enabled/disabled; absent, invalid and valid mocked native
+  fence managers; release-context acceptance/rejection; ordinary delivery versus
+  cancellation followed by event-registry closure and checked retirement.
+- Real Hyprutils references assert destination storage plus its buffer lock,
+  renderbuffer, current/main/output framebuffer, non-release-point sources and
+  transient explicit-release framebuffer remain retained after render cleanup.
+  Explicit release-point sources import the fence before their references drop.
+  Failure keeps the complete payload and never calls completion or explicit release.
+- Ordinary completion runs through real libwayland-server event-loop scheduling.
+  Shutdown cancellation suppresses delivery without releasing pending resources.
+  Successful retirement explicitly releases the transient framebuffer exactly once.
+- Four scratch mutations fail their exact named assertions: Full Fake early
+  return, implicit fallback immediate-success callback, omitted explicit release-
+  point import and discarded transient framebuffer. Compiler failures and unrelated
+  nonzero exits are not accepted as RED.
+- Six actual compositor translation units syntax-check in the complete isolated
+  overlay. Thirteen original inputs remain hash-identical. The receipt binds
+  current test/runner, extracted methods, overlay, patch and header hashes.
+
+Fence-manager/GL/EGL operations and successful native-fence status are injected
+CPU dependencies. A separate actual `SYNC_IOC_FILE_INFO` call rejects the eventfd
+used for scheduling; readable eventfd is not native-fence success. Failure cases
+assert retained ownership before `_Exit`, avoiding intentional unresolved-owner
+unwind; this is not a compositor process-outcome test. No compositor, config
+verifier, GUI/GPU workload, full compositor link, VM/device/live changes or
+`check.sh` ran. Earlier unchanged primitive/ownership suites were not rerun.
+
+Current evidence: `build/native-fit/render-submission/verification.json`,
+`build/native-fit/render-submission-build.log` and per-control `result.log` files.
+The runner removes stale success receipts before execution and invalidates the
+older core receipt. Next: extend actual-source CPU coverage to remaining teardown
+producers and protocol-owner destruction/reentrancy across the cleanup barrier.
+Packaged-launcher exit status, native-driver support and synchronous SHM readback
+bounds remain separate outstanding implementation/acceptance work.
+
+## Native parent/frame ownership, 2026-10-22 — CPU protocol execution
+
+Added `child-lifetime.patch` and `cursor-lifetime.patch` after the cleanup patch.
+Ordinary frames retain their parent native state while parent protocol destruction
+detaches its listeners and immediately destroys its wire resource. Cursor frames
+are separate protocol owners with a shared native-state holder, independent of
+both parent resources. Frame destruction revokes only its own delivery. Cursor
+source-stop notification no longer erases its own native owner during emission;
+parent teardown detaches its source/monitor listeners before dropping ownership.
+Global shutdown still uses the distinct cancellation phase from the preceding
+cleanup checkpoint.
+
+Executed:
+
+```sh
+python3 tests/native-fit/verify-child-lifetime.py --source "$HYPRLAND_SOURCE"
+```
+
+- ASan/UBSan GREEN: eight ordinary parent/frame cases, sixteen cursor cases and a
+  source-stop/frame-replacement group. Cases vary capture before/after parent
+  destruction, ordinary request/server resource destruction, cursor parent
+  selection, source loss, frame destruction before completion, duplicate
+  completion and old completion after a replacement frame. Destroyed parent
+  resources disappear immediately; native state remains until the child dies.
+- The fixture compiles extracted production declarations, ordinary frame and
+  parent destruction methods, cursor constructor/frame methods and protocol
+  erase methods with the actual generated ext-image-copy-capture implementation.
+  Real libwayland-server socket dispatch and Hyprutils owners/signals are used.
+  Native capture/render objects and constraint generation are explicit CPU mocks;
+  this is not execution of the GPU/native capture stack.
+- Five scratch RED mutations each fail their intended assertion: ordinary parent
+  stop, weak parent retention, parent wire-resource retention, premature cursor
+  native reset and source-stop erasing the cursor capture parent. Nonzero exit
+  alone is not sufficient; the runner checks the named assertion text.
+- All six actual compositor translation units syntax-check with the complete
+  current overlay. Fifteen original source/generated-protocol inputs are hashed
+  before and after and unchanged. Current patch/header/test/runner/overlay hashes
+  were independently matched to the success receipt.
+- Receipt: `build/native-fit/child-lifetime/verification.json`; complete execution
+  log: `build/native-fit/child-lifetime-build.log`. The focused runner invalidates
+  the older core success receipt. Prior primitive/retirement/cleanup suites were
+  not rerun unchanged as progress.
+
+No compositor or GPU workload was started. Next implementation: focused CPU
+execution of full-fake/non-output-explicit-sync submission wiring, retaining
+fail-closed behavior when native fence/context validation fails. Actual driver,
+SHM-readback and compositor runtime acceptance remain unexecuted; packaged-launcher
+status remains separate from direct-child status.
+
 ## Theme picker layout fix, 2026-10-19
 
 Branch `feat/theme-extras` on `49728ce`. Executed by an agent in the running
@@ -2334,3 +2474,121 @@ restored 18/true/0, with empty configerrors. Ubuntu source CI now uses the
 supported 26.04 runner for QtQuick.Effects; every source/build job declares the
 portal's GTK/GLib build dependencies. Terminal Fn exposes navigation/F1–F12
 without adding short key rows.
+
+
+## Native shutdown submitted-work ownership — 2026-10-22
+
+Implemented the explicit-sync renderer retirement layer in the private native
+shutdown overlay (`patches/hyprland/shutdown`). Submitted records own source
+locks independently of readable-wait closures, copy destination lock/storage,
+renderbuffer and current/main/output framebuffer references. Explicit source
+release-point and ordinary output in-fence paths remain unchanged. Failed fence
+creation/registration and negative/invalid native fence status retain owners and
+never send successful copy completion. Cancelled delivery does not retire GPU
+work. The drain uses checked sync-file status and one absolute wait deadline;
+the renderer entry checks EGL binding/current context/display/reset state.
+
+Executed without a compositor, plugin, GUI or GPU workload:
+
+- `python3 tests/native-fit/build-core.py --source "$HYPRLAND_SOURCE" --test test-submitted-work`:
+  13 C++ cases passed under ASan/UBSan, including real Wayland deferred/inline
+  callbacks, cancellation and registry destruction retaining all three resource
+  roles, exactly-once reentrant completion, native kernel rejection of eventfd
+  as sync_file, error quarantine, shared deadline, timeout retention and
+  fail-stop destruction before unresolved payload unwind. Successful fence
+  status is injected in CPU tests; no actual GPU fence is created.
+- The combined overlay applied cleanly. Configured-compiler syntax checks passed
+  EventLoopManager.cpp, ImageCopyCapture.cpp, ScreenshareFrame.cpp and
+  GLRenderer.cpp. Eight original source/header files were SHA256-unchanged.
+  Receipt includes source/header/patch/test hashes in
+  `build/native-fit/core-shutdown/verification.json`; command log:
+  `build/native-fit/submitted-work-build.log`.
+- `python3 tests/native-fit/verify-retirement-controls.py`: both deliberately
+  broken scratch variants failed at the required assertions: cancellation
+  releasing submitted owners and ioctl failure reported as native success.
+  Production headers were hash-unchanged. Receipt/logs:
+  `build/native-fit/retirement-controls/`.
+
+Remaining: call the drain after producer quiescence and before dependency
+teardown, cover unchanged unsupported-explicit-sync/full-fake paths and transient
+resource/explicit-FB release ordering, preserve child frames on parent-resource
+destruction, stop/session/timer ownership, inert lazy-manager lifetime, and
+failed cleanup propagation through main/destructor. The current early renderer
+destructor guard refuses unresolved submissions; it is not completed cleanup.
+No full compositor link, native runtime acceptance or packaged-launcher outcome
+validation was performed. Repository-wide check.sh was not run because it
+launches the prohibited Hyprland config verifier.
+
+## Native shutdown cleanup barrier and explicit framebuffer retirement — 2026-10-22
+
+Implemented in the uninstalled native shutdown overlay for #77 / draft PR #83:
+
+- Compositor cleanup quiesces capture producers after plugin unload, cancels
+  submitted delivery, checks the renderer drain, releases capture framebuffers,
+  then tears down desktop/monitor/client/GL dependencies. One absolute two-second
+  deadline is passed to the drain. Cleanup state is separate from the earlier
+  stopping flag; failure, exceptions and recursive cleanup use nonzero `_Exit`
+  without unwinding retained owners. Destructor fallback fails closed if the
+  global compositor identity has already disappeared. Watchdog `end` is emitted
+  only after successful teardown; packaged-launcher status is not repaired here.
+- Global capture cancellation is deliberately silent: internal producer listeners
+  and managed erase listeners detach, timers cancel, callbacks clear, unique
+  managed owners stay retained until drain succeeds, and the manager remains
+  inert during dependency teardown. This does not change ordinary parent-resource
+  destruction into a shutdown operation.
+- Submitted-work retirement validates the actual GL context before explicit FB
+  release. Permission-snapshot FBs move into retirement ownership rather than
+  releasing while their queued texture reads may still be pending. Full-fake
+  rendering now submits native-fence retirement records. The unsupported-output-
+  explicit-sync branch no longer uses `glFinish` or immediate successful delivery;
+  it attempts the same native-fence path. Missing native fence support retains
+  owners and fails cleanup. Synchronous SHM readback remains unchanged.
+
+Executed:
+
+```sh
+python3 tests/native-fit/build-core.py --source "$HYPRLAND_SOURCE" \
+  --test test-shutdown-sequence --test test-submitted-work
+python3 tests/native-fit/verify-shutdown-controls.py
+python3 tests/native-fit/verify-retirement-controls.py
+python3 tests/native-fit/verify-shutdown-methods.py
+```
+
+- 14 new shutdown-sequence cases passed under ASan/UBSan. Coverage includes normal
+  and destructor-fallback failure, exception/reentrancy fail-stop, cancellation
+  retaining transient targets, explicit release after checked completion,
+  context-gate failure, and release-before-success callback ordering.
+- 13 submitted-work regressions passed again because their queue header changed.
+  The earlier unchanged scoped-readable and terminal suites were not rerun.
+- Two new scratch GREEN/RED controls returned the required exits: failed drain
+  exits 1 in production versus reaching forbidden release exit 42 in the mutant;
+  failed context gate retains ownership in production versus forbidden success
+  exit 42 in the mutant. Both prior retirement controls still rejected their
+  precise defects. Production headers were hash-unchanged by controls.
+- Six actual translation units passed configured-compiler syntax checks in the
+  private source overlay: EventLoopManager, ImageCopyCapture, ScreenshareFrame,
+  GLRenderer, ScreenshareManager and Compositor. Twelve original source/header
+  inputs were SHA256-unchanged. Expected compiler warnings concern the existing
+  O0/FORTIFY configuration and an unrecognized warning-suppression flag.
+- Four additional source-method mock groups passed ASan/UBSan. Exact production
+  quiesce/release and context/retire method bodies were extracted from the verified
+  overlay and compiled against explicit CPU mocks with real Hyprutils unique/weak
+  ownership. They exercise listener/timer cancellation, silent unique-owner
+  retention, late protocol-owner destruction, and rejection of absent/wrong/reset
+  graphics context before explicit release. EGL/GL calls are mocked.
+
+Local receipts: `build/native-fit/core-shutdown/verification.json`,
+`build/native-fit/shutdown-controls/verification.json`,
+`build/native-fit/retirement-controls/verification.json`, and
+`build/native-fit/shutdown-methods/verification.json`. Build output is in
+`build/native-fit/cleanup-integration-build.log`. Receipts bind source, header,
+patch, test and extracted-method hashes; failed runs remove their prior receipt.
+Fence-success cases inject completion status; eventfd/invalid-FD rejection uses
+actual kernel sync_file ioctl checks. No real GPU fence or EGL binding was tested.
+
+Not executed: full compositor link, compositor/config verification, native protocol
+end-to-end, GUI/GPU/VM/device workload or `scripts/check.sh`. Next implementation:
+preserve native child frames across ordinary/cursor parent-resource destruction,
+with frame-destruction revocation separate from global cancellation; then expand
+full-fake/non-output-explicit-sync and teardown-producer CPU coverage. Driver
+behavior, SHM readback timing and packaged-launcher status remain separate gaps.

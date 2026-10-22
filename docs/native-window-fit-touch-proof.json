@@ -1,0 +1,303 @@
+{
+  "status": "PASS",
+  "source": "compositor-local synthetic Aquamarine ITouch; no uinput/kernel device",
+  "baseline": {
+    "contact": 1,
+    "screen_down": [
+      300,
+      100
+    ],
+    "screen_move": [
+      350,
+      150
+    ],
+    "expected_down": [
+      300.0,
+      100.0
+    ],
+    "expected_motion": [
+      350.0,
+      150.0
+    ],
+    "actual_events": [
+      [
+        "DOWN",
+        [
+          300.0,
+          100.0
+        ]
+      ],
+      [
+        "MOTION",
+        [
+          350.0,
+          150.0
+        ]
+      ],
+      [
+        "UP",
+        []
+      ]
+    ],
+    "motion_correction_disabled": false
+  },
+  "red_motion_control": {
+    "contact": 2,
+    "screen_down": [
+      300,
+      100
+    ],
+    "screen_move": [
+      350,
+      150
+    ],
+    "expected_down": [
+      608.780487804878,
+      202.92682926829266
+    ],
+    "expected_motion": [
+      658.780487804878,
+      252.92682926829264
+    ],
+    "actual_events": [
+      [
+        "DOWN",
+        [
+          608.781,
+          202.926
+        ]
+      ],
+      [
+        "MOTION",
+        [
+          658.781,
+          252.926
+        ]
+      ],
+      [
+        "UP",
+        []
+      ]
+    ],
+    "motion_correction_disabled": true
+  },
+  "fitted_contacts": [
+    {
+      "contact": 3,
+      "screen_down": [
+        300,
+        100
+      ],
+      "screen_move": [
+        350,
+        150
+      ],
+      "expected_down": [
+        608.780487804878,
+        202.92682926829266
+      ],
+      "expected_motion": [
+        710.2439024390244,
+        304.390243902439
+      ],
+      "actual_events": [
+        [
+          "DOWN",
+          [
+            608.781,
+            202.926
+          ]
+        ],
+        [
+          "MOTION",
+          [
+            710.242,
+            304.391
+          ]
+        ],
+        [
+          "UP",
+          []
+        ]
+      ],
+      "motion_correction_disabled": false
+    },
+    {
+      "contact": 4,
+      "screen_down": [
+        300,
+        100
+      ],
+      "screen_move": [
+        350,
+        150
+      ],
+      "expected_down": [
+        608.780487804878,
+        202.92682926829266
+      ],
+      "expected_motion": [
+        710.2439024390244,
+        304.390243902439
+      ],
+      "actual_events": [
+        [
+          "DOWN",
+          [
+            608.781,
+            202.926
+          ]
+        ],
+        [
+          "MOTION",
+          [
+            710.242,
+            304.391
+          ]
+        ],
+        [
+          "UP",
+          []
+        ]
+      ],
+      "motion_correction_disabled": false
+    },
+    {
+      "contact": 5,
+      "screen_down": [
+        300,
+        100
+      ],
+      "screen_move": [
+        350,
+        150
+      ],
+      "expected_down": [
+        608.780487804878,
+        202.92682926829266
+      ],
+      "expected_motion": [
+        710.2439024390244,
+        304.390243902439
+      ],
+      "actual_events": [
+        [
+          "DOWN",
+          [
+            608.781,
+            202.926
+          ]
+        ],
+        [
+          "MOTION",
+          [
+            710.242,
+            304.391
+          ]
+        ],
+        [
+          "UP",
+          []
+        ]
+      ],
+      "motion_correction_disabled": false
+    }
+  ],
+  "letterbox": {
+    "black_area_touch_events": [],
+    "black_then_content_buttons": [
+      "BUTTON 272 1 811.707 405.855",
+      "BUTTON 272 0 811.707 405.855"
+    ]
+  },
+  "disabled": {
+    "contact": 6,
+    "screen_down": [
+      300,
+      100
+    ],
+    "screen_move": [
+      350,
+      150
+    ],
+    "expected_down": [
+      300.0,
+      100.0
+    ],
+    "expected_motion": [
+      350.0,
+      150.0
+    ],
+    "actual_events": [
+      [
+        "DOWN",
+        [
+          300.0,
+          100.0
+        ]
+      ],
+      [
+        "MOTION",
+        [
+          350.0,
+          150.0
+        ]
+      ],
+      [
+        "UP",
+        []
+      ]
+    ],
+    "motion_correction_disabled": false
+  },
+  "reloaded": {
+    "contact": 7,
+    "screen_down": [
+      300,
+      100
+    ],
+    "screen_move": [
+      350,
+      150
+    ],
+    "expected_down": [
+      608.780487804878,
+      202.92682926829266
+    ],
+    "expected_motion": [
+      710.2439024390244,
+      304.390243902439
+    ],
+    "actual_events": [
+      [
+        "DOWN",
+        [
+          608.781,
+          202.926
+        ]
+      ],
+      [
+        "MOTION",
+        [
+          710.242,
+          304.391
+        ]
+      ],
+      [
+        "UP",
+        []
+      ]
+    ],
+    "motion_correction_disabled": false
+  },
+  "unload_finishes_active_contact": true,
+  "device_removed_after_unload": true,
+  "not_verified": [
+    "physical touch hardware",
+    "libinput calibration",
+    "multitouch",
+    "touch cancellation",
+    "popups/subsurfaces",
+    "rotation"
+  ]
+}

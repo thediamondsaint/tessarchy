@@ -1,0 +1,47 @@
+--- a/src/managers/eventLoop/EventLoopManager.hpp
++++ b/src/managers/eventLoop/EventLoopManager.hpp
+@@ -9,6 +9,7 @@
+ #include <hyprutils/os/FileDescriptor.hpp>
+ 
+ #include "EventLoopTimer.hpp"
++#include "ScopedReadable.hpp"
+ 
+ namespace Aquamarine {
+     struct SPollFD;
+@@ -78,6 +79,10 @@
+     void onFdReadable(SReadableWaiter* waiter);
+     void onFdReadableFail(SReadableWaiter* waiter);
+ 
++    [[nodiscard]] CScopedReadableRegistry::SRegistration doOnReadableScoped(Hyprutils::OS::CFileDescriptor fd, CScopedReadableRegistry::FCallback fn) {
++        return m_scopedReadable.arm(std::move(fd), std::move(fn));
++    }
++
+   private:
+     // Manages the event sources after AQ pollFDs change.
+     void syncPollFDs();
+@@ -103,6 +108,7 @@
+     SIdleData                        m_idle;
+     std::map<int, SEventSourceData>  m_aqEventSources;
+     std::vector<UP<SReadableWaiter>> m_readableWaiters;
++    CScopedReadableRegistry          m_scopedReadable;
+ 
+     struct {
+         CHyprSignalListener pollFDsChanged;
+--- a/src/managers/eventLoop/EventLoopManager.cpp
++++ b/src/managers/eventLoop/EventLoopManager.cpp
+@@ -27,13 +27,14 @@
+         g_pEventLoopManager->removeDoLater(seq);
+ }
+ 
+-CEventLoopManager::CEventLoopManager(wl_display* display, wl_event_loop* wlEventLoop) {
++CEventLoopManager::CEventLoopManager(wl_display* display, wl_event_loop* wlEventLoop) : m_scopedReadable(wlEventLoop) {
+     m_timers.timerfd  = CFileDescriptor{timerfd_create(CLOCK_MONOTONIC, TFD_CLOEXEC)};
+     m_wayland.loop    = wlEventLoop;
+     m_wayland.display = display;
+ }
+ 
+ CEventLoopManager::~CEventLoopManager() {
++    m_scopedReadable.close();
+     for (auto const& [_, eventSourceData] : m_aqEventSources) {
+         wl_event_source_remove(eventSourceData.eventSource);
+     }

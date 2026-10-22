@@ -1,0 +1,299 @@
+--- a/src/protocols/ImageCopyCapture.hpp
++++ b/src/protocols/ImageCopyCapture.hpp
+@@ -7,6 +7,7 @@
+ #include "../helpers/Format.hpp"
+ #include "WaylandProtocol.hpp"
+ #include "ImageCaptureSource.hpp"
++#include "../helpers/TerminalDelivery.hpp"
+ #include "ext-image-copy-capture-v1.hpp"
+ 
+ class IHLBuffer;
+@@ -16,6 +17,9 @@
+     class CScreenshareSession;
+     class CScreenshareFrame;
+ };
++
++enum class EImageCaptureDelivery { TIMESTAMP, READY, FAILED_UNKNOWN, FAILED_STOPPED, FAILED_CONSTRAINTS };
++using CImageCaptureDelivery = CTerminalDelivery<EImageCaptureDelivery>;
+ 
+ class CImageCopyCaptureFrame {
+   public:
+@@ -29,6 +33,7 @@
+     WP<CImageCopyCaptureSession>       m_session;
+     UP<Screenshare::CScreenshareFrame> m_frame;
+ 
++    CImageCaptureDelivery               m_delivery;
+     bool                               m_captured = false;
+     SP<IHLBuffer>                      m_buffer;
+     CRegion                            m_clientDamage;
+@@ -91,6 +96,7 @@
+ 
+     // frame stuff
+     SP<CExtImageCopyCaptureFrameV1> m_frameResource;
++    CImageCaptureDelivery           m_frameDelivery;
+     bool                            m_captured = false;
+     SP<IHLBuffer>                   m_buffer;
+ 
+--- a/src/protocols/ImageCopyCapture.cpp
++++ b/src/protocols/ImageCopyCapture.cpp
+@@ -12,6 +12,52 @@
+ 
+ using namespace Screenshare;
+ 
++namespace {
++    CImageCaptureDelivery makeImageCaptureDelivery(WP<CExtImageCopyCaptureFrameV1> frame) {
++        return CImageCaptureDelivery([frame](EImageCaptureDelivery result) {
++            if (!frame || !frame->resource())
++                return;
++            switch (result) {
++                case EImageCaptureDelivery::READY: frame->sendReady(); break;
++                case EImageCaptureDelivery::FAILED_UNKNOWN: frame->sendFailed(EXT_IMAGE_COPY_CAPTURE_FRAME_V1_FAILURE_REASON_UNKNOWN); break;
++                case EImageCaptureDelivery::FAILED_STOPPED: frame->sendFailed(EXT_IMAGE_COPY_CAPTURE_FRAME_V1_FAILURE_REASON_STOPPED); break;
++                case EImageCaptureDelivery::FAILED_CONSTRAINTS: frame->sendFailed(EXT_IMAGE_COPY_CAPTURE_FRAME_V1_FAILURE_REASON_BUFFER_CONSTRAINTS); break;
++                case EImageCaptureDelivery::TIMESTAMP: {
++                    auto [sec, nsec] = Time::secNsec(Time::steadyNow());
++                    uint32_t tvSecHi = (sizeof(sec) > 4) ? sec >> 32 : 0;
++                    frame->sendPresentationTime(tvSecHi, sec & 0xFFFFFFFF, nsec);
++                    break;
++                }
++            }
++        });
++    }
++
++    FScreenshareCallback captureCallback(CImageCaptureDelivery delivery) {
++        return [delivery](eScreenshareResult result) {
++            switch (result) {
++                case RESULT_COPIED: delivery.finish(EImageCaptureDelivery::READY); break;
++                case RESULT_NOT_COPIED: delivery.finish(EImageCaptureDelivery::FAILED_UNKNOWN); break;
++                case RESULT_TIMESTAMP: delivery.notify(EImageCaptureDelivery::TIMESTAMP); break;
++            }
++        };
++    }
++
++    void captureError(eScreenshareError error, const CImageCaptureDelivery& delivery, SP<CExtImageCopyCaptureFrameV1> frame) {
++        switch (error) {
++            case ERROR_NONE: break;
++            case ERROR_NO_BUFFER:
++                delivery.cancel();
++                frame->error(EXT_IMAGE_COPY_CAPTURE_FRAME_V1_ERROR_NO_BUFFER, "no buffer attached");
++                break;
++            case ERROR_BUFFER_SIZE:
++            case ERROR_BUFFER_FORMAT: delivery.finish(EImageCaptureDelivery::FAILED_CONSTRAINTS); break;
++            case ERROR_STOPPED: delivery.finish(EImageCaptureDelivery::FAILED_STOPPED); break;
++            case ERROR_UNKNOWN: delivery.finish(EImageCaptureDelivery::FAILED_UNKNOWN); break;
++        }
++    }
++}
++
++
+ CImageCopyCaptureSession::CImageCopyCaptureSession(SP<CExtImageCopyCaptureSessionV1> resource, SP<CImageCaptureSource> source, extImageCopyCaptureManagerV1Options options) :
+     m_resource(resource), m_source(source), m_paintCursor(options & EXT_IMAGE_COPY_CAPTURE_MANAGER_V1_OPTIONS_PAINT_CURSORS) {
+     if UNLIKELY (!good())
+@@ -162,8 +208,7 @@
+     m_listeners.constraintsChanged.reset();
+     m_listeners.stopped.reset();
+ 
+-    if (m_frameResource && m_frameResource->resource())
+-        m_frameResource->sendFailed(EXT_IMAGE_COPY_CAPTURE_FRAME_V1_FAILURE_REASON_STOPPED);
++    m_frameDelivery.finish(EImageCaptureDelivery::FAILED_STOPPED);
+     m_frameResource.reset();
+ 
+     m_sessionResource.reset();
+@@ -172,13 +217,17 @@
+ 
+ void CImageCopyCaptureCursorSession::createFrame(SP<CExtImageCopyCaptureFrameV1> resource) {
+     m_frameResource = resource;
++    m_frameDelivery = makeImageCaptureDelivery(resource);
+     m_captured      = false;
+     m_buffer.reset();
+ 
+-    m_frameResource->setDestroy([this](CExtImageCopyCaptureFrameV1* pMgr) { m_frameResource.reset(); });
+-    m_frameResource->setOnDestroy([this](CExtImageCopyCaptureFrameV1* pMgr) { m_frameResource.reset(); });
++    m_frameResource->setDestroy([this](CExtImageCopyCaptureFrameV1* pMgr) { m_frameDelivery.cancel(); m_frameResource.reset(); });
++    m_frameResource->setOnDestroy([this](CExtImageCopyCaptureFrameV1* pMgr) { m_frameDelivery.cancel(); m_frameResource.reset(); });
+ 
+     m_frameResource->setAttachBuffer([this](CExtImageCopyCaptureFrameV1* pMgr, wl_resource* buf) {
++        if (!m_frameDelivery.pending())
++            return;
++
+         if UNLIKELY (!m_frameResource || !m_frameResource->resource())
+             return;
+ 
+@@ -201,6 +250,9 @@
+     });
+ 
+     m_frameResource->setDamageBuffer([this](CExtImageCopyCaptureFrameV1* pMgr, int32_t x, int32_t y, int32_t w, int32_t h) {
++        if (!m_frameDelivery.pending())
++            return;
++
+         if UNLIKELY (!m_frameResource || !m_frameResource->resource())
+             return;
+ 
+@@ -221,6 +273,9 @@
+     });
+ 
+     m_frameResource->setCapture([this](CExtImageCopyCaptureFrameV1* pMgr) {
++        if (!m_frameDelivery.pending())
++            return;
++
+         if UNLIKELY (!m_frameResource || !m_frameResource->resource())
+             return;
+ 
+@@ -233,34 +288,12 @@
+ 
+         const auto PMONITOR = m_source->m_monitor.expired() ? m_source->m_window->m_monitor.lock() : m_source->m_monitor.lock();
+ 
+-        auto       sourceBoxCallback = [this]() { return m_source ? m_source->logicalBox() : CBox(); };
+-        auto       error             = m_session->share(PMONITOR, m_buffer, sourceBoxCallback, [this](eScreenshareResult result) {
+-            switch (result) {
+-                case RESULT_COPIED: m_frameResource->sendReady(); break;
+-                case RESULT_NOT_COPIED: m_frameResource->sendFailed(EXT_IMAGE_COPY_CAPTURE_FRAME_V1_FAILURE_REASON_UNKNOWN); break;
+-                case RESULT_TIMESTAMP:
+-                    auto [sec, nsec] = Time::secNsec(Time::steadyNow());
+-                    uint32_t tvSecHi = (sizeof(sec) > 4) ? sec >> 32 : 0;
+-                    uint32_t tvSecLo = sec & 0xFFFFFFFF;
+-                    m_frameResource->sendPresentationTime(tvSecHi, tvSecLo, nsec);
+-                    break;
+-            }
+-        });
+-
+-        if (!m_frameResource)
+-            return;
+-
+-        switch (error) {
+-            case ERROR_NONE: m_captured = true; break;
+-            case ERROR_NO_BUFFER:
+-                m_frameResource->error(EXT_IMAGE_COPY_CAPTURE_FRAME_V1_ERROR_NO_BUFFER, "no buffer attached");
+-                m_frameResource.reset();
+-                break;
+-            case ERROR_BUFFER_SIZE:
+-            case ERROR_BUFFER_FORMAT: m_frameResource->sendFailed(EXT_IMAGE_COPY_CAPTURE_FRAME_V1_FAILURE_REASON_BUFFER_CONSTRAINTS); break;
+-            case ERROR_STOPPED: m_frameResource->sendFailed(EXT_IMAGE_COPY_CAPTURE_FRAME_V1_FAILURE_REASON_STOPPED); break;
+-            case ERROR_UNKNOWN: m_frameResource->sendFailed(EXT_IMAGE_COPY_CAPTURE_FRAME_V1_FAILURE_REASON_UNKNOWN); break;
+-        }
++        const auto frame = m_frameResource;
++        const auto delivery = m_frameDelivery;
++        m_captured = true;
++        auto sourceBoxCallback = [source = m_source]() { return source ? source->logicalBox() : CBox(); };
++        const auto error = m_session->share(PMONITOR, m_buffer, sourceBoxCallback, captureCallback(delivery));
++        captureError(error, delivery, frame);
+     });
+ 
+     // we should always copy over the entire cursor image, it doesn't cost much
+@@ -338,22 +371,26 @@
+     }
+ }
+ 
+-CImageCopyCaptureFrame::CImageCopyCaptureFrame(SP<CExtImageCopyCaptureFrameV1> resource, WP<CImageCopyCaptureSession> session) : m_resource(resource), m_session(session) {
++CImageCopyCaptureFrame::CImageCopyCaptureFrame(SP<CExtImageCopyCaptureFrameV1> resource, WP<CImageCopyCaptureSession> session) : m_resource(resource), m_session(session), m_delivery(makeImageCaptureDelivery(resource)) {
+     if UNLIKELY (!good())
+         return;
++
++    m_resource->setDestroy([this](CExtImageCopyCaptureFrameV1* pMgr) { PROTO::imageCopyCapture->destroyResource(this); });
++    m_resource->setOnDestroy([this](CExtImageCopyCaptureFrameV1* pMgr) { PROTO::imageCopyCapture->destroyResource(this); });
+ 
+     if (m_session->m_bufferSize != m_session->m_session->bufferSize()) {
+         m_session->sendConstraints();
+-        m_resource->sendFailed(EXT_IMAGE_COPY_CAPTURE_FRAME_V1_FAILURE_REASON_UNKNOWN);
++        m_delivery.finish(EImageCaptureDelivery::FAILED_CONSTRAINTS);
+         return;
+     }
+ 
+     m_frame = m_session->m_session->nextFrame(m_session->m_paintCursor);
+ 
+-    m_resource->setDestroy([this](CExtImageCopyCaptureFrameV1* pMgr) { PROTO::imageCopyCapture->destroyResource(this); });
+-    m_resource->setOnDestroy([this](CExtImageCopyCaptureFrameV1* pMgr) { PROTO::imageCopyCapture->destroyResource(this); });
+ 
+     m_resource->setAttachBuffer([this](CExtImageCopyCaptureFrameV1* pMgr, wl_resource* buf) {
++        if (!m_delivery.pending())
++            return;
++
+         if (m_captured) {
+             LOGM(Log::ERR, "Frame already captured in attach_buffer, {:x}", (uintptr_t)this);
+             m_resource->error(EXT_IMAGE_COPY_CAPTURE_FRAME_V1_ERROR_ALREADY_CAPTURED, "already captured");
+@@ -371,6 +408,9 @@
+     });
+ 
+     m_resource->setDamageBuffer([this](CExtImageCopyCaptureFrameV1* pMgr, int32_t x, int32_t y, int32_t w, int32_t h) {
++        if (!m_delivery.pending())
++            return;
++
+         if (m_captured) {
+             LOGM(Log::ERR, "Frame already captured in damage_buffer, {:x}", (uintptr_t)this);
+             m_resource->error(EXT_IMAGE_COPY_CAPTURE_FRAME_V1_ERROR_ALREADY_CAPTURED, "already captured");
+@@ -386,33 +426,20 @@
+     });
+ 
+     m_resource->setCapture([this](CExtImageCopyCaptureFrameV1* pMgr) {
++        if (!m_delivery.pending())
++            return;
++
+         if (m_captured) {
+             LOGM(Log::ERR, "Frame already captured in capture, {:x}", (uintptr_t)this);
+             m_resource->error(EXT_IMAGE_COPY_CAPTURE_FRAME_V1_ERROR_ALREADY_CAPTURED, "already captured");
+             return;
+         }
+ 
+-        auto error = m_frame->share(m_buffer, m_clientDamage, [this](eScreenshareResult result) {
+-            switch (result) {
+-                case RESULT_COPIED: m_resource->sendReady(); break;
+-                case RESULT_NOT_COPIED: m_resource->sendFailed(EXT_IMAGE_COPY_CAPTURE_FRAME_V1_FAILURE_REASON_UNKNOWN); break;
+-                case RESULT_TIMESTAMP:
+-                    auto [sec, nsec] = Time::secNsec(Time::steadyNow());
+-                    uint32_t tvSecHi = (sizeof(sec) > 4) ? sec >> 32 : 0;
+-                    uint32_t tvSecLo = sec & 0xFFFFFFFF;
+-                    m_resource->sendPresentationTime(tvSecHi, tvSecLo, nsec);
+-                    break;
+-            }
+-        });
+-
+-        switch (error) {
+-            case ERROR_NONE: m_captured = true; break;
+-            case ERROR_NO_BUFFER: m_resource->error(EXT_IMAGE_COPY_CAPTURE_FRAME_V1_ERROR_NO_BUFFER, "no buffer attached"); break;
+-            case ERROR_BUFFER_SIZE:
+-            case ERROR_BUFFER_FORMAT: m_resource->sendFailed(EXT_IMAGE_COPY_CAPTURE_FRAME_V1_FAILURE_REASON_BUFFER_CONSTRAINTS); break;
+-            case ERROR_STOPPED: m_resource->sendFailed(EXT_IMAGE_COPY_CAPTURE_FRAME_V1_FAILURE_REASON_STOPPED); break;
+-            case ERROR_UNKNOWN: m_resource->sendFailed(EXT_IMAGE_COPY_CAPTURE_FRAME_V1_FAILURE_REASON_UNKNOWN); break;
+-        }
++        const auto frame = m_resource;
++        const auto delivery = m_delivery;
++        m_captured = true;
++        const auto error = m_frame->share(m_buffer, m_clientDamage, captureCallback(delivery));
++        captureError(error, delivery, frame);
+     });
+ 
+     m_clientDamage.clear();
+@@ -424,6 +451,7 @@
+ }
+ 
+ CImageCopyCaptureFrame::~CImageCopyCaptureFrame() {
++    m_delivery.cancel();
+     if (m_session)
+         m_session->m_frame.reset();
+ }
+--- a/src/managers/screenshare/ScreenshareFrame.cpp
++++ b/src/managers/screenshare/ScreenshareFrame.cpp
+@@ -416,8 +416,10 @@
+             return;
+ 
+         LOGM(Log::TRACE, "Copied frame via dma");
+-        self->m_callback(RESULT_COPIED);
+         self->m_copied = true;
++        auto callback = std::move(self->m_callback);
++        if (callback)
++            callback(RESULT_COPIED);
+     });
+ 
+     return true;
+@@ -472,8 +474,10 @@
+ 
+     if (!m_copied) {
+         LOGM(Log::TRACE, "Copied frame via shm");
+-        m_callback(RESULT_COPIED);
+         m_copied = true;
++        auto callback = std::move(m_callback);
++        if (callback)
++            callback(RESULT_COPIED);
+     }
+ 
+     return true;

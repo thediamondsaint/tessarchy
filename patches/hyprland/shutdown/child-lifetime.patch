@@ -1,0 +1,75 @@
+--- a/src/protocols/ImageCopyCapture.cpp
++++ b/src/protocols/ImageCopyCapture.cpp
+@@ -74,7 +74,7 @@
+         }
+ 
+         auto PFRAME = PROTO::imageCopyCapture->m_frames.emplace_back(
+-            makeShared<CImageCopyCaptureFrame>(makeShared<CExtImageCopyCaptureFrameV1>(pMgr->client(), pMgr->version(), id), m_self));
++            makeShared<CImageCopyCaptureFrame>(makeShared<CExtImageCopyCaptureFrameV1>(pMgr->client(), pMgr->version(), id), m_self.lock()));
+ 
+         m_frame = PFRAME;
+     });
+@@ -96,10 +96,17 @@
+ }
+ 
+ CImageCopyCaptureSession::~CImageCopyCaptureSession() {
++    detachResource();
+     if (m_session)
+         m_session->stop();
+-    if (m_resource->resource())
+-        m_resource->sendStopped();
++}
++
++void CImageCopyCaptureSession::detachResource() {
++    m_listeners.constraintsChanged.reset();
++    m_listeners.stopped.reset();
++    auto resource = std::move(m_resource);
++    if (resource)
++        resource->setOnDestroy([](CExtImageCopyCaptureSessionV1*) {});
+ }
+ 
+ bool CImageCopyCaptureSession::good() {
+@@ -371,7 +378,7 @@
+     }
+ }
+ 
+-CImageCopyCaptureFrame::CImageCopyCaptureFrame(SP<CExtImageCopyCaptureFrameV1> resource, WP<CImageCopyCaptureSession> session) : m_resource(resource), m_session(session), m_delivery(makeImageCaptureDelivery(resource)) {
++CImageCopyCaptureFrame::CImageCopyCaptureFrame(SP<CExtImageCopyCaptureFrameV1> resource, SP<CImageCopyCaptureSession> session) : m_resource(resource), m_session(session), m_delivery(makeImageCaptureDelivery(resource)) {
+     if UNLIKELY (!good())
+         return;
+ 
+@@ -520,6 +527,7 @@
+ }
+ 
+ void CImageCopyCaptureProtocol::destroyResource(CImageCopyCaptureSession* resource) {
++    resource->detachResource();
+     std::erase_if(m_sessions, [&](const auto& other) { return other.get() == resource; });
+ }
+ 
+--- a/src/protocols/ImageCopyCapture.hpp
++++ b/src/protocols/ImageCopyCapture.hpp
+@@ -23,14 +23,14 @@
+ 
+ class CImageCopyCaptureFrame {
+   public:
+-    CImageCopyCaptureFrame(SP<CExtImageCopyCaptureFrameV1> resource, WP<CImageCopyCaptureSession> session);
++    CImageCopyCaptureFrame(SP<CExtImageCopyCaptureFrameV1> resource, SP<CImageCopyCaptureSession> session);
+     ~CImageCopyCaptureFrame();
+ 
+     bool good();
+ 
+   private:
+     SP<CExtImageCopyCaptureFrameV1>    m_resource;
+-    WP<CImageCopyCaptureSession>       m_session;
++    SP<CImageCopyCaptureSession>       m_session;
+     UP<Screenshare::CScreenshareFrame> m_frame;
+ 
+     CImageCaptureDelivery               m_delivery;
+@@ -67,6 +67,7 @@
+ 
+     //
+     void sendConstraints();
++    void detachResource();
+ 
+     friend class CImageCopyCaptureProtocol;
+     friend class CImageCopyCaptureFrame;
