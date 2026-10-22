@@ -134,6 +134,14 @@ class Workflows(unittest.TestCase):
         self.assertIn('property bool touchMode: false', indicators)
         self.assertIn('property bool touchMode: false', status_icon)
         self.assertIn('Layout.preferredWidth: touchMode ? 48', status_icon)
+        self.assertIn('showSettings: surface.mode === "desktop" && surface.modelData.width >= 560', shell)
+        self.assertNotIn('id: homeHeader', shell)
+        self.assertIn('anchors.topMargin: surface.mode === "desktop" ? 24 : 92', shell)
+
+        settings = (ROOT / 'shell/components/SettingsPage.qml').read_text()
+        self.assertIn('Accessible.role: Accessible.RadioButton', settings)
+        self.assertIn('Accessible.checked: selected', settings)
+        self.assertIn('text: "THEMES"', settings)
 
     def test_components_qmldir_lists_every_component(self):
         # An explicit qmldir hides any component it omits ("X is not a type").

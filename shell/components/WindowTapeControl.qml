@@ -65,7 +65,7 @@ Item {
         Rectangle {
             anchors { top: parent.top; left: parent.left; right: parent.right }
             height: 1
-            radius: 1
+            radius: Theme.radius("progress", 1, height)
             color: Qt.alpha(Theme.text, 0.28)
         }
     }
@@ -148,7 +148,7 @@ Item {
             anchors { horizontalCenter: parent.horizontalCenter; bottom: parent.bottom }
             width: 44
             height: 2
-            radius: 1
+            radius: Theme.radius("progress", 1, height)
             color: Qt.alpha(Theme.wheelGlow, 0.55)
         }
     }

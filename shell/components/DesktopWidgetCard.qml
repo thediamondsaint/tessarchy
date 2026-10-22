@@ -15,11 +15,35 @@ Rectangle {
     implicitWidth: 224
     implicitHeight: 164
     radius: Theme.radius("card", 24, height)
-    color: Qt.alpha(Theme.glass, 0.94)
+    color: Theme.glass
     border.width: Theme.borderWidth(1)
-    border.color: Qt.alpha(card.accentColor, 0.24)
+    border.color: Qt.alpha(card.accentColor, 0.38)
 
-    Behavior on color { ColorAnimation { duration: 140 } }
+    // Keep the glass treatment palette-driven: a soft theme surface wash,
+    // an edge highlight, and a restrained accent rim instead of a fixed
+    // white overlay.
+    gradient: Gradient {
+        GradientStop { position: 0; color: Qt.alpha(Theme.text, Theme.mode === "light" ? 0.16 : 0.08) }
+        GradientStop { position: 0.34; color: Qt.alpha(Theme.glass, 0.96) }
+        GradientStop { position: 1; color: Qt.alpha(Theme.darkerBackground, Theme.mode === "light" ? 0.12 : 0.32) }
+    }
+
+    Rectangle {
+        anchors { top: parent.top; left: parent.left; right: parent.right }
+        height: 1
+        radius: Theme.radius("progress", 1, height)
+        color: Qt.alpha(card.accentColor, 0.55)
+    }
+    Rectangle {
+        anchors.fill: parent
+        anchors.margins: 1
+        radius: Math.max(0, card.radius - 1)
+        color: "transparent"
+        border.width: 1
+        border.color: Qt.alpha(Theme.text, Theme.mode === "light" ? 0.18 : 0.08)
+    }
+
+    Behavior on border.color { ColorAnimation { duration: 140 } }
 
     ColumnLayout {
         anchors.fill: parent

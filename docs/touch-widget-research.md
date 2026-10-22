@@ -36,6 +36,15 @@ touch behavior in Tessa's QML layer. No external widget code was copied.
   compact-to-expanded FAB behavior and touch sizing in `WindowTapeControl.qml`,
   while retaining Tessa's cube mark, native Hyprland tape bridge, radial menu,
   and local theme tokens. No source file was copied.
+- [valorisa/Quickshell-Hyprland](https://github.com/valorisa/Quickshell-Hyprland)
+  documents reusable `BlurPanel`/glow surfaces built with Qt Quick Effects and
+  a palette singleton. Tessa keeps the no-dependency approach, applying the
+  same layered highlight, tinted surface, and accent rim to native widget
+  cards so the selected theme remains visible.
+- [xscriptor-colors/hyprland](https://github.com/xscriptor-colors/hyprland/blob/main/docs/quickshell-widgets.md)
+  uses independent widget modules and a shared palette with live reload. Tessa
+  follows that boundary: `Theme.qml` is the semantic palette source and each
+  widget reads its colors from it instead of embedding a fixed glass palette.
 
 ## Current implementation
 

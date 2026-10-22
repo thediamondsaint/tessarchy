@@ -1237,7 +1237,6 @@ ShellRoot {
                     }
                     TouchButton {
                         visible: surface.mode !== "desktop"
-                        Layout.fillWidth: true
                         Layout.minimumWidth: 56
                         Layout.preferredWidth: 56
                         Layout.minimumHeight: 48
@@ -1293,7 +1292,9 @@ ShellRoot {
                         settingsSelected: panel.page === "settings"
                         showBatteryText: surface.modelData.width >= 380
                         showVolume: surface.modelData.width >= 700
-                        showSettings: surface.modelData.width >= 560
+                        // Touch users reach Settings from the themed quick
+                        // controls sheet; reserve the tray gear for desktop.
+                        showSettings: surface.mode === "desktop" && surface.modelData.width >= 560
                         onNotificationsRequested: panel.showPage("notifications")
                         onPanelRequested: statusBar.toggleDrawer()
                         onMuteToggled: root.audioSink.audio.muted = !root.audioSink.audio.muted
@@ -1523,60 +1524,21 @@ ShellRoot {
                 }
                 Rectangle {
                     anchors.fill: parent
-                    color: Qt.alpha(Theme.darkerBackground, shellPreferences.wallpaperDim)
+                    // Tint the wallpaper with the active palette so theme
+                    // changes are visible on the home surface as well as
+                    // inside the glass cards.
+                    color: Qt.alpha(Theme.background, shellPreferences.wallpaperDim)
                 }
-                    Column {
-                        id: homeHeader
-                    visible: !panel.expanded
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    y: Math.max(64, parent.height * (surface.isPhone ? 0.14 : 0.18))
-                    spacing: 12
-                    BrandMark {
-                        id: homeBrand
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        width: 96
-                        height: 96
-                        reducedMotion: shellPreferences.reducedMotion
-                    }
-                    Connections {
-                        target: root
-                        function onReplayBrand() {
-                            homeBrand.replay();
-                        }
-                    }
-                    Text {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        text: Qt.formatDateTime(clock.date, shellPreferences.use24Hour ? "hh:mm" : "h:mm AP")
-                        color: Theme.text
-                        font {
-                            pixelSize: surface.isPhone ? 58 : 72
-                            weight: Font.Light
-                        }
-                    }
-                    Text {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        text: Qt.formatDateTime(clock.date, "dddd, MMMM d")
-                        color: Theme.accent
-                        font.pixelSize: 18
-                    }
-                    Text {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        text: "TESSA · TESSARCHY"
-                        color: root.accentColor
-                        font {
-                            pixelSize: 12
-                            bold: true
-                            letterSpacing: 5
-                        }
-                    }
-                }
-                    DesktopWidgets {
+                DesktopWidgets {
                         id: homeWidgets
                         visible: !panel.expanded
                         anchors.left: parent.left
                         anchors.right: parent.right
-                        anchors.top: homeHeader.bottom
-                        anchors.topMargin: 24
+                        anchors.top: parent.top
+                        // The floating top bar owns the identity row. Keep
+                        // widgets below it instead of stacking a second clock
+                        // and logo over the wallpaper.
+                        anchors.topMargin: surface.mode === "desktop" ? 24 : 92
                         anchors.bottom: parent.bottom
                         anchors.bottomMargin: surface.navHeight + 24
                         mode: surface.mode

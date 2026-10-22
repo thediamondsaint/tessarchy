@@ -95,9 +95,10 @@ Item {
                                 spacing: 4
                                 RowLayout {
                                     Layout.fillWidth: true
-                                    Image {
-                                        source: "../icons/" + (widgets.weather.icon || "weather-cloud") + ".svg"
-                                        sourceSize: Qt.size(42, 42)
+                                    Icon {
+                                        symbol: widgets.weather.icon || "weather-cloud"
+                                        size: 42
+                                        color: widgets.accentColor
                                         Layout.preferredWidth: 42
                                         Layout.preferredHeight: 42
                                     }

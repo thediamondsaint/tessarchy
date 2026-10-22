@@ -11,11 +11,11 @@ RowLayout {
     Accessible.role: Accessible.Button
     Accessible.name: (chip.conditions.description || "Weather") + ", " + Math.round(chip.conditions.temperature || 0) + (chip.conditions.unit || "")
     spacing: 6
-    Image {
+    Icon {
         Layout.alignment: Qt.AlignVCenter
-        source: "../icons/" + (chip.conditions.icon || "weather-cloud") + ".svg"
-        sourceSize.width: chip.glyphSize
-        sourceSize.height: chip.glyphSize
+        symbol: chip.conditions.icon || "weather-cloud"
+        size: chip.glyphSize
+        color: Theme.accent
     }
     Text {
         Layout.alignment: Qt.AlignVCenter

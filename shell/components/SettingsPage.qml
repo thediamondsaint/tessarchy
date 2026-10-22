@@ -152,6 +152,18 @@ ColumnLayout {
         color: Theme.textSecondary
         font.pixelSize: 14
     }
+    Text {
+        text: "THEMES"
+        color: page.accentColor
+        font { pixelSize: 11; bold: true; letterSpacing: 2 }
+    }
+    Text {
+        text: "Choose a palette. Tessa applies it to glass surfaces, icons, widgets, wallpaper tint, and controls."
+        color: Theme.textMuted
+        font.pixelSize: 13
+        Layout.fillWidth: true
+        wrapMode: Text.WordWrap
+    }
     GridLayout {
         columns: width >= 560 ? 3 : 2
         columnSpacing: 10
@@ -165,12 +177,15 @@ ColumnLayout {
                 text: page.themeLabel(modelData.name)
                 enabled: !page.themeBusy
                 Accessible.name: "Theme " + page.themeLabel(modelData.name)
+                Accessible.description: modelData.mode + " palette, accent " + modelData.accent + (selected ? ", selected" : "")
+                Accessible.role: Accessible.RadioButton
+                Accessible.checked: selected
                 selected: page.currentTheme === modelData.name
                 accentColor: modelData.accent
                 Layout.fillWidth: true
                 Layout.preferredWidth: 1
                 // Every card is the same size: a 16:9 thumbnail over a name strip.
-                readonly property int labelHeight: 32
+                readonly property int labelHeight: 36
                 readonly property int inset: 6
                 Layout.preferredHeight: Math.min(Math.round(width * 9 / 16), 120) + labelHeight
                 // The theme's preview.png when it ships one; otherwise a mock built from its palette.
@@ -189,6 +204,18 @@ ColumnLayout {
                     color: themeButton.modelData.background
                     border.width: themeButton.selected ? Theme.borderWidth(3) : Theme.borderWidth(1)
                     border.color: themeButton.selected ? themeButton.modelData.accent : Theme.selection
+                    Rectangle {
+                        anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
+                        height: themeButton.labelHeight
+                        color: Qt.alpha(themeButton.modelData.background, 0.86)
+                    }
+                    Icon {
+                        visible: themeButton.selected
+                        anchors { top: parent.top; right: parent.right; margins: 10 }
+                        symbol: "check"
+                        size: 22
+                        color: themeButton.modelData.accent
+                    }
                     Item {
                         anchors.fill: parent
                         anchors.margins: themeButton.inset

@@ -60,12 +60,7 @@ RowLayout {
         visible: control.airplaneOn
         Layout.preferredWidth: control.compact ? 28 : 18
         Layout.preferredHeight: 48
-        Image {
-            anchors.centerIn: parent
-            source: "../icons/airplane.svg"
-            sourceSize.width: 18
-            sourceSize.height: 18
-        }
+        Icon { anchors.centerIn: parent; symbol: "airplane"; size: 18; color: control.accentColor }
         Accessible.name: "Airplane mode on"
     }
     StatusIcon {
@@ -93,11 +88,11 @@ RowLayout {
             id: batteryRow
             anchors.centerIn: parent
             spacing: 4
-            Image {
-                source: "../icons/battery.svg"
-                sourceSize.width: control.compact ? 18 : 22
-                sourceSize.height: control.compact ? 18 : 22
-                opacity: control.compact || control.batteryPresent ? 1 : 0.35
+            Icon {
+                symbol: "battery"
+                size: control.compact ? 18 : 22
+                color: control.batteryPresent ? control.accentColor : Theme.textMuted
+                opacity: control.compact || control.batteryPresent ? 1 : 0.55
             }
             Text {
                 visible: control.showBatteryText
