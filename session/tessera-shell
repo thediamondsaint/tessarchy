@@ -3,6 +3,7 @@ set -euo pipefail
 share=${TESSARCHY_DATA_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}/tessarchy}
 if [[ ! -f "$share/shell/shell.qml" ]]; then share=/usr/share/tessarchy; fi
 [[ -f "$share/shell/shell.qml" ]] || { echo "Tessa source not installed" >&2; exit 1; }
+export PATH="$HOME/.local/bin:$PATH"
 # `tessera-shell ipc call <target> <function> ...` talks to the running shell.
 if [[ ${1-} == ipc ]]; then
     shift

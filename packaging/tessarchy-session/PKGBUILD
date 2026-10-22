@@ -27,6 +27,8 @@ package() {
     install -Dm755 "$srcdir/session/tessarchy-osk" "$pkgdir/usr/bin/tessarchy-osk"
     install -Dm755 "$srcdir/session/tessarchy-theme" "$pkgdir/usr/bin/tessarchy-theme"
     install -Dm755 "$srcdir/session/tessarchy-run" "$pkgdir/usr/bin/tessarchy-run"
+    install -Dm755 "$srcdir/session/tessera-chatgpt-status" "$pkgdir/usr/bin/tessera-chatgpt-status"
+    install -Dm755 "$srcdir/session/tessera-chatgpt-status" "$pkgdir/usr/share/tessarchy/session/tessera-chatgpt-status"
     cp -r "$srcdir/themes" "$pkgdir/usr/share/tessarchy/"
     install -Dm644 "$srcdir/session/tessarchy.desktop" "$pkgdir/usr/share/wayland-sessions/tessarchy.desktop"
 }

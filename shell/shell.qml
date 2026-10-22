@@ -40,6 +40,7 @@ ShellRoot {
     IpcHandler {
         target: "apps"
         function launcher(): void { root.openAppRequested("apps"); }
+        function chatgpt(): void { root.openAppRequested("chatgpt"); }
         function phone(): void { root.openAppRequested("phone"); }
         function messages(): void { root.openAppRequested("messages"); }
         function cellular(): void { root.openAppRequested("cellular"); }
@@ -195,6 +196,29 @@ ShellRoot {
         active: Quickshell.env("TESSARCHY_AUDIO") === "1"
         source: "components/AudioStatus.qml"
     }
+    // ChatGPT stays a normal desktop app; this bridge only reads the official
+    // app-server usage surface and exposes truthful signed-out state to QML.
+    readonly property string chatgptStatusCommand: (Quickshell.env("TESSARCHY_DATA_DIR") || ((Quickshell.env("XDG_DATA_HOME") || (Quickshell.env("HOME") + "/.local/share")) + "/tessarchy")) + "/session/tessera-chatgpt-status"
+    property var chatgptStatus: ({installed: false, state: "checking", message: "Checking ChatGPT", usage: ({connected: false, windows: []})})
+    function refreshChatGPT() { chatgptProbe.running = true; }
+    Process {
+        id: chatgptProbe
+        command: [root.chatgptStatusCommand, "status"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try { root.chatgptStatus = JSON.parse(text); }
+                catch (error) { root.chatgptStatus = {installed: false, state: "unavailable", message: "ChatGPT status unavailable", usage: ({connected: false, windows: []})}; }
+            }
+        }
+        stderr: StdioCollector {}
+    }
+    Timer {
+        interval: 900000
+        repeat: true
+        running: true
+        onTriggered: root.refreshChatGPT()
+    }
+    Component.onCompleted: root.refreshChatGPT()
     readonly property var activePlayer: {
         const players = Mpris.players.values;
         const index = Policy.preferredPlayerIndex(players.map(player => player.isPlaying));
@@ -371,7 +395,7 @@ ShellRoot {
                 }
                 WlrLayershell.namespace: "tessera"
                 WlrLayershell.layer: WlrLayer.Top
-                WlrLayershell.keyboardFocus: panel.page === "apps" ? WlrKeyboardFocus.Exclusive : ["phone", "messages", "cellular", "settings", "sounds"].indexOf(panel.page) >= 0 ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
+                WlrLayershell.keyboardFocus: panel.page === "apps" ? WlrKeyboardFocus.Exclusive : ["phone", "messages", "cellular", "settings", "sounds", "chatgpt"].indexOf(panel.page) >= 0 ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
 
                 function showPage(name) {
                     if (name === "windows" && page !== "windows") switcher.selectActive();
@@ -459,7 +483,7 @@ ShellRoot {
                             // The launcher page carries no heading; Desktop gets
                             // the Start menu instead.
                             visible: panel.page !== "windows" && panel.page !== "apps"
-                            text: panel.page === "close" ? "Close this window?" : panel.page === "settings" ? "Settings" : panel.page === "phone" ? "Phone" : panel.page === "messages" ? "Messages" : panel.page === "cellular" ? "SIM & cellular" : panel.page === "sounds" ? "Sounds & ringtones" : panel.page === "notifications" ? "Alerts" : "End this session?"
+                            text: panel.page === "close" ? "Close this window?" : panel.page === "settings" ? "Settings" : panel.page === "chatgpt" ? "ChatGPT" : panel.page === "phone" ? "Phone" : panel.page === "messages" ? "Messages" : panel.page === "cellular" ? "SIM & cellular" : panel.page === "sounds" ? "Sounds & ringtones" : panel.page === "notifications" ? "Alerts" : "End this session?"
                             color: root.accentColor
                             font.pixelSize: 22
                             font.bold: true
@@ -545,6 +569,18 @@ ShellRoot {
                                     active: panel.page === "cellular"
                                     Layout.fillWidth: true
                                     sourceComponent: CellularSettings { backend: communications; accentColor: root.accentColor }
+                                }
+                                Loader {
+                                    visible: active
+                                    active: panel.page === "chatgpt"
+                                    Layout.fillWidth: true
+                                    sourceComponent: ChatGPTPanel {
+                                        status: root.chatgptStatus
+                                        accentColor: root.accentColor
+                                        onOpenRequested: Quickshell.execDetached([root.chatgptStatusCommand, "open"])
+                                        onLoginRequested: Quickshell.execDetached([root.chatgptStatusCommand, "login"])
+                                        onRefreshRequested: root.refreshChatGPT()
+                                    }
                                 }
                                 Loader {
                                     visible: active
@@ -755,6 +791,18 @@ ShellRoot {
                             selected: panel.page === "settings"
                             onClicked: panel.showPage("settings")
                         }
+                        NavButton {
+                            Layout.fillWidth: false
+                            Layout.minimumWidth: 32
+                            Layout.preferredWidth: 32
+                            text: "ChatGPT"
+                            symbol: "chatgpt"
+                            showLabel: false
+                            iconSize: 18
+                            accentColor: root.accentColor
+                            selected: panel.page === "chatgpt"
+                            onClicked: panel.showPage("chatgpt")
+                        }
                         Rectangle {
                             Layout.preferredWidth: 1
                             Layout.topMargin: 8
@@ -904,6 +952,7 @@ ShellRoot {
                         if (action === "leave") Hyprland.dispatch("TessarchyTape.close_request()");
                         else if (action === "controls") statusBar.toggleDrawer();
                         else if (action === "keyboard") Quickshell.execDetached(["tessarchy-osk", "toggle"]);
+                        else if (action === "chatgpt") panel.showPage("chatgpt");
                         else panel.showPage(action);
                     }
                     canPan: surface.tapeWorkspace !== null && surface.tapeWorkspace.toplevels.values.filter(w => w.lastIpcObject && !w.lastIpcObject.floating).length > 1
@@ -1243,6 +1292,17 @@ ShellRoot {
                         conditions: weatherBackend.state
                         Layout.alignment: Qt.AlignVCenter
                         Layout.leftMargin: 4
+                    }
+                    TrayButton {
+                        visible: surface.mode !== "desktop"
+                        slotWidth: surface.mode === "phone" ? 28 : 40
+                        icon.source: "icons/chatgpt.svg"
+                        icon.width: 19
+                        icon.height: 19
+                        accentColor: root.accentColor
+                        selected: panel.page === "chatgpt"
+                        Accessible.name: "ChatGPT"
+                        onClicked: panel.showPage("chatgpt")
                     }
                     // Built-in indicators move to the taskbar tray in Desktop
                     // mode; the mobile strip keeps them along the top edge.

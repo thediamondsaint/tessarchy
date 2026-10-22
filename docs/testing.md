@@ -2665,3 +2665,23 @@ was returned to Tablet with OSK enabled and Tessa Night active.
 [Five actual captures](../assets/screenshots/tessa-glass-icons/README.md) show the
 phone/tablet cube, revealed Calculator, touch flick and icon radial menu. Physical
 touchscreen latency remains untested; prior broader limitations still apply.
+
+
+## Native ChatGPT panel — 2026-10-21
+
+Tessa now exposes an icon-only ChatGPT shortcut in the tablet status area,
+desktop task strip and radial actions. The panel launches the official Linux
+`chatgpt-bin` app when installed and reports account/rate-limit data only from
+the local Codex app-server in read-only mode. Signed-out systems show a clear
+sign-in state and never display fabricated usage values.
+
+`./scripts/check.sh` passed: 223 Python, 101 Qt Quick and 11 Node results;
+QML lint and Hyprland config validation passed. The only existing diagnostics
+are the FilePicker `PanelWindow` warning and unavailable Fish/ShellCheck tools.
+
+The existing VM installed and verified `chatgpt-bin 26.1016.61520-1`. A real
+1024×768 QMP capture shows the Tessa ChatGPT panel with the installed/signed-out
+state. No credentials were entered, so authenticated usage, physical sign-in,
+and native ChatGPT window rendering remain unverified.
+
+[Actual VM capture and provenance](../assets/screenshots/tessa-chatgpt/README.md).

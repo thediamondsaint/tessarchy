@@ -12,6 +12,7 @@ Item {
         {label: "Recents", icon: "recents", action: "windows"},
         {label: "Controls", icon: "controls", action: "controls"},
         {label: "Keyboard", icon: "keyboard", action: "keyboard"},
+        {label: "ChatGPT", icon: "chatgpt", action: "chatgpt"},
         {label: "Exit tape", icon: "desktop", action: "leave"}
     ]
     Repeater {
@@ -22,7 +23,7 @@ Item {
             id: actionButton
             required property var modelData
             required property int index
-            readonly property real angle: -Math.PI / 2 + index * Math.PI / 3
+            readonly property real angle: -Math.PI / 2 + index * Math.PI * 2 / radial.actions.length
             width: 56; height: 56
             x: radial.width / 2 + Math.cos(angle) * 94 - width / 2
             y: radial.height / 2 + Math.sin(angle) * 94 - height / 2

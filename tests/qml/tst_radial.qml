@@ -14,13 +14,13 @@ TestCase {
     function test_all_actions_and_dead_center() {
         actions.clear(); dismiss.clear();
         for (let i = 0; i < menu.actions.length; i++) {
-            const angle = -Math.PI / 2 + i * Math.PI / 3;
+            const angle = -Math.PI / 2 + i * Math.PI * 2 / menu.actions.length;
             mouseClick(menu, 140 + Math.cos(angle) * 94, 140 + Math.sin(angle) * 94);
             compare(actions.signalArguments[i][0], menu.actions[i].action);
         }
         mouseClick(menu, 140, 140);
         compare(dismiss.count, 1);
-        compare(actions.count, 6);
+        compare(actions.count, menu.actions.length);
         compare(menu.activeFocus, false);
     }
 }

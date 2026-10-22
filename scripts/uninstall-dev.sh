@@ -25,7 +25,7 @@ if [[ $version != tessarchy-dev-v1 ]]; then
     done
 fi
 # New installs retain the installed bytes so a source update is not a user edit.
-launchers=(start-tessarchy tessera-shell tessarchy-osk tessarchy-theme tessarchy-run tessera-screenshot tessera-brightness tessera-nightlight tessera-rotate tessarchy-session-services)
+launchers=(start-tessarchy tessera-shell tessarchy-osk tessarchy-theme tessarchy-run tessera-screenshot tessera-chatgpt-status tessera-brightness tessera-nightlight tessera-rotate tessarchy-session-services)
 originals=$root/session
 if [[ $version == tessarchy-dev-v3 ]]; then
     originals=$data/.tessarchy-dev-launchers
