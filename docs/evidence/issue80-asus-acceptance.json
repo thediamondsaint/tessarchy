@@ -1,0 +1,122 @@
+{
+  "feature": "OSK overflow dialog placement (#80)",
+  "environment": {
+    "client": "native Wayland GTK3 dialog with declared 850px minimum height",
+    "output_pixels": [
+      1920,
+      1080
+    ],
+    "scale": 1,
+    "transform": 0
+  },
+  "deployment": {
+    "method": "atomic single-file replacement; config-only reload",
+    "preserves_existing_session_changes": true,
+    "installed_sha256": "b31b55ed6791b48d61ea210f8370e663376ba6c05f7931a25cfd79816100589b"
+  },
+  "geometry": {
+    "baseline-shown": {
+      "window_at": [
+        610,
+        -49
+      ],
+      "window_size": [
+        700,
+        850
+      ],
+      "button_screen_rect": [
+        1038,
+        713,
+        248,
+        64
+      ],
+      "button_bottom": 777,
+      "osk_top": 704,
+      "button_clearance": -73
+    },
+    "acceptance-ready": {
+      "window_at": [
+        610,
+        -146
+      ],
+      "window_size": [
+        700,
+        850
+      ],
+      "button_screen_rect": [
+        1038,
+        616,
+        248,
+        64
+      ],
+      "button_bottom": 680,
+      "osk_top": 704,
+      "button_clearance": 24
+    },
+    "restoration-hidden": {
+      "window_at": [
+        610,
+        60
+      ],
+      "window_size": [
+        700,
+        850
+      ],
+      "button_screen_rect": [
+        1038,
+        822,
+        248,
+        64
+      ],
+      "button_bottom": 886
+    },
+    "manual-hidden": {
+      "window_at": [
+        610,
+        100
+      ],
+      "window_size": [
+        700,
+        850
+      ],
+      "button_screen_rect": [
+        1038,
+        862,
+        248,
+        64
+      ],
+      "button_bottom": 926
+    }
+  },
+  "input": {
+    "method": "temporary uinput direct multitouch device, targeted at the owned disposable dialog",
+    "received_touch_begin_and_end": true,
+    "actual_button_activation_delta": 1,
+    "point": [
+      1162,
+      648
+    ],
+    "physical_sensor_retest_required": false
+  },
+  "preservation": {
+    "shell_compositor_identity_unchanged": true,
+    "preferences_unchanged": true,
+    "monitor_settings_unchanged": true,
+    "only_allowlisted_source_changed": true,
+    "no_config_errors": true,
+    "only_disposable_fixture_clients": true
+  },
+  "cleanup": {
+    "fixture_closed": true,
+    "keyboard_hidden": true,
+    "virtual_touchscreen_removed": true,
+    "no_app_clients": true,
+    "configerrors": ""
+  },
+  "not_exercised_live": [
+    "Phone layout",
+    "other orientations or output scales",
+    "Desktop layout"
+  ],
+  "attribution": "AI-assisted implementation and verification"
+}

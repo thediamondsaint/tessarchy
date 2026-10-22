@@ -1,0 +1,37 @@
+{
+  "baseline": "c29e635",
+  "baseline_controls": {
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skips": 0
+  },
+  "red": {
+    "tests": 20,
+    "failures": 15,
+    "errors": 0,
+    "skips": 0
+  },
+  "green": {
+    "tests": 20,
+    "failures": 0,
+    "errors": 0,
+    "skips": 0
+  },
+  "workflows": {
+    "tests": 65,
+    "failures": 0,
+    "errors": 0,
+    "skips": 0
+  },
+  "excluded_native_build_test": [
+    "test_portal_asks_shell_and_falls_back_to_gtk_in_desktop"
+  ],
+  "lua_syntax": "passed",
+  "compositor_or_device_acceptance": false,
+  "source_sha256": {
+    "session/hyprland.lua": "2b2827aa6fb913ad1875301126e4c969fdda1dfe9c2835eeb1857f466d20fc71",
+    "tests/test_osk_window_lift.py": "9635d87165f5c9d98082cd59837d699ec83a308c7f8120c1e86083d6e8bcdf45"
+  },
+  "provenance": "AI-assisted implementation and software-only verification"
+}
