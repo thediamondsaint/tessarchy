@@ -2334,3 +2334,44 @@ restored 18/true/0, with empty configerrors. Ubuntu source CI now uses the
 supported 26.04 runner for QtQuick.Effects; every source/build job declares the
 portal's GTK/GLib build dependencies. Terminal Fn exposes navigation/F1–F12
 without adding short key rows.
+
+
+### 2026-10-22 — T04 read-only runtime/source identity (PR95)
+
+`python3 -m unittest discover -s tests -p test_runtime_identity.py -v`: 22 pass;
+initial stub RED: 16 run, one assertion failure and 13 errors.
+`bash scripts/check.sh`: 236 Python tests run (one GI-dependent skip), 76 Qt
+results and four website tests; available syntax/config checks pass. Fish syntax
+and shellcheck unavailable.
+
+The exact final helper was executed in-memory on the existing running VM.
+It identified one real Tessera process/source layout, hashed 126 runtime files
+and confirmed stable PID/start identity; actual queries returned Quickshell
+0.3.2, Hyprland v0.56.2 and 1280×800 at scale 1, transform 0. No source/service,
+input, capture, package or VM lifecycle changes. Version/socket queries use the
+target session environment supplied to that invocation; source hashes are disk
+bytes, not proof of the QML bytes loaded by a prior reload.
+
+ASUS name resolution blocked its read-only attempt; no report/device changes.
+Actual report, exact helper hash, CPU totals and limits:
+`docs/evidence/runtime-identity-cpu.json`; usage: `docs/runtime-identity.md`.
+
+### Runtime/source identity Git-root review follow-up
+
+## Peer-review follow-up: Git root identity
+
+Read-only review found that `git -C source` can inherit a parent repository.
+A real isolated Git fixture reproduced this (24 focused cases run, one RED).
+The helper now requires `git rev-parse --show-toplevel` to resolve to the selected
+source root before including HEAD/tracked-change metadata. A source directory
+nested under an unrelated checkout no longer borrows that checkout's identity;
+an actual selected-root repository still reports its real metadata. Git commands
+retain `--no-optional-locks`, and the test uses isolated HOME/system/global Git
+configuration. This is agent review, followed by lead reproduction and fix.
+
+Final focused result:24 cases pass. Repository checks:238 Python run with one GI
+skip,76 Qt results and four website passes; available syntax/config/QML pass,
+optional fish/shellcheck absent. The corrected helper was re-exercised read-only
+on the existing VM: real source identified,126 source files hashed, process
+identity stable. No source/service/input/capture/VM lifecycle changes. Updated
+actual report and helper hash are in the evidence artifact.
