@@ -39,6 +39,8 @@ browser pages render emoji. None of this changes development installs.
 Current source expands the live image with broad Linux firmware, SOF audio
 firmware, NetworkManager and its connection/secret agent, Bluetooth tools,
 PipeWire audio/ALSA support, an authorization agent, portals and common apps.
+The preloaded app suite covers browser, terminal, files, editor, calculator,
+documents, images, media, archives and office work.
 Only NetworkManager manages the live network; inherited networkd/resolved
 activation links are removed and DNS points at NetworkManager's resolver file.
 The supplied power-on video is converted to Plymouth frames during staging.

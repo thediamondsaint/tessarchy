@@ -11,6 +11,7 @@ e2fsprogs
 edk2-shell
 efibootmgr
 ffmpeg
+file-roller
 firefox
 fish
 foot
@@ -30,6 +31,7 @@ hyprsunset
 iio-sensor-proxy
 libinput
 libnotify
+libreoffice-fresh
 linux
 linux-firmware
 loupe
