@@ -16,6 +16,9 @@ Item {
     property bool tessaCube: true
     property int maxControlWidth: 10000
     signal launcherRequested()
+    signal phoneRequested()
+    signal messagesRequested()
+    signal keyboardRequested()
     signal started()
     signal canceled()
     signal moved(int delta)
@@ -23,7 +26,7 @@ Item {
     signal settled()
     signal leaveRequested()
     implicitWidth: Math.min(maxControlWidth, radialOpen ? 280 : expanded ? (tessaCube ? 408 : 336) : (tessaCube ? 56 : 128))
-    implicitHeight: radialOpen ? 280 : expanded && tessaCube ? 208 : 56
+    implicitHeight: radialOpen ? 280 : expanded && tessaCube ? 256 : 56
 
     function cancel() {
         radialOpen = false;
@@ -116,12 +119,16 @@ Item {
         Behavior on scale { NumberAnimation { duration: control.reducedMotion ? 0 : 180; easing.type: Easing.OutCubic } }
         sourceComponent: control.recentsComponent
     }
-    RowLayout {
+    GridLayout {
+        id: cubeActions
+        objectName: "cubeActions"
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
         width: Math.min(parent.width - 24, 344)
-        height: 56
-        spacing: 8
+        height: control.tessaCube ? 104 : 56
+        columns: control.tessaCube ? 4 : 5
+        columnSpacing: 8
+        rowSpacing: 8
         visible: control.expanded && !control.radialOpen
         opacity: visible ? 1 : 0
         Behavior on opacity { NumberAnimation { duration: control.reducedMotion ? 0 : 160 } }
@@ -133,7 +140,8 @@ Item {
             text: "Apps"
             padding: 4
             Accessible.name: "Open Tessa launcher"
-            Layout.preferredWidth: 56
+            Layout.preferredWidth: 48
+            Layout.fillWidth: true
             Layout.fillHeight: true
             onClicked: { control.launcherRequested(); control.expanded = false; }
         }
@@ -144,6 +152,7 @@ Item {
             text: "‹"
             Accessible.name: "Previous window"
             Layout.preferredWidth: 48
+            Layout.fillWidth: true
             Layout.fillHeight: true
             enabled: control.canPan
             onClicked: { control.stepped("previous"); idle.restart(); }
@@ -165,9 +174,46 @@ Item {
             text: "›"
             Accessible.name: "Next window"
             Layout.preferredWidth: 48
+            Layout.fillWidth: true
             Layout.fillHeight: true
             enabled: control.canPan
             onClicked: { control.stepped("next"); idle.restart(); }
+        }
+        GlassIconButton {
+            objectName: "cubePhone"
+            symbol: "call"
+            reducedMotion: control.reducedMotion
+            visible: control.tessaCube
+            text: "Phone"
+            Accessible.name: "Open Phone"
+            Layout.preferredWidth: 48
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            onClicked: { control.phoneRequested(); control.expanded = false; }
+        }
+        GlassIconButton {
+            objectName: "cubeMessages"
+            symbol: "messages"
+            reducedMotion: control.reducedMotion
+            visible: control.tessaCube
+            text: "Messages"
+            Accessible.name: "Open Messages"
+            Layout.preferredWidth: 48
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            onClicked: { control.messagesRequested(); control.expanded = false; }
+        }
+        GlassIconButton {
+            objectName: "cubeKeyboard"
+            symbol: "keyboard"
+            reducedMotion: control.reducedMotion
+            visible: control.tessaCube
+            text: "Keyboard"
+            Accessible.name: "Toggle on-screen keyboard"
+            Layout.preferredWidth: 48
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            onClicked: { control.keyboardRequested(); control.expanded = false; }
         }
         GlassIconButton {
             symbol: "desktop"
@@ -176,6 +222,7 @@ Item {
             text: "×"
             Accessible.name: "Leave window tape"
             Layout.preferredWidth: 48
+            Layout.fillWidth: true
             Layout.fillHeight: true
             onClicked: control.leaveRequested()
         }

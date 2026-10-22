@@ -91,33 +91,33 @@ class Workflows(unittest.TestCase):
         policy = (ROOT / 'shell/LayoutPolicy.js').read_text()
         self.assertIn('function barGeometry(mode, rows)', policy)
         self.assertRegex(shell, r'property var bar: Policy\.barGeometry\(mode, dock\.rows\)')
-        self.assertRegex(shell, r'property int navHeight: bar\.height\n')
+        self.assertRegex(shell, r'property int navHeight: mode === "desktop" \? bar\.height : 0\n')
         panel = shell[shell.index('id: panel\n'):shell.index('id: statusBar\n')]
         # The frame and its content margins: no literal except the open-page flush 0.
         margins = re.findall(r'^ {20}anchors\.\w*[mM]argins?:.*$', panel, re.M)
         self.assertGreaterEqual(len(margins), 5, margins)
         for line in margins:
             self.assertNotRegex(line.replace('panel.expanded ? 0 :', ''), r'\d', line)
-        dock = panel[panel.index('columns: surface.dock.columns') - 200:]
-        dock = dock[:dock.index('NavButton {')]
-        for key in ('Layout.preferredHeight', 'columnSpacing', 'rowSpacing'):
-            line = re.search(key + r':.*', dock).group(0)
-            self.assertNotRegex(line, r'\d', line)
+        self.assertNotIn('columns: surface.dock.columns', panel)
+        self.assertIn('Phone, Messages and Keyboard are in the expanded T cube', shell)
         taskbar = panel[panel.index('visible: surface.mode === "desktop"\n'):]
         self.assertIn('Layout.preferredHeight: surface.bar.row\n', taskbar[:200])
 
-    def test_navigation_gestures_reuse_dock_actions_and_keep_a_button_fallback(self):
+    def test_navigation_gestures_move_touch_actions_into_the_t_cube(self):
         shell = (ROOT / 'shell/shell.qml').read_text()
         settings = (ROOT / 'shell/components/SettingsPage.qml').read_text()
         self.assertIn('property string navigation: "gestures"', shell)
         self.assertIn('property bool showGestureHandle: true', shell)
         self.assertIn('Policy.gestureNavigation(mode, shellPreferences.navigation)', shell)
         self.assertIn('Policy.dockLayout(mode, modelData.width, root.oskAvailable, gestures)', shell)
-        # Buttons and gestures call the same panel action; no copied logic.
-        for action in ('back', 'home', 'recents'):
-            self.assertIn(f'onClicked: panel.navigate("{action}")', shell)
+        self.assertIn('signal phoneRequested()', (ROOT / 'shell/components/WindowTapeControl.qml').read_text())
+        self.assertIn('signal messagesRequested()', (ROOT / 'shell/components/WindowTapeControl.qml').read_text())
+        self.assertIn('signal keyboardRequested()', (ROOT / 'shell/components/WindowTapeControl.qml').read_text())
+        self.assertIn('onPhoneRequested: { tapeControl.cancel(); panel.showPage("phone"); }', shell)
+        self.assertIn('onMessagesRequested: { tapeControl.cancel(); panel.showPage("messages"); }', shell)
+        self.assertIn('onKeyboardRequested: { tapeControl.cancel(); Quickshell.execDetached(["tessarchy-osk", "toggle"]); }', shell)
         self.assertEqual(shell.count('onGesture: action => panel.navigate(action)'), 2)
-        self.assertEqual(shell.count('visible: !surface.gestures'), 3)
+        self.assertNotIn('visible: !surface.gestures', shell)
         self.assertIn('shown: shellPreferences.showGestureHandle', shell)
         self.assertIn('visible: surface.gestures', shell)
         self.assertIn('value: "buttons"', settings)

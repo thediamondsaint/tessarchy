@@ -74,6 +74,21 @@ TestCase {
         mouseClick(findChild(control, "collapseCube"));
         compare(control.expanded, false);
     }
+    function test_cube_contains_touch_shortcuts() {
+        const control = createTemporaryObject(factory, test, {reducedMotion: true});
+        const phone = findChild(control, "cubePhone");
+        const messages = findChild(control, "cubeMessages");
+        const keyboard = findChild(control, "cubeKeyboard");
+        verify(phone !== null);
+        verify(messages !== null);
+        verify(keyboard !== null);
+        verify(!phone.visible);
+        control.expanded = true;
+        verify(phone.visible);
+        verify(messages.visible);
+        verify(keyboard.visible);
+        compare(control.implicitHeight, 256);
+    }
     function test_drag_coalesces_and_settles_without_reversing() {
         const control = createTemporaryObject(wheelFactory, test);
         const area = findChild(control, "tapeDrag");

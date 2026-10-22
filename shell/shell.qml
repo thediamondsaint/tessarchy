@@ -304,7 +304,9 @@ ShellRoot {
             readonly property var gestureEdge: Policy.gestureEdgeSize(mode, panel.expanded)
             // Bar geometry comes from Policy.barGeometry; do not add literals here.
             readonly property var bar: Policy.barGeometry(mode, dock.rows)
-            readonly property int navHeight: bar.height
+            // Touch navigation lives in the T cube and edge gestures. Keep a
+            // reserved taskbar only for the desktop layout.
+            readonly property int navHeight: mode === "desktop" ? bar.height : 0
             readonly property bool showWorkspaces: Policy.showWorkspaces(mode, modelData.width)
             readonly property var workspaceIds: {
                 const ids = [];
@@ -681,67 +683,9 @@ ShellRoot {
                             opacity: pageScroll.ScrollBar.vertical.size < 1 && pageScroll.ScrollBar.vertical.position + pageScroll.ScrollBar.vertical.size < 0.999 ? 1 : 0
                         }
                     }
-                    GridLayout {
-                        layer.enabled: panel.page === "windows"
-                        visible: surface.mode !== "desktop"
-                        Layout.fillWidth: true
-                        Layout.fillHeight: false
-                        Layout.preferredHeight: surface.bar.rowsHeight
-                        columns: surface.dock.columns
-                        columnSpacing: surface.bar.columnGap
-                        rowSpacing: surface.bar.rowGap
-                        NavButton {
-                            text: "Phone"; symbol: "call"
-                            showLabel: shellPreferences.showLabels
-                            accentColor: root.accentColor
-                            selected: panel.page === "phone"
-                            onClicked: panel.showPage("phone")
-                        }
-                        NavButton {
-                            text: "Messages"; symbol: "messages"
-                            showLabel: shellPreferences.showLabels
-                            accentColor: root.accentColor
-                            selected: panel.page === "messages"
-                            onClicked: panel.showPage("messages")
-                        }
-                        NavButton {
-                            // Panel never takes keyboard focus, so the app keeps its text field.
-                            visible: root.oskAvailable && surface.mode !== "desktop"
-                            text: "Keyboard"
-                            symbol: "keyboard"
-                            showLabel: shellPreferences.showLabels
-                            accentColor: root.accentColor
-                            onClicked: Quickshell.execDetached(["tessarchy-osk", "toggle"])
-                        }
-                        NavButton {
-                            // Gesture navigation replaces Back, Home and Recents.
-                            visible: !surface.gestures
-                            text: "Back"
-                            symbol: "back"
-                            showLabel: shellPreferences.showLabels
-                            accentColor: root.accentColor
-                            enabled: panel.expanded || statusBar.drawerOpen
-                            onClicked: panel.navigate("back")
-                        }
-                        NavButton {
-                            visible: !surface.gestures
-                            text: surface.mode === "desktop" ? "Apps" : "Home"
-                            symbol: "home"
-                            showLabel: shellPreferences.showLabels
-                            accentColor: root.accentColor
-                            selected: panel.page === "apps"
-                            onClicked: panel.navigate("home")
-                        }
-                        NavButton {
-                            visible: !surface.gestures
-                            text: surface.mode === "desktop" ? "Windows" : "Recents"
-                            symbol: "recents"
-                            showLabel: shellPreferences.showLabels
-                            accentColor: root.accentColor
-                            selected: panel.page === "windows"
-                            onClicked: panel.navigate("recents")
-                        }
-                    }
+                    // Phone, Messages and Keyboard are in the expanded T cube;
+                    // touch layouts use the cube and edge gestures instead of a
+                    // persistent bottom dock.
                     // Desktop taskbar in the spirit of Windows XP, rendered as
                     // glass: Start and quick-launch on the left, wide bevelled
                     // task buttons, and a sunken tray with the clock on the right.
@@ -945,6 +889,9 @@ ShellRoot {
                     }
                     reducedMotion: shellPreferences.reducedMotion
                     onExpandedChanged: if (expanded && root.oskAvailable) Quickshell.execDetached(["tessarchy-osk", "hide"])
+                    onPhoneRequested: { tapeControl.cancel(); panel.showPage("phone"); }
+                    onMessagesRequested: { tapeControl.cancel(); panel.showPage("messages"); }
+                    onKeyboardRequested: { tapeControl.cancel(); Quickshell.execDetached(["tessarchy-osk", "toggle"]); }
                     onActionRequested: action => {
                         if (action === "leave") Hyprland.dispatch("TessarchyTape.close_request()");
                         else if (action === "controls") statusBar.toggleDrawer();

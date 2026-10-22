@@ -2688,6 +2688,14 @@ policies were removed from the vanilla baseline.
 GitHub pattern review and license notes are in
 [touch-widget-research.md](touch-widget-research.md).
 
+The touch layouts no longer reserve a persistent bottom dock. Phone, Messages,
+and Keyboard are now icon-only actions in the expanded T cube, while the
+desktop taskbar remains unchanged. Focused cube tests cover the three actions
+and the larger two-row touch target grid. A follow-up VM restart was blocked by
+the host QEMU `virtio-vga` SIGSEGV during device initialization; the previous
+real widget capture remains valid for the underlying shell surface, but this
+specific dock relocation needs a fresh VM capture.
+
 
 ## Native ChatGPT panel — 2026-10-21
 
