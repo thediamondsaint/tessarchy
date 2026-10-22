@@ -14,11 +14,12 @@ Item {
     // a real value, instead of a crossed-out glyph.
     property bool showFallback: false
     property bool pressed: false
+    property int touchSlot: 48
     property int fallbackLevel: 2
     signal clicked
     readonly property bool reported: strength >= 0
     readonly property bool fallback: !reported && showFallback
-    Layout.preferredWidth: touchMode ? 48 : uniform ? 28 : 18
+    Layout.preferredWidth: touchMode ? touchSlot : uniform ? 28 : 18
     Layout.preferredHeight: 48
     Accessible.name: label + (reported || fallback ? " connected" : " unavailable")
     Accessible.role: Accessible.Button

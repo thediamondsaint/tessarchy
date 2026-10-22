@@ -1275,9 +1275,9 @@ ShellRoot {
                         Accessible.name: "Clock " + Qt.formatDateTime(clock.date, shellPreferences.use24Hour ? "h:mm" : "h:mm AP") + ", quick controls"
                         reducedMotion: shellPreferences.reducedMotion
                         Layout.minimumHeight: 48
-                        Layout.preferredHeight: 52
-                        Layout.preferredWidth: surface.mode === "desktop" ? 66 : 72
-                        implicitHeight: surface.mode === "desktop" ? 48 : 56
+                        Layout.preferredHeight: 56
+                        Layout.preferredWidth: 64
+                        implicitHeight: 56
                         padding: 0
                         background: Rectangle {
                             radius: Theme.radius("button", 20, height)
@@ -1322,8 +1322,8 @@ ShellRoot {
                     WeatherChip {
                         visible: weatherBackend.available && surface.mode !== "desktop"
                         conditions: weatherBackend.state
+                        iconOnly: true
                         Layout.alignment: Qt.AlignVCenter
-                        Layout.leftMargin: 4
                         onClicked: statusBar.toggleDrawer()
                     }
                     GlassIconButton {
@@ -1335,12 +1335,28 @@ ShellRoot {
                         Accessible.name: "ChatGPT"
                         onClicked: panel.showPage("chatgpt")
                     }
+                    Item {
+                        visible: surface.mode !== "desktop"
+                        Layout.fillWidth: true
+                        Layout.minimumWidth: surface.mode === "phone" ? 8 : 72
+                        Layout.preferredWidth: 96
+                        Layout.preferredHeight: 56
+                        TopBarPet {
+                            anchors.centerIn: parent
+                            reducedMotion: shellPreferences.reducedMotion
+                            accentColor: root.accentColor
+                            engaged: statusBar.drawerOpen || panel.page.length > 0
+                            attention: root.notificationCount + (statusBar.drawerOpen ? 1 : 0) + (panel.page.length > 0 ? 1 : 0)
+                            onClicked: panel.showPage("chatgpt")
+                        }
+                    }
                     // Built-in indicators move to the taskbar tray in Desktop
                     // mode; the mobile strip keeps them along the top edge.
                     StatusIndicators {
                         visible: surface.mode !== "desktop"
                         compact: false
                         touchMode: true
+                        touchSlot: 56
                         reducedMotion: shellPreferences.reducedMotion
                         accentColor: root.accentColor
                         notificationCount: root.notificationCount

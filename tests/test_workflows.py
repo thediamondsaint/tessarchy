@@ -133,9 +133,10 @@ class Workflows(unittest.TestCase):
         self.assertIn('interactive: surface.mode !== "desktop" && contentWidth > width', shell)
         self.assertIn('boundsBehavior: Flickable.StopAtBounds', shell)
         self.assertIn('touchMode: true', shell)
+        self.assertIn('touchSlot: 56', shell)
         self.assertIn('property bool touchMode: false', indicators)
         self.assertIn('property bool touchMode: false', status_icon)
-        self.assertIn('Layout.preferredWidth: touchMode ? 48', status_icon)
+        self.assertIn('Layout.preferredWidth: touchMode ? touchSlot', status_icon)
         self.assertIn('showSettings: surface.mode === "desktop" && surface.modelData.width >= 560', shell)
         self.assertNotIn('id: homeHeader', shell)
         self.assertIn('anchors.topMargin: surface.mode === "desktop" ? 24 : 92', shell)
@@ -144,6 +145,8 @@ class Workflows(unittest.TestCase):
         self.assertIn('Accessible.role: Accessible.RadioButton', settings)
         self.assertIn('Accessible.checked: selected', settings)
         self.assertIn('title: "THEMES"', settings)
+        self.assertIn('TopBarPet {', shell)
+        self.assertIn('iconOnly: true', shell)
 
     def test_ai_control_surface_and_ssh_support_are_explicit_and_local(self):
         shell = (ROOT / 'shell/shell.qml').read_text()

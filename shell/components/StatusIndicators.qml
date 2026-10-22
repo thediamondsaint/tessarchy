@@ -19,6 +19,7 @@ RowLayout {
     property bool showVolume: true
     property bool showSettings: true
     property bool touchMode: false
+    property int touchSlot: 56
     property bool reducedMotion: false
     signal notificationsRequested
     signal settingsRequested
@@ -30,7 +31,7 @@ RowLayout {
 
     TrayButton {
         id: bellButton
-        slotWidth: control.compact ? 28 : 48
+        slotWidth: control.touchMode ? control.touchSlot : control.compact ? 28 : 48
         icon.source: "../icons/bell.svg"
         icon.width: control.glyphSize
         icon.height: control.glyphSize
@@ -60,7 +61,7 @@ RowLayout {
     }
     Item {
         visible: control.airplaneOn
-        Layout.preferredWidth: control.touchMode ? 48 : control.compact ? 28 : 48
+        Layout.preferredWidth: control.touchMode ? control.touchSlot : control.compact ? 28 : 48
         Layout.preferredHeight: 48
         Rectangle {
             anchors.centerIn: parent
@@ -81,6 +82,7 @@ RowLayout {
         uniform: control.compact
         showFallback: control.compact
         touchMode: control.touchMode
+        touchSlot: control.touchSlot
         onClicked: control.panelRequested()
     }
     StatusIcon {
@@ -90,10 +92,11 @@ RowLayout {
         uniform: control.compact
         showFallback: control.compact
         touchMode: control.touchMode
+        touchSlot: control.touchSlot
         onClicked: control.panelRequested()
     }
     Item {
-        Layout.preferredWidth: control.touchMode ? 48 : control.compact ? 28 : batteryRow.implicitWidth
+        Layout.preferredWidth: control.touchMode ? control.touchSlot : control.compact ? 28 : batteryRow.implicitWidth
         Layout.preferredHeight: 48
         Rectangle {
             visible: control.touchMode
@@ -132,7 +135,7 @@ RowLayout {
     }
     TrayButton {
         visible: control.showVolume
-        slotWidth: control.compact ? 28 : 48
+        slotWidth: control.touchMode ? control.touchSlot : control.compact ? 28 : 48
         enabled: control.audioAvailable
         icon.source: "../icons/" + (control.audioMuted ? "volume-muted" : "volume") + ".svg"
         icon.width: control.glyphSize
@@ -144,7 +147,7 @@ RowLayout {
     }
     TrayButton {
         visible: control.showSettings
-        slotWidth: control.compact ? 28 : 48
+        slotWidth: control.touchMode ? control.touchSlot : control.compact ? 28 : 48
         icon.source: "../icons/settings.svg"
         icon.width: control.glyphSize
         icon.height: control.glyphSize

@@ -5,11 +5,12 @@ Item {
     id: chip
     property var conditions: ({})
     property int glyphSize: 20
+    property bool iconOnly: false
     signal clicked
     property bool pressed: false
     Layout.minimumWidth: 56
     Layout.minimumHeight: 48
-    implicitWidth: weatherRow.implicitWidth + 20
+    implicitWidth: iconOnly ? 56 : weatherRow.implicitWidth + 20
     implicitHeight: 48
     Accessible.role: Accessible.Button
     Accessible.name: (chip.conditions.description || "Weather") + ", " + Math.round(chip.conditions.temperature || 0) + (chip.conditions.unit || "")
@@ -33,8 +34,9 @@ Item {
     RowLayout {
         id: weatherRow
         anchors.fill: parent
-        anchors.leftMargin: 10
-        anchors.rightMargin: 10
+        anchors.leftMargin: chip.iconOnly ? 0 : 10
+        anchors.rightMargin: chip.iconOnly ? 0 : 10
+        Layout.alignment: Qt.AlignCenter
         spacing: 6
         Icon {
             Layout.alignment: Qt.AlignVCenter
@@ -43,6 +45,7 @@ Item {
             color: Theme.accent
         }
         Text {
+            visible: !chip.iconOnly
             Layout.alignment: Qt.AlignVCenter
             text: Math.round(chip.conditions.temperature || 0) + (chip.conditions.unit || "")
             color: Theme.textSecondary

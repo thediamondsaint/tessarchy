@@ -41,6 +41,7 @@ StartButton 1.0 StartButton.qml
 StartMenuTile 1.0 StartMenuTile.qml
 StatusIcon 1.0 StatusIcon.qml
 StatusIndicators 1.0 StatusIndicators.qml
+TopBarPet 1.0 TopBarPet.qml
 TaskButton 1.0 TaskButton.qml
 TaskStrip 1.0 TaskStrip.qml
 singleton Theme 1.0 Theme.qml
