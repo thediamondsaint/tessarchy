@@ -2334,3 +2334,50 @@ restored 18/true/0, with empty configerrors. Ubuntu source CI now uses the
 supported 26.04 runner for QtQuick.Effects; every source/build job declares the
 portal's GTK/GLib build dependencies. Terminal Fn exposes navigation/F1–F12
 without adding short key rows.
+
+
+## Direct OSK dismissal feature, 2026-10-22 UTC
+
+Issue#89 / draft PR93. Scope, implementation, CPU commands and exclusions are
+in [osk-direct-dismiss.md](osk-direct-dismiss.md); machine-readable source hashes
+in [the CPU checkpoint](evidence/issue89-cpu-checkpoint.json). Initial policy
+RED:4 failures. Final complete Qt suite:87 pass under offscreen software rendering
+and scratch HOME/config. Four Lua-query/wiring Python checks pass. Copy-only
+scratch installer byte matches all five runtime paths. qmllint exits0 with
+metadata warnings; not warning-free. Actual button component preview inspected.
+No live layer/touch, native build, VM or device deployment acceptance claimed.
+
+
+## OSK dismiss deployed on ASUS, 2026-10-22 UTC
+
+
+Deployed at the owner's request, integrating only the five runtime patch paths
+into the actual installed source rather than overwriting it with the topic
+branch. Full source/preferences backup verified before writes; dependencies and
+qmldir staged atomically before the root entrypoint, then normal live reload.
+This is per-file atomic replacement, not a whole-generation atomic deployment.
+
+The first native read caught a transport defect: `hyprctl eval` executes the
+query but returns only `ok`, not its printed JSON. Corrected the watcher to
+`hyprctl repl`, confirmed against native `evalRequest`/`CConfigManager::eval`
+source and actual ASUS JSON. The new wiring assertion failed before correction;
+all five Python checks and all87 Qt results pass after correction. Standalone
+Lua print tests alone had not covered the native IPC response contract.
+
+Actual compositor observations: mapped OSK at y704, dismiss layer at y648 with
+48x48 bounds, leaving an8px gap. Real button-only capture visually inspected:
+keyboard/down-chevron visible and unclipped. The query returned valid mapped
+layer JSON. Normal reload logged `Configuration Loaded`; compositor configuration
+errors empty. Original shell/compositor process start identities and both original
+application clients unchanged; shell service restart count0. Preferences and all
+unrelated installed source bytes unchanged. No service/compositor restart, input
+injection, application interaction or native/package build was performed.
+
+[Sanitized deployment evidence](evidence/issue89-asus-deployment.json) separates
+source/rendering acceptance from input acceptance. Private full backups and
+session metadata remain on-device/off-repository. Device-installed root/qmldir
+include preserved differences; their hashes are not topic-file hashes.
+
+Still draft: real delivered dismissal, application focus/draft/reopen and full
+Phone/Tablet/Desktop mode matrix have not been exercised in this deployment.
+The owner can dogfood the visible control; no personal-app input was injected.

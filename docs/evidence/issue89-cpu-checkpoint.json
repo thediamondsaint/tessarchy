@@ -1,0 +1,51 @@
+{
+  "date_utc": "2026-10-22",
+  "issue": 89,
+  "kind": "CPU-only feature acceptance checkpoint",
+  "qt_software": {
+    "passed": 87,
+    "failed": 0,
+    "platform": "offscreen",
+    "backend": "software"
+  },
+  "python_query": {
+    "passed": 5,
+    "failed": 0,
+    "real_lua_interpreter": true,
+    "hyprland_api": "test fixture; not real compositor",
+    "transport_wiring_assertion": true
+  },
+  "qml_lint": {
+    "exit_code": 0,
+    "metadata_warnings": true,
+    "warning_summary": [
+      "PanelWindow/margins metadata resolution",
+      "BluetoothAdapter metadata resolution",
+      "QProcess::ExitStatus metadata resolution"
+    ]
+  },
+  "live_device_acceptance": false,
+  "native_build": false,
+  "source_sha256": {
+    "shell/OskDismissPolicy.js": "245829caf61f190d283817285ffa321facb5d5236b6195eb0f3c348e28ee1407",
+    "shell/components/OskWatcher.qml": "98cd88408e81ba5a78ce56e5cbfddc8a47488cf82f4a4456bc33002bd086cd23",
+    "shell/components/OskDismissButton.qml": "3d1e0e6b8f483a421fa24773974885c1eb6b730f867397736896da85bdccc864",
+    "shell/components/qmldir": "4aa830532e83a61a23e8db7faea432437e65658ebe3b1e61e7cc2d18fe9542bb",
+    "shell/shell.qml": "227b4732a1ee2917836d9773208872a0aae14a4492d72b160d9298901e75ba2b",
+    "tests/test_osk_dismiss.py": "68c267d9a4762e2dbb8409712a2ccae3428a1de1225494a3c8a6d7c93fd1891b",
+    "tests/qml/tst_oskdismiss.qml": "37af46d161bcc2db14f6195dc509671ca20efd290499857b7d24e0ff3a1daa19",
+    "tests/qml/tst_oskdismissbutton.qml": "bc57aec69418ee237b2971ef0df3cadb3c4add4374630b5c4b13fb34b0b19dbd"
+  },
+  "copy_only_scratch_install": {
+    "exit_code": 0,
+    "byte_identical_runtime_files": [
+      "shell/OskDismissPolicy.js",
+      "shell/components/OskWatcher.qml",
+      "shell/components/OskDismissButton.qml",
+      "shell/components/qmldir",
+      "shell/shell.qml"
+    ],
+    "launcher_executed": false,
+    "checkpoint_before_transport_correction": true
+  }
+}

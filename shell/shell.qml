@@ -15,6 +15,7 @@ import Quickshell.Services.Notifications
 import "components"
 import "LayoutPolicy.js" as Policy
 import "AppPolicy.js" as Apps
+import "OskDismissPolicy.js" as Osk
 
 ShellRoot {
     id: root
@@ -161,6 +162,11 @@ ShellRoot {
     readonly property real cellularStrength: communications.state.cellular.signal === undefined ? -1 : communications.state.cellular.signal / 100
     // squeekboard via tessarchy-osk; it also appears by itself for text fields.
     readonly property bool oskAvailable: Quickshell.env("TESSARCHY_OSK") === "1"
+    OskWatcher {
+        id: oskWatcher
+        enabled: root.oskAvailable && Quickshell.screens.some(screen =>
+            Policy.effectiveMode(shellPreferences.layoutMode, screen.width, screen.height) !== "desktop")
+    }
     // Desktop mode must never raise the on-screen keyboard; touch modes may.
     function applyOskMode(mode) {
         if (!oskAvailable) return;
@@ -853,6 +859,30 @@ ShellRoot {
                             }
                         }
                     }
+                }
+            }
+            PanelWindow {
+                id: oskDismissLayer
+                screen: surface.modelData
+                readonly property var monitor: Hyprland.monitors.values.find(m => m.name === surface.modelData.name) ?? null
+                readonly property var placement: Osk.placement(surface.mode,
+                    surface.modelData.width, surface.modelData.height,
+                    monitor ? monitor.id : -1, oskWatcher.rectangles, statusBar.implicitHeight)
+                visible: placement !== null
+                anchors { top: true; left: true }
+                margins.left: placement ? placement.x : 0
+                margins.top: placement ? placement.y : 0
+                implicitWidth: Osk.TARGET
+                implicitHeight: Osk.TARGET
+                exclusionMode: ExclusionMode.Ignore
+                color: "transparent"
+                WlrLayershell.namespace: "tessera-osk-dismiss"
+                WlrLayershell.layer: WlrLayer.Overlay
+                WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
+                OskDismissButton {
+                    anchors.fill: parent
+                    accentColor: root.accentColor
+                    onClicked: Quickshell.execDetached(["tessarchy-osk", "hide"])
                 }
             }
             // Gesture navigation: thin edge strips catch swipes that start at

@@ -1,0 +1,33 @@
+{
+  "date_utc": "2026-10-22",
+  "issue": 89,
+  "kind": "Actual ASUS deployment and mapped layer rendering; not delivered input acceptance",
+  "full_source_and_preferences_backup_verified": true,
+  "normal_live_reload": true,
+  "service_restart_performed": false,
+  "original_shell_and_compositor_process_start_identities_unchanged": true,
+  "original_application_clients_present": true,
+  "preferences_unchanged": true,
+  "unrelated_source_bytes_unchanged": true,
+  "configuration_errors": "",
+  "query_transport": "hyprctl repl",
+  "native_query_valid_json": true,
+  "observed_osk_top": 704,
+  "observed_button": {
+    "x": 1848,
+    "y": 648,
+    "width": 48,
+    "height": 48
+  },
+  "observed_keyboard_gap": 8,
+  "actual_button_crop_visually_inspected": true,
+  "delivered_input_acceptance": false,
+  "mode_matrix_acceptance": false,
+  "installed_sha256": {
+    "shell/OskDismissPolicy.js": "245829caf61f190d283817285ffa321facb5d5236b6195eb0f3c348e28ee1407",
+    "shell/components/OskDismissButton.qml": "3d1e0e6b8f483a421fa24773974885c1eb6b730f867397736896da85bdccc864",
+    "shell/components/OskWatcher.qml": "98cd88408e81ba5a78ce56e5cbfddc8a47488cf82f4a4456bc33002bd086cd23",
+    "shell/components/qmldir": "89068995fe7e5f33cdbe14f550282703c82f11efa1c98709260adabd9d613754",
+    "shell/shell.qml": "4b7d088bc520ada84c2dcd2e55f0fce393671032372ceb12231df4ed3bb62828"
+  }
+}
