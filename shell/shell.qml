@@ -971,7 +971,10 @@ ShellRoot {
                 id: wheelPanel
                 screen: surface.modelData
                 readonly property string placement: ["left", "right"].indexOf(shellPreferences.wheelStyle) >= 0 ? shellPreferences.wheelStyle : "bottom"
-                visible: surface.tapeActive && !panel.expanded && !tapeControl.expanded
+                // Desktop keeps the native scrolling workspace, but uses the
+                // Hyprland Super+[ / Super+] bindings instead of an overlay
+                // slider. Touch layouts retain the edge wheel.
+                visible: surface.mode !== "desktop" && surface.tapeActive && !panel.expanded && !tapeControl.expanded
                 anchors.bottom: placement === "bottom"
                 anchors.left: placement === "left"
                 anchors.right: placement === "right"

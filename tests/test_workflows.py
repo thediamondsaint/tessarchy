@@ -138,6 +138,7 @@ class Workflows(unittest.TestCase):
         self.assertIn('property bool touchMode: false', status_icon)
         self.assertIn('Layout.preferredWidth: touchMode ? touchSlot', status_icon)
         self.assertIn('showSettings: surface.mode === "desktop" && surface.modelData.width >= 560', shell)
+        self.assertIn('visible: surface.mode !== "desktop" && surface.tapeActive && !panel.expanded && !tapeControl.expanded', shell)
         self.assertNotIn('id: homeHeader', shell)
         self.assertIn('anchors.topMargin: surface.mode === "desktop" ? 24 : 92', shell)
 
