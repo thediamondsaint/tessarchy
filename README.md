@@ -49,7 +49,7 @@ board](AGENT-README.md#claiming-and-extending-tasks) lists the next contribution
   labels, and reduced motion.
 - Translucent bars, Wi-Fi/cellular indicator slots, and optional PipeWire volume
   controls. Wireless and modem backends remain to be connected.
-- An expandable launcher for Firefox and Foot.
+- An expandable launcher for Chromium and Foot.
 - One system theme, Omarchy-style: a theme is a directory with an Omarchy
   `colors.toml` (and optional `backgrounds/`), so Omarchy themes work unchanged.
   `tessarchy-theme set <name>` (or Settings) restyles the shell, the keyboard,

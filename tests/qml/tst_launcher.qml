@@ -12,7 +12,7 @@ TestCase {
         id: launcher
         width: 304; height: 580
         applications: [
-            {id: "firefox", name: "Firefox", icon: "", command: ["firefox"]},
+            {id: "browser", name: "Browser", icon: "", command: ["browser"]},
             {id: "foot", name: "Foot", icon: "", command: ["foot"]}
         ]
     }
@@ -21,17 +21,17 @@ TestCase {
         const input = findChild(launcher, "launcherSearch");
         launches.clear();
         input.forceActiveFocus();
-        keyClick(Qt.Key_F); keyClick(Qt.Key_F); keyClick(Qt.Key_X);
+        keyClick(Qt.Key_B); keyClick(Qt.Key_R); keyClick(Qt.Key_W);
         compare(launcher.matches.length, 1);
         keyClick(Qt.Key_Return);
-        compare(launches.signalArguments[0][0], "firefox");
+        compare(launches.signalArguments[0][0], "browser");
         launcher.visible = false;
         launcher.visible = true;
         compare(input.text, "");
         compare(launcher.matches.length, 2);
         wait(1);
-        keyClick(Qt.Key_F); keyClick(Qt.Key_F); keyClick(Qt.Key_X);
-        compare(input.text, "ffx");
+        keyClick(Qt.Key_B); keyClick(Qt.Key_R); keyClick(Qt.Key_W);
+        compare(input.text, "brw");
         compare(launcher.matches.length, 1);
         input.text = "";
         input.forceActiveFocus();

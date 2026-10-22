@@ -6,7 +6,7 @@ usage() {
 Usage: tessa-ai <open|close|launch|theme|controls|radio|window|tape|cube|keyboard|screenshot|volume|mute> [value]
 Examples:
   tessa-ai open settings
-  tessa-ai launch org.mozilla.firefox
+  tessa-ai launch chromium
   tessa-ai radio wifi
   tessa-ai cube radial
   tessa-ai volume 0.35

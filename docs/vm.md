@@ -84,7 +84,7 @@ stock Arch ISO with `fetch-arch-iso.sh`, then pass the printed path to `vm.sh ru
 The downloader needs curl, gpgv and the Arch keyring. Verification errors stop it;
 refresh your keyring explicitly if needed rather than bypassing signature checks.
 
-The default 2GiB RAM suits a small host; Firefox plus an ISO build will need more.
+The default 2GiB RAM suits a small host; Chromium plus an ISO build will need more.
 For a larger machine use `VM_RAM=4096 VM_CPUS=4 ./scripts/vm.sh run <ISO>`.
 `VM_ACCEL=tcg` forces software emulation. `VM_UEFI=1` opts into OVMF firmware and
 a persistent guest variables file. `vm.sh plan <ISO>` prints the command without
@@ -123,7 +123,7 @@ sudo mkdir -p /mnt/tessarchy
 sudo mount -t 9p -o trans=virtio,version=9p2000.L,ro tessarchy /mnt/tessarchy
 cp -r /mnt/tessarchy/tessarchy ~/tessarchy
 cd ~/tessarchy
-sudo pacman -S --needed hyprland quickshell firefox foot mesa qt6-declarative qt6-wayland ttf-dejavu
+sudo pacman -S --needed hyprland quickshell chromium foot mesa qt6-declarative qt6-wayland ttf-dejavu
 ./scripts/check.sh
 ./scripts/install-dev.sh
 ~/.local/bin/start-tessarchy
@@ -162,7 +162,7 @@ the x86_64 guest:
 
 ```bash
 pacman-key --init && pacman-key --populate archlinuxarm
-pacman -Syu --needed hyprland quickshell firefox foot mesa qt6-declarative qt6-wayland ttf-dejavu python python-gobject ffmpeg sudo
+pacman -Syu --needed hyprland quickshell chromium foot mesa qt6-declarative qt6-wayland ttf-dejavu python python-gobject ffmpeg sudo
 ```
 
 Then mount the source share and run `./scripts/setup-guest.sh` as `alarm`, as for

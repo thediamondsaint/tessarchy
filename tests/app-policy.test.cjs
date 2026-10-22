@@ -22,9 +22,9 @@ function model() {
 }
 
 test('all apps includes unknown IDs and competing browsers; does not mutate inventory', () => {
-    const apps = [entry('firefox', 'Firefox'), entry('custom', 'A custom app'), entry('chromium', 'Chromium')];
-    assert.deepEqual(plain(policy.applications(apps)).map(a => a.id), ['custom', 'chromium', 'firefox']);
-    assert.deepEqual(apps.map(a => a.id), ['firefox', 'custom', 'chromium']);
+    const apps = [entry('browser', 'Browser'), entry('custom', 'A custom app'), entry('chromium', 'Chromium')];
+    assert.deepEqual(plain(policy.applications(apps)).map(a => a.id), ['custom', 'browser', 'chromium']);
+    assert.deepEqual(apps.map(a => a.id), ['browser', 'custom', 'chromium']);
 });
 test('filters hidden/unlaunchable entries and keeps distinct IDs with equal names', () => {
     const apps = [entry('b', 'Editor'), entry('a', 'Editor'), {...entry('hidden'), noDisplay: true},
@@ -70,9 +70,9 @@ test('large inventory remains complete and repeated updates do not duplicate row
 });
 
 test('launcher ranks substrings, supports fuzzy metadata and refreshes input', () => {
-    const apps = [entry('org.editor', 'Text Editor'), entry('org.firefox', 'Firefox'),
+    const apps = [entry('org.editor', 'Text Editor'), entry('org.browser', 'Browser'),
         {...entry('org.settings', 'Preferences'), keywords: ['display']}];
-    assert.deepEqual(plain(policy.search(apps, 'ffx')).map(a => a.id), ['org.firefox']);
+    assert.deepEqual(plain(policy.search(apps, 'brw')).map(a => a.id), ['org.browser']);
     assert.deepEqual(plain(policy.search(apps, 'display')).map(a => a.id), ['org.settings']);
     assert.equal(policy.search(apps, 'impossible').length, 0);
     assert.equal(policy.search(apps.slice(0, 1), '').length, 1);

@@ -1,10 +1,10 @@
 pkgname=tessarchy-session
 pkgver=0.1.0
-pkgrel=4
+pkgrel=5
 pkgdesc='Tessarchy prototype Hyprland session'
 arch=('any')
 license=('MIT' 'GPL-3.0-or-later')
-depends=('tessera-shell=0.1.0' 'hyprland>=0.56' 'hypridle' 'dbus' 'firefox' 'foot' 'ttf-dejavu' 'grim' 'libnotify' 'openssh')
+depends=('tessera-shell=0.1.0' 'hyprland>=0.56' 'hypridle' 'dbus' 'chromium' 'foot' 'ttf-dejavu' 'grim' 'libnotify' 'openssh')
 optdepends=('squeekboard: on-screen keyboard for touch text input'
             'brightnessctl: screen backlight control' 'hyprsunset: night light'
             'tessarchy-portal: touch file dialogs on Phone/Tablet')
@@ -29,6 +29,7 @@ package() {
     install -Dm755 "$srcdir/session/tessarchy-run" "$pkgdir/usr/bin/tessarchy-run"
     install -Dm755 "$srcdir/session/tessera-chatgpt-status" "$pkgdir/usr/bin/tessera-chatgpt-status"
     install -Dm755 "$srcdir/session/tessera-chatgpt-status" "$pkgdir/usr/share/tessarchy/session/tessera-chatgpt-status"
+    install -Dm644 "$srcdir/session/tessarchy-chatgpt.desktop" "$pkgdir/usr/share/applications/tessarchy-chatgpt.desktop"
     install -Dm755 "$srcdir/session/tessa-ai" "$pkgdir/usr/bin/tessa-ai"
     install -Dm755 "$srcdir/session/tessarchy-ssh" "$pkgdir/usr/bin/tessarchy-ssh"
     install -Dm644 "$srcdir/session/sshd_config.d/tessarchy.conf" "$pkgdir/etc/ssh/sshd_config.d/20-tessarchy.conf"

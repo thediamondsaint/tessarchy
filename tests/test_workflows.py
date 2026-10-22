@@ -4,7 +4,9 @@ import re
 from pathlib import Path
 import re
 import subprocess
+import sys
 import tempfile
+import time
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -618,17 +620,42 @@ print(g.border_size, col.active_border, col.inactive_border, group.border_active
     def test_run_launches_apps_in_theme_mode(self):
         stubs = self.home / 'bin'
         stubs.mkdir()
-        for name in ('foot', 'firefox'):
+        for name in ('foot', 'chromium'):
             (stubs / name).write_text('#!/bin/bash\necho "$GTK_THEME|$*"\n')
             (stubs / name).chmod(0o755)
         env = dict(self.env, PATH=f'{stubs}:{os.environ["PATH"]}', XDG_STATE_HOME=str(self.home / 'state'))
         run = lambda *a: subprocess.run([str(ROOT / 'session/tessarchy-run'), *a], env=env,
                                         capture_output=True, text=True).stdout.strip()
-        self.assertEqual(run('firefox', 'about:blank'), 'Adwaita:dark|about:blank')
+        self.assertEqual(run('chromium', 'about:blank'), 'Adwaita:dark|about:blank')
         self.theme('set', 'tessera-light')
         config = self.home / 'state/tessarchy/theme/foot.ini'
         self.assertEqual(run('foot', '-e', 'ls'), f'Adwaita|--config={config} -e ls')
-        self.assertEqual(run('firefox'), 'Adwaita|')
+        self.assertEqual(run('chromium'), 'Adwaita|')
+
+    def test_chatgpt_status_uses_chromium_app_mode_when_native_client_is_absent(self):
+        stubs = self.home / 'bin'
+        stubs.mkdir()
+        chromium = stubs / 'chromium'
+        chromium.write_text('#!/bin/sh\nprintf "%s\\n" "$*" > "$CHATGPT_ARGS"\n')
+        chromium.chmod(0o755)
+        codex = stubs / 'codex'
+        codex.write_text('#!/bin/sh\nexit 1\n')
+        codex.chmod(0o755)
+        env = dict(self.env, PATH=str(stubs),
+                   CHATGPT_ARGS=str(self.home / 'chatgpt-args'))
+        command = [sys.executable, str(ROOT / 'session/tessera-chatgpt-status')]
+        status = subprocess.run(command + ['status'],
+                                env=env, capture_output=True, text=True, check=True)
+        payload = __import__('json').loads(status.stdout)
+        self.assertEqual(payload['state'], 'signed-out')
+        self.assertTrue(payload['installed'])
+        self.assertEqual(payload['command'], str(chromium))
+        subprocess.run(command + ['open'], env=env, check=True)
+        for _ in range(20):
+            if (self.home / 'chatgpt-args').exists():
+                break
+            time.sleep(0.01)
+        self.assertEqual((self.home / 'chatgpt-args').read_text().strip(), '--app=https://chatgpt.com')
 
     def test_portal_asks_shell_and_falls_back_to_gtk_in_desktop(self):
         import shutil

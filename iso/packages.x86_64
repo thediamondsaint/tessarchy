@@ -12,7 +12,9 @@ edk2-shell
 efibootmgr
 ffmpeg
 file-roller
-firefox
+amberol
+celluloid
+chromium
 fish
 foot
 glib2
@@ -29,6 +31,7 @@ hyprland
 hyprpolkitagent
 hyprsunset
 iio-sensor-proxy
+krita
 libinput
 libnotify
 libreoffice-fresh
@@ -64,6 +67,7 @@ qt6-declarative
 qt6-wayland
 quickshell
 rsync
+rnote
 rtkit
 sof-firmware
 squeekboard

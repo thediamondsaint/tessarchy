@@ -11,7 +11,7 @@ Examples:
 
 ```sh
 tessa-ai open settings
-tessa-ai launch org.mozilla.firefox
+tessa-ai launch chromium
 tessa-ai radio wifi
 tessa-ai tape next
 ```
