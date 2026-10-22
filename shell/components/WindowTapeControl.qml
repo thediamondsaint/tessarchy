@@ -31,7 +31,10 @@ Item {
     readonly property bool hasRecents: recentView && recentView.windows !== undefined
         ? recentView.windows.length > 0 : !!recentView
     readonly property int expandedWidth: Math.min(maxControlWidth, tessaCube ? 360 : 336)
-    readonly property int expandedHeight: hasRecents ? 408 : 300
+    // The empty shelf still gets a dedicated glass slot above the action grid;
+    // keeping that slot in the height budget prevents its icon from colliding
+    // with the first row on narrow touch layouts.
+    readonly property int expandedHeight: hasRecents ? 408 : 344
     implicitWidth: Math.min(maxControlWidth, radialOpen ? 320 : expanded ? expandedWidth : (tessaCube ? 68 : 128))
     implicitHeight: radialOpen ? 320 : expanded && tessaCube ? expandedHeight : 68
 
@@ -131,12 +134,33 @@ Item {
         objectName: "cubeRecentsEmpty"
         visible: control.expanded && !control.radialOpen && !control.hasRecents
         anchors { top: parent.top; left: parent.left; right: parent.right; topMargin: 58 }
-        height: 42
+        height: 48
+        Rectangle {
+            anchors.centerIn: parent
+            width: 58
+            height: 44
+            radius: Theme.radius("button", 18, height)
+            color: Theme.glass
+            border.width: Theme.borderWidth(1)
+            border.color: Qt.alpha(Theme.wheelGlow, 0.26)
+            gradient: Gradient {
+                GradientStop { position: 0; color: Qt.alpha(Theme.text, 0.12) }
+                GradientStop { position: 1; color: Qt.alpha(Theme.darkerBackground, 0.20) }
+            }
+            Rectangle {
+                anchors.fill: parent
+                anchors.margins: 2
+                radius: Math.max(0, parent.radius - 2)
+                color: "transparent"
+                border.width: 1
+                border.color: Qt.alpha(Theme.text, 0.10)
+            }
+        }
         Icon {
             anchors.centerIn: parent
             symbol: "recents"
-            size: 34
-            color: Qt.alpha(Theme.textSecondary, 0.42)
+            size: 28
+            color: Theme.textSecondary
         }
     }
     GridLayout {

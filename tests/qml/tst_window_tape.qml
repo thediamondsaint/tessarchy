@@ -93,7 +93,7 @@ TestCase {
         verify(keyboard.visible);
         verify(settings.visible);
         verify(chatgpt.visible);
-        compare(control.implicitHeight, 300);
+        compare(control.implicitHeight, 344);
     }
     function test_drag_coalesces_and_settles_without_reversing() {
         const control = createTemporaryObject(wheelFactory, test);
