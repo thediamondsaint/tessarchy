@@ -29,6 +29,9 @@ TestCase {
         verify(findChild(widgets, "desktopWidgetCard-weather") !== null);
         verify(findChild(widgets, "desktopWidgetCard-media") !== null);
         verify(findChild(widgets, "desktopWidgetCard-battery") !== null);
+        compare(findChild(widgets, "desktopWidgetCard-calendar").subtle, false);
+        widgets.mode = "desktop";
+        compare(findChild(widgets, "desktopWidgetCard-calendar").subtle, true);
     }
 
     function test_weather_refresh_signal_is_explicit() {

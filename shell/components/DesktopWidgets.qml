@@ -57,6 +57,7 @@ Item {
                         subtitle: widget.modelData === "calendar" ? Qt.formatDate(widgets.now, "dddd, MMMM d") : widget.modelData === "weather" ? (widgets.weather.ok ? (widgets.weather.description || "Current conditions") : "Tap to refresh") : widget.modelData === "media" ? (widgets.player ? (widgets.player.identity || "Now playing") : "No player connected") : (widgets.batteryPresent ? "Power status" : "Battery unavailable")
                         symbol: widget.modelData === "calendar" ? "calendar" : widget.modelData === "weather" ? (widgets.weather.icon || "weather-cloud") : widget.modelData === "media" ? "music" : "battery"
                         accentColor: widgets.accentColor
+                        subtle: widgets.mode === "desktop"
                         interactive: widget.modelData === "weather"
                         onClicked: if (widget.modelData === "weather") widgets.refreshWeather()
 
