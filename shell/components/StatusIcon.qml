@@ -13,6 +13,7 @@ Item {
     // Mobile strip shows a steady medium signal when no radio backend reports
     // a real value, instead of a crossed-out glyph.
     property bool showFallback: false
+    property bool pressed: false
     property int fallbackLevel: 2
     signal clicked
     readonly property bool reported: strength >= 0
@@ -26,9 +27,19 @@ Item {
         width: 44
         height: 44
         radius: Theme.radius("button", 20, height)
-        color: Qt.alpha(indicator.uniform ? Theme.text : Theme.surface, indicator.uniform ? 0.09 : 0.06)
+        color: indicator.pressed ? Qt.alpha(Theme.accent, 0.24) : indicator.uniform ? Qt.alpha(Theme.text, 0.11) : Theme.glass
         border.width: Theme.borderWidth(1)
-        border.color: Qt.alpha(indicator.uniform ? Theme.text : Theme.accent, indicator.uniform ? 0.14 : 0.10)
+        border.color: indicator.pressed ? Theme.accent : Qt.alpha(indicator.uniform ? Theme.text : Theme.accent, indicator.uniform ? 0.18 : 0.16)
+        scale: indicator.pressed ? 0.94 : 1
+        Behavior on scale { NumberAnimation { duration: 90; easing.type: Easing.OutCubic } }
+        Rectangle {
+            anchors.fill: parent
+            anchors.margins: 2
+            radius: Math.max(0, parent.radius - 2)
+            color: "transparent"
+            border.width: 1
+            border.color: Qt.alpha(Theme.text, indicator.pressed ? 0.24 : 0.10)
+        }
         Icon {
             anchors.centerIn: parent
             symbol: indicator.fallback ? indicator.symbol + "-" + indicator.fallbackLevel : indicator.symbol
@@ -49,6 +60,9 @@ Item {
     MouseArea {
         anchors.fill: parent
         cursorShape: Qt.PointingHandCursor
+        onPressed: indicator.pressed = true
+        onReleased: indicator.pressed = false
+        onCanceled: indicator.pressed = false
         onClicked: indicator.clicked()
     }
 }

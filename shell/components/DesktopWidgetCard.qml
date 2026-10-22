@@ -29,12 +29,6 @@ Rectangle {
     }
 
     Rectangle {
-        anchors { top: parent.top; left: parent.left; right: parent.right }
-        height: 1
-        radius: Theme.radius("progress", 1, height)
-        color: Qt.alpha(card.accentColor, 0.55)
-    }
-    Rectangle {
         anchors.fill: parent
         anchors.margins: 1
         radius: Math.max(0, card.radius - 1)

@@ -19,6 +19,7 @@ RowLayout {
     property bool showVolume: true
     property bool showSettings: true
     property bool touchMode: false
+    property bool reducedMotion: false
     signal notificationsRequested
     signal settingsRequested
     signal muteToggled
@@ -34,6 +35,7 @@ RowLayout {
         icon.width: control.glyphSize
         icon.height: control.glyphSize
         accentColor: control.accentColor
+        reducedMotion: control.reducedMotion
         selected: control.notificationsSelected
         Rectangle {
             visible: control.notificationCount > 0
@@ -136,6 +138,7 @@ RowLayout {
         icon.width: control.glyphSize
         icon.height: control.glyphSize
         accentColor: control.accentColor
+        reducedMotion: control.reducedMotion
         Accessible.name: control.audioMuted ? "Unmute audio" : "Mute audio"
         onClicked: control.muteToggled()
     }
@@ -146,6 +149,7 @@ RowLayout {
         icon.width: control.glyphSize
         icon.height: control.glyphSize
         accentColor: control.accentColor
+        reducedMotion: control.reducedMotion
         selected: control.settingsSelected
         Accessible.name: "Settings"
         onClicked: control.settingsRequested()

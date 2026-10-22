@@ -62,12 +62,6 @@ Item {
         }
         border.color: Qt.alpha(Theme.wheelGlow, control.expanded ? 0.72 : 0.88)
         border.width: Theme.borderWidth(control.expanded ? 1 : 2)
-        Rectangle {
-            anchors { top: parent.top; left: parent.left; right: parent.right }
-            height: 1
-            radius: Theme.radius("progress", 1, height)
-            color: Qt.alpha(Theme.text, 0.28)
-        }
     }
     TouchButton {
         id: cubeButton
@@ -143,13 +137,6 @@ Item {
             symbol: "recents"
             size: 34
             color: Qt.alpha(Theme.textSecondary, 0.42)
-        }
-        Rectangle {
-            anchors { horizontalCenter: parent.horizontalCenter; bottom: parent.bottom }
-            width: 44
-            height: 2
-            radius: Theme.radius("progress", 1, height)
-            color: Qt.alpha(Theme.wheelGlow, 0.55)
         }
     }
     GridLayout {

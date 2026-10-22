@@ -6,6 +6,7 @@ Item {
     property var conditions: ({})
     property int glyphSize: 20
     signal clicked
+    property bool pressed: false
     Layout.minimumWidth: 56
     Layout.minimumHeight: 48
     implicitWidth: weatherRow.implicitWidth + 20
@@ -15,9 +16,19 @@ Item {
     Rectangle {
         anchors.fill: parent
         radius: Theme.radius("button", 20, height)
-        color: Qt.alpha(Theme.text, 0.08)
+        color: chip.pressed ? Qt.alpha(Theme.accent, 0.24) : Theme.glass
         border.width: Theme.borderWidth(1)
-        border.color: Qt.alpha(Theme.accent, 0.16)
+        border.color: chip.pressed ? Theme.accent : Theme.glassBorder
+        scale: chip.pressed ? 0.96 : 1
+        Behavior on scale { NumberAnimation { duration: 90; easing.type: Easing.OutCubic } }
+        Rectangle {
+            anchors.fill: parent
+            anchors.margins: 2
+            radius: Math.max(0, parent.radius - 2)
+            color: "transparent"
+            border.width: 1
+            border.color: Qt.alpha(Theme.text, chip.pressed ? 0.24 : 0.10)
+        }
     }
     RowLayout {
         id: weatherRow
@@ -40,5 +51,8 @@ Item {
                 + (chip.conditions.stale ? ", last observation" : "")
         }
     }
-    TapHandler { onTapped: chip.clicked() }
+    TapHandler {
+        onPressedChanged: chip.pressed = pressed
+        onTapped: chip.clicked()
+    }
 }

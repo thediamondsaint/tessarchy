@@ -1226,7 +1226,6 @@ ShellRoot {
                     color: statusBar.drawerOpen ? Theme.glassStrong : Theme.bar(shellPreferences.barOpacity)
                     border.width: surface.mode === "desktop" ? 0 : Theme.borderWidth(1)
                     border.color: Qt.alpha(root.accentColor, 0.18)
-                    Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: Qt.alpha(root.accentColor, 0.1) }
                 }
                 WlrLayershell.namespace: "tessera-status"
                 WlrLayershell.layer: WlrLayer.Top
@@ -1274,15 +1273,30 @@ ShellRoot {
                         visible: surface.mode !== "desktop"
                         text: Qt.formatDateTime(clock.date, shellPreferences.use24Hour ? "h:mm" : "h:mm AP").replace(/ [AP]M$/, "")
                         Accessible.name: "Clock " + Qt.formatDateTime(clock.date, shellPreferences.use24Hour ? "h:mm" : "h:mm AP") + ", quick controls"
+                        reducedMotion: shellPreferences.reducedMotion
                         Layout.minimumHeight: 48
+                        Layout.preferredHeight: 52
                         Layout.preferredWidth: surface.mode === "desktop" ? 66 : 72
                         implicitHeight: surface.mode === "desktop" ? 48 : 56
                         padding: 0
                         background: Rectangle {
                             radius: Theme.radius("button", 20, height)
-                            color: Qt.alpha(Theme.text, 0.08)
+                            color: mobileClock.down ? Theme.pressed(root.accentColor) : Theme.glass
                             border.width: Theme.borderWidth(1)
-                            border.color: Qt.alpha(root.accentColor, 0.16)
+                            border.color: mobileClock.down ? root.accentColor : Theme.glassBorder
+                            gradient: Gradient {
+                                GradientStop { position: 0; color: mobileClock.down ? Qt.alpha(root.accentColor, 0.28) : Qt.alpha(Theme.text, 0.12) }
+                                GradientStop { position: 0.52; color: Theme.glass }
+                                GradientStop { position: 1; color: Qt.alpha(Theme.darkerBackground, 0.18) }
+                            }
+                            Rectangle {
+                                anchors.fill: parent
+                                anchors.margins: 2
+                                radius: Math.max(0, parent.radius - 2)
+                                color: "transparent"
+                                border.width: 1
+                                border.color: Qt.alpha(Theme.text, mobileClock.down ? 0.24 : 0.10)
+                            }
                         }
                         contentItem: Text {
                             anchors.fill: parent
@@ -1294,27 +1308,15 @@ ShellRoot {
                         }
                         onClicked: statusBar.toggleDrawer()
                     }
-                    TouchButton {
+                    GlassIconButton {
+                        id: quickControls
                         visible: surface.mode !== "desktop"
-                        Layout.minimumWidth: 56
+                        symbol: statusBar.drawerOpen ? "close" : "controls"
                         Layout.preferredWidth: 56
-                        Layout.minimumHeight: 48
-                        implicitHeight: 56
-                        text: "Quick controls"
+                        Layout.preferredHeight: 56
                         Accessible.name: statusBar.drawerOpen ? "Collapse quick controls" : "Open quick controls, or swipe down"
-                        padding: 0
-                        background: Rectangle {
-                            radius: Theme.radius("button", 20, height)
-                            color: statusBar.drawerOpen ? Qt.alpha(root.accentColor, 0.22) : Qt.alpha(Theme.text, 0.08)
-                            border.width: Theme.borderWidth(1)
-                            border.color: Qt.alpha(statusBar.drawerOpen ? root.accentColor : Theme.text, statusBar.drawerOpen ? 0.66 : 0.16)
-                        }
-                        contentItem: Icon {
-                            anchors.centerIn: parent
-                            symbol: statusBar.drawerOpen ? "close" : "controls"
-                            size: 22
-                            color: statusBar.drawerOpen ? root.accentColor : Theme.textSecondary
-                        }
+                        reducedMotion: shellPreferences.reducedMotion
+                        selected: statusBar.drawerOpen
                         onClicked: statusBar.toggleDrawer()
                     }
                     WeatherChip {
@@ -1324,13 +1326,11 @@ ShellRoot {
                         Layout.leftMargin: 4
                         onClicked: statusBar.toggleDrawer()
                     }
-                    TrayButton {
+                    GlassIconButton {
                         visible: surface.mode !== "desktop"
-                        slotWidth: 48
-                        icon.source: "icons/chatgpt.svg"
-                        icon.width: 19
-                        icon.height: 19
-                        accentColor: root.accentColor
+                        symbol: "chatgpt"
+                        Layout.preferredWidth: 56
+                        Layout.preferredHeight: 56
                         selected: panel.page === "chatgpt"
                         Accessible.name: "ChatGPT"
                         onClicked: panel.showPage("chatgpt")
@@ -1341,6 +1341,7 @@ ShellRoot {
                         visible: surface.mode !== "desktop"
                         compact: false
                         touchMode: true
+                        reducedMotion: shellPreferences.reducedMotion
                         accentColor: root.accentColor
                         notificationCount: root.notificationCount
                         cellularStrength: root.cellularStrength

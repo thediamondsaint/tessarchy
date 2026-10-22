@@ -4,7 +4,6 @@ import QtQuick
 TouchButton {
     id: button
     required property string symbol
-    property bool reducedMotion: false
     implicitWidth: 56
     implicitHeight: 56
     padding: 0
