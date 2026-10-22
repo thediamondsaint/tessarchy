@@ -18,6 +18,7 @@ RowLayout {
     property bool showBatteryText: true
     property bool showVolume: true
     property bool showSettings: true
+    property bool touchMode: false
     signal notificationsRequested
     signal settingsRequested
     signal muteToggled
@@ -73,7 +74,7 @@ RowLayout {
         strength: control.cellularStrength
         uniform: control.compact
         showFallback: control.compact
-        Layout.preferredWidth: control.compact ? 28 : 18
+        touchMode: control.touchMode
         onClicked: control.panelRequested()
     }
     StatusIcon {
@@ -82,11 +83,11 @@ RowLayout {
         strength: control.wifiStrength
         uniform: control.compact
         showFallback: control.compact
-        Layout.preferredWidth: control.compact ? 28 : 18
+        touchMode: control.touchMode
         onClicked: control.panelRequested()
     }
     Item {
-        Layout.preferredWidth: control.compact ? 28 : batteryRow.implicitWidth
+        Layout.preferredWidth: control.touchMode ? 48 : control.compact ? 28 : batteryRow.implicitWidth
         Layout.preferredHeight: 48
         RowLayout {
             id: batteryRow
@@ -105,6 +106,12 @@ RowLayout {
                 font.pixelSize: control.compact ? 10 : 11
                 Accessible.name: control.batteryPresent ? "Battery " + text : "Battery status unavailable"
             }
+        }
+        Accessible.role: Accessible.Button
+        Accessible.name: control.batteryPresent ? "Battery " + Math.round(control.batteryPercent * 100) + " percent" : "Battery status unavailable"
+        MouseArea {
+            anchors.fill: parent
+            onClicked: control.panelRequested()
         }
     }
     TrayButton {

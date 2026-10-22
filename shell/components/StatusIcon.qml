@@ -8,6 +8,8 @@ Item {
     // Negative means no backend/device; bind a real signal value here later.
     property real strength: -1
     property bool uniform: false
+    // Top bars use a full touch target even when the glyph itself stays small.
+    property bool touchMode: false
     // Mobile strip shows a steady medium signal when no radio backend reports
     // a real value, instead of a crossed-out glyph.
     property bool showFallback: false
@@ -15,7 +17,7 @@ Item {
     signal clicked
     readonly property bool reported: strength >= 0
     readonly property bool fallback: !reported && showFallback
-    Layout.preferredWidth: uniform ? 28 : 18
+    Layout.preferredWidth: touchMode ? 48 : uniform ? 28 : 18
     Layout.preferredHeight: 48
     Accessible.name: label + (reported || fallback ? " connected" : " unavailable")
     Accessible.role: Accessible.Button

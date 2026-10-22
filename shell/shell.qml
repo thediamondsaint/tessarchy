@@ -1161,14 +1161,19 @@ ShellRoot {
                     left: true
                     right: true
                 }
-                implicitHeight: drawerOpen ? Math.min(surface.modelData.height - surface.navHeight - 12, quickSheet.implicitHeight + 76) : 48
-                exclusiveZone: 48
+                margins.top: surface.mode === "desktop" ? 0 : 8
+                margins.left: surface.mode === "desktop" ? 0 : 12
+                margins.right: surface.mode === "desktop" ? 0 : 12
+                implicitHeight: drawerOpen ? Math.min(surface.modelData.height - surface.navHeight - 12, quickSheet.implicitHeight + 88) : surface.mode === "desktop" ? 48 : 64
+                exclusiveZone: surface.mode === "desktop" ? 48 : 0
                 color: "transparent"
                 Rectangle {
                     anchors.fill: parent
-                    radius: Theme.radius("card", statusBar.drawerOpen ? 28 : 0, height)
+                    radius: Theme.radius("card", statusBar.drawerOpen ? 28 : (surface.mode === "desktop" ? 0 : 26), height)
                     visible: surface.mode !== "desktop" || statusBar.drawerOpen
                     color: statusBar.drawerOpen ? Theme.glassStrong : Theme.bar(shellPreferences.barOpacity)
+                    border.width: surface.mode === "desktop" ? 0 : Theme.borderWidth(1)
+                    border.color: Qt.alpha(root.accentColor, 0.18)
                     Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: Qt.alpha(root.accentColor, 0.1) }
                 }
                 WlrLayershell.namespace: "tessera-status"
@@ -1177,7 +1182,7 @@ ShellRoot {
                 Item {
                     id: statusHeader
                     width: parent.width
-                    height: 48
+                    height: surface.mode === "desktop" ? 48 : 64
                     DragHandler {
                         target: null
                         xAxis.enabled: false
@@ -1196,19 +1201,30 @@ ShellRoot {
                             }
                         }
                     }
-                RowLayout {
+                Flickable {
+                    id: topBarFlick
                     anchors.fill: parent
-                    anchors.leftMargin: surface.mode === "desktop" ? 0 : 18
+                    anchors.leftMargin: surface.mode === "desktop" ? 0 : 8
                     anchors.rightMargin: surface.mode === "desktop" ? 0 : 8
-                    spacing: surface.mode === "phone" ? 4 : surface.modelData.width < 360 ? 4 : 8
+                    clip: true
+                    contentWidth: topBarContent.implicitWidth
+                    contentHeight: height
+                    boundsBehavior: Flickable.StopAtBounds
+                    flickableDirection: Flickable.HorizontalFlick
+                    interactive: surface.mode !== "desktop" && contentWidth > width
+                    RowLayout {
+                    id: topBarContent
+                    width: Math.max(implicitWidth, topBarFlick.width)
+                    height: topBarFlick.height
+                    spacing: surface.mode === "phone" ? 4 : 8
                     TouchButton {
                         id: mobileClock
                         visible: surface.mode !== "desktop"
                         text: Qt.formatDateTime(clock.date, shellPreferences.use24Hour ? "h:mm" : "h:mm AP").replace(/ [AP]M$/, "")
                         Accessible.name: "Clock " + Qt.formatDateTime(clock.date, shellPreferences.use24Hour ? "h:mm" : "h:mm AP") + ", quick controls"
                         Layout.minimumHeight: 48
-                        Layout.preferredWidth: 66
-                        implicitHeight: 48
+                        Layout.preferredWidth: surface.mode === "desktop" ? 66 : 72
+                        implicitHeight: surface.mode === "desktop" ? 48 : 56
                         padding: 0
                         background: Item {}
                         contentItem: Text {
@@ -1220,15 +1236,24 @@ ShellRoot {
                         onClicked: statusBar.toggleDrawer()
                     }
                     TouchButton {
+                        visible: surface.mode !== "desktop"
                         Layout.fillWidth: true
-                        Layout.minimumWidth: 64
+                        Layout.minimumWidth: 56
+                        Layout.preferredWidth: 56
                         Layout.minimumHeight: 48
-                        implicitHeight: 48
+                        implicitHeight: 56
                         text: "Quick controls"
                         Accessible.name: statusBar.drawerOpen ? "Collapse quick controls" : "Open quick controls, or swipe down"
                         padding: 0
                         background: Item {}
-                        contentItem: Item { }
+                        contentItem: Image {
+                            source: "icons/" + (statusBar.drawerOpen ? "close" : "controls") + ".svg"
+                            sourceSize.width: 22
+                            sourceSize.height: 22
+                            width: 22
+                            height: 22
+                            fillMode: Image.PreserveAspectFit
+                        }
                         onClicked: statusBar.toggleDrawer()
                     }
                     WeatherChip {
@@ -1236,10 +1261,11 @@ ShellRoot {
                         conditions: weatherBackend.state
                         Layout.alignment: Qt.AlignVCenter
                         Layout.leftMargin: 4
+                        onClicked: statusBar.toggleDrawer()
                     }
                     TrayButton {
                         visible: surface.mode !== "desktop"
-                        slotWidth: surface.mode === "phone" ? 28 : 40
+                        slotWidth: 48
                         icon.source: "icons/chatgpt.svg"
                         icon.width: 19
                         icon.height: 19
@@ -1252,7 +1278,8 @@ ShellRoot {
                     // mode; the mobile strip keeps them along the top edge.
                     StatusIndicators {
                         visible: surface.mode !== "desktop"
-                        compact: surface.mode === "phone"
+                        compact: false
+                        touchMode: true
                         accentColor: root.accentColor
                         notificationCount: root.notificationCount
                         cellularStrength: root.cellularStrength
@@ -1272,6 +1299,7 @@ ShellRoot {
                         onMuteToggled: root.audioSink.audio.muted = !root.audioSink.audio.muted
                         onSettingsRequested: { statusBar.drawerOpen = false; panel.showPage("settings"); }
                     }
+                }
                 }
                 }
                 ScrollView {

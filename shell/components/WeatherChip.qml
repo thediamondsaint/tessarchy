@@ -5,6 +5,11 @@ RowLayout {
     id: chip
     property var conditions: ({})
     property int glyphSize: 20
+    signal clicked
+    Layout.minimumWidth: 56
+    Layout.minimumHeight: 48
+    Accessible.role: Accessible.Button
+    Accessible.name: (chip.conditions.description || "Weather") + ", " + Math.round(chip.conditions.temperature || 0) + (chip.conditions.unit || "")
     spacing: 6
     Image {
         Layout.alignment: Qt.AlignVCenter
@@ -20,4 +25,5 @@ RowLayout {
         Accessible.name: (chip.conditions.description || "Weather") + ", " + text
             + (chip.conditions.stale ? ", last observation" : "")
     }
+    TapHandler { onTapped: chip.clicked() }
 }

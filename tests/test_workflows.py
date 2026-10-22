@@ -123,6 +123,18 @@ class Workflows(unittest.TestCase):
         self.assertIn('value: "buttons"', settings)
         self.assertIn('page.preferences.navigation = modelData.value', settings)
 
+    def test_touch_top_bar_uses_floating_scrollable_glass_and_targets(self):
+        shell = (ROOT / 'shell/shell.qml').read_text()
+        indicators = (ROOT / 'shell/components/StatusIndicators.qml').read_text()
+        status_icon = (ROOT / 'shell/components/StatusIcon.qml').read_text()
+        self.assertIn('implicitHeight: drawerOpen ? Math.min(surface.modelData.height - surface.navHeight - 12, quickSheet.implicitHeight + 88) : surface.mode === "desktop" ? 48 : 64', shell)
+        self.assertIn('interactive: surface.mode !== "desktop" && contentWidth > width', shell)
+        self.assertIn('boundsBehavior: Flickable.StopAtBounds', shell)
+        self.assertIn('touchMode: true', shell)
+        self.assertIn('property bool touchMode: false', indicators)
+        self.assertIn('property bool touchMode: false', status_icon)
+        self.assertIn('Layout.preferredWidth: touchMode ? 48', status_icon)
+
     def test_components_qmldir_lists_every_component(self):
         # An explicit qmldir hides any component it omits ("X is not a type").
         components = ROOT / 'shell/components'

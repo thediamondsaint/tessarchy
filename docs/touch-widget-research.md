@@ -21,6 +21,16 @@ touch behavior in Tessa's QML layer. No external widget code was copied.
   documents a shared QML widget library and plugin surface. Tessa keeps its
   smaller local component set and theme tokens until a stable plugin contract
   is needed.
+- [fbuedding/quickshell](https://github.com/fbuedding/quickshell) uses a
+  floating, blurred top bar with a slide-in quick-controls surface and
+  input-transparent regions around the controls. Its 34px desktop defaults are
+  too small for Tessa touch layouts, so Tessa adapts the pattern to a 64px
+  floating glass bar, horizontally scrollable on phones, with every action
+  given a 48px target.
+- [sluets/quickshell-hyprland](https://github.com/sluets/quickshell-hyprland)
+  documents configurable floating bars, blur, spacing, and attached menus.
+  Tessa reuses the architecture pattern and existing service bindings rather
+  than importing its shell or dependencies.
 
 ## Current implementation
 
