@@ -13,21 +13,26 @@ Rectangle {
     // while letting the background show through; touch layouts use the fuller
     // glass treatment for separation and thumb-friendly grouping.
     property bool subtle: false
+    property bool hovered: false
+    property bool pressed: false
     signal clicked
     default property alias content: body.data
 
     implicitWidth: 224
     implicitHeight: 164
     radius: Theme.radius("card", subtle ? 20 : 24, height)
-    color: subtle ? Qt.alpha(Theme.surface, Theme.mode === "light" ? 0.18 : 0.10) : Theme.glass
+    color: pressed ? Qt.alpha(card.accentColor, subtle ? 0.13 : 0.26)
+                   : subtle ? Qt.alpha(Theme.surface, Theme.mode === "light" ? 0.18 : 0.10) : Theme.glass
     border.width: Theme.borderWidth(1)
-    border.color: Qt.alpha(card.accentColor, subtle ? 0.22 : 0.38)
+    border.color: Qt.alpha(card.accentColor, pressed ? 0.72 : hovered ? 0.46 : subtle ? 0.22 : 0.38)
+    scale: pressed ? 0.985 : hovered ? 1.012 : 1
+    Behavior on scale { NumberAnimation { duration: 100; easing.type: Easing.OutCubic } }
 
     // Keep the glass treatment palette-driven: a soft theme surface wash,
     // an edge highlight, and a restrained accent rim instead of a fixed
     // white overlay.
     gradient: Gradient {
-        GradientStop { position: 0; color: Qt.alpha(Theme.text, card.subtle ? 0.04 : Theme.mode === "light" ? 0.16 : 0.08) }
+        GradientStop { position: 0; color: Qt.alpha(card.pressed ? card.accentColor : Theme.text, card.pressed ? 0.22 : card.subtle ? 0.04 : Theme.mode === "light" ? 0.16 : 0.08) }
         GradientStop { position: 0.34; color: card.subtle ? Qt.alpha(Theme.surface, 0.10) : Qt.alpha(Theme.glass, 0.96) }
         GradientStop { position: 1; color: Qt.alpha(Theme.darkerBackground, card.subtle ? 0.08 : Theme.mode === "light" ? 0.12 : 0.32) }
     }
@@ -52,13 +57,13 @@ Rectangle {
             Layout.fillWidth: true
             spacing: 10
             Rectangle {
-                Layout.preferredWidth: 38
-                Layout.preferredHeight: 38
+                Layout.preferredWidth: card.subtle ? 40 : 44
+                Layout.preferredHeight: card.subtle ? 40 : 44
                 radius: Theme.radius("tile", 14, height)
                 color: Qt.alpha(card.accentColor, card.subtle ? 0.10 : 0.18)
                 border.width: Theme.borderWidth(1)
                 border.color: Qt.alpha(card.accentColor, card.subtle ? 0.18 : 0.28)
-                Icon { anchors.centerIn: parent; symbol: card.symbol; size: 20; color: card.accentColor }
+                Icon { anchors.centerIn: parent; symbol: card.symbol; size: card.subtle ? 20 : 22; color: card.accentColor }
             }
             ColumnLayout {
                 Layout.fillWidth: true
@@ -94,9 +99,18 @@ Rectangle {
         anchors.fill: parent
         enabled: card.interactive
         hoverEnabled: true
+        onEntered: card.hovered = true
+        onExited: card.hovered = false
         onClicked: card.clicked()
-        onPressed: card.opacity = 0.86
-        onReleased: card.opacity = 1
-        onCanceled: card.opacity = 1
+        onPressed: card.pressed = true
+        onReleased: card.pressed = false
+        onCanceled: card.pressed = false
     }
+
+    Accessible.role: card.interactive ? Accessible.Button : Accessible.StaticText
+    Accessible.name: card.title + (card.subtitle.length > 0 ? ", " + card.subtitle : "")
+    focus: card.interactive
+    activeFocusOnTab: card.interactive
+    Keys.onReturnPressed: if (card.interactive) card.clicked()
+    Keys.onSpacePressed: if (card.interactive) card.clicked()
 }

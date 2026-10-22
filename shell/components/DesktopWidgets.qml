@@ -145,7 +145,7 @@ Item {
                                     Layout.fillWidth: true
                                 }
                                 Text {
-                                    text: widgets.player ? (widgets.player.trackArtist || "Unknown artist") : "Connect a media player"
+                                    text: widgets.player ? (widgets.player.trackArtist || "Unknown artist") : "Start playback to see controls"
                                     color: Theme.textSecondary
                                     font.pixelSize: 12
                                     elide: Text.ElideRight
@@ -153,6 +153,7 @@ Item {
                                 }
                                 Item { Layout.fillHeight: true }
                                 RowLayout {
+                                    visible: !!widgets.player
                                     Layout.fillWidth: true
                                     GlassIconButton { symbol: "media-previous"; text: "Previous"; Accessible.name: "Previous track"; enabled: !!widgets.player && widgets.player.canGoPrevious; onClicked: widgets.mediaAction("previous") }
                                     GlassIconButton { symbol: widgets.player && widgets.player.isPlaying ? "media-pause" : "media-play"; text: "Play"; Accessible.name: widgets.player && widgets.player.isPlaying ? "Pause" : "Play"; enabled: !!widgets.player && widgets.player.canTogglePlaying; onClicked: widgets.mediaAction("toggle") }
