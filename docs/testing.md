@@ -2334,3 +2334,96 @@ restored 18/true/0, with empty configerrors. Ubuntu source CI now uses the
 supported 26.04 runner for QtQuick.Effects; every source/build job declares the
 portal's GTK/GLib build dependencies. Terminal Fn exposes navigation/F1–F12
 without adding short key rows.
+
+## Superseded horizontal-centring experiment, 2026-10-22
+
+This experiment misinterpreted #71: the owner wanted vertical centring, not
+horizontal realignment. Its results below are historical only and do not
+establish a fix for the reported issue. See the vertical correction below.
+
+Scope-first draft PR #87, branch `fix/desktop-taskbar-centering`, based on
+upstream `e52ff9e`. No scaling or compositor changes were involved.
+
+`TaskButton` previously stretched its content row across the available width;
+its filling text item left the visible icon/title group against the left padding.
+A centred wrapper now constrains that row to its natural width or the available
+width, whichever is smaller. Long titles retain right elision; empty icon sources
+reserve neither an icon column nor spacing. Button sizing, styling, accessible
+name, no-focus policy and activation behaviour are unchanged.
+
+Executed with Qt 6.11.2, `QT_QPA_PLATFORM=offscreen` and
+`QT_QUICK_BACKEND=software`:
+
+- RED: the unmodified upstream component fails all 18 short-title centring
+  cases across 150/210/240 px widths, icon/no-icon and ordinary/selected/disabled
+  states. The other five Qt results pass; there are no QML warnings.
+- GREEN: the same focused file returns 23 passed, zero failed, zero skipped:
+  21 test cases plus initialization/cleanup. This includes two long-title elision
+  cases and activation without stealing focus.
+- Complete Qt Quick suite: 99 passed, zero failed/skipped; no QML warnings.
+  Existing task-strip overflow, active-window scrolling and activation tests pass.
+- Python discovery: 214 tests run, one skipped, no failures. Website: four pass.
+- Changed-component `qmllint` and `git diff --check` return zero.
+- Inspected the actual software-rendered before/after capture below. Short
+  icon/title groups and iconless titles centre; long-title elision is unchanged;
+  selected/disabled styles remain aligned. The before component is copied from
+  the unmodified upstream source, not a recreation of its appearance.
+
+![Actual offscreen-rendered task buttons before and after](assets/taskbar-centering.png)
+
+Logs and capture harness are in ignored `build/taskbar-centering/`. No compositor,
+Hyprland config verifier, VM, device deployment or host desktop change was used.
+The full `scripts/check.sh` was not run because it includes the native config
+verifier; the checks above were executed separately. This is component-level
+rendering evidence, not a new desktop/device acceptance run.
+
+## Desktop taskbar vertical centring correction, 2026-10-22
+
+PR #87 now preserves the original left alignment and addresses the confirmed
+vertical axis. The horizontal prototype above was withdrawn; the original
+component was restored and the corrected scope published in `273bb52` before
+replacement implementation.
+
+The direct content RowLayout receives 28 logical pixels inside a 48-pixel
+button with 10-pixel padding. A controlled image decoded to 36 pixels makes Qt
+arrange the children against the larger minimum height: icon centre 28 and
+title centre 28.5, versus button centre 24. A full-width row inside a content
+Item now uses `max(implicitHeight, parent.height)` and only a vertical-centre
+anchor. Icon dimensions and horizontal placement are unchanged. Retaining the
+content-area height for small/iconless rows preserves their existing rounding.
+
+Actual Qt 6.11.2 software/offscreen verification:
+
+- Original component: 23 Qt results pass, 12 fail, no QML warnings. Failures
+  reproduce the vertical offset in 150/210/240-pixel ordinary/selected/disabled
+  buttons, long titles and actual TaskStrip delegates in Desktop-height rows.
+- Corrected component: 35 focused results pass; the full Qt suite has 111
+  passes, zero failures/skips. Focused checks also pass at scale factors 1.5
+  and 2 (35 results at each scale), with no QML warnings.
+- Python: 214 tests run, one skipped, no failures. Website: four pass.
+- Changed-component QML lint and `git diff --check` pass. The full check script
+  is not run because it invokes the native compositor config verifier; safe
+  constituent checks are run separately.
+- Actual before/after render: icon centre changes from 28 to 24, title centre
+  from 28.5 to 24.5 (Qt half-pixel rounding). Both icon x=10 and title x=54
+  remain unchanged for the 36-pixel image. Image-stroke pixel sampling gives
+  y=72 before and y=68 after, against a button centre of y=68 in the capture.
+- Iconless and normal 18-pixel-image control rows have strict whole-button
+  pixel equality before/after. Selected/disabled appearance and long-title
+  elision were inspected in the actual render.
+
+![Actual software-rendered vertical correction](assets/taskbar-vertical-centering.png)
+
+The 36-pixel decoded image is a controlled layout input, not a measured claim
+about the physical device's icon provider. The original device screenshot was
+reviewed privately; no provider implementation changes or new device acceptance
+are claimed. No compositor, GPU workload, running-desktop, VM or device change
+was used for this correction. Logs and the capture harness remain under ignored
+`build/taskbar-centering/`.
+
+Re-run the focused checks with:
+
+```sh
+QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software QT_QPA_PLATFORMTHEME='' \
+  /usr/lib/qt6/bin/qmltestrunner -input tests/qml/tst_taskbutton.qml
+```
