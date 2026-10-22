@@ -101,9 +101,6 @@ ShellRoot {
         property real barOpacity: 0.44
         property real wallpaperDim: 0.12
         property bool doNotDisturb: false
-        // "windowed" opens desktop windows floating and sized; "tiled" restores
-        // the dwindle layout. Read by the Hyprland config on load.
-        property string desktopWindows: "windowed"
         property bool nightLight: false
     }
     RadioBackend { id: radioBackend }
@@ -1553,7 +1550,8 @@ ShellRoot {
                     anchors.fill: parent
                     color: Qt.alpha(Theme.darkerBackground, shellPreferences.wallpaperDim)
                 }
-                Column {
+                    Column {
+                        id: homeHeader
                     visible: !panel.expanded
                     anchors.horizontalCenter: parent.horizontalCenter
                     y: Math.max(64, parent.height * (surface.isPhone ? 0.14 : 0.18))
@@ -1597,6 +1595,31 @@ ShellRoot {
                         }
                     }
                 }
+                    DesktopWidgets {
+                        id: homeWidgets
+                        visible: !panel.expanded
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.top: homeHeader.bottom
+                        anchors.topMargin: 24
+                        anchors.bottom: parent.bottom
+                        anchors.bottomMargin: surface.navHeight + 24
+                        mode: surface.mode
+                        now: clock.date
+                        weather: weatherBackend.state
+                        player: root.activePlayer
+                        batteryPresent: UPower.displayDevice.isPresent
+                        batteryPercent: UPower.displayDevice.percentage
+                        accentColor: root.accentColor
+                        onRefreshWeather: weatherBackend.refresh()
+                        onMediaAction: action => {
+                            const player = root.activePlayer;
+                            if (!player || !player.canControl) return;
+                            if (action === "previous" && player.canGoPrevious) player.previous();
+                            else if (action === "next" && player.canGoNext) player.next();
+                            else if (action === "toggle" && player.canTogglePlaying) player.togglePlaying();
+                        }
+                    }
             }
         }
     }

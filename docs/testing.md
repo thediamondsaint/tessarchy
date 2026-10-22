@@ -2667,6 +2667,28 @@ phone/tablet cube, revealed Calculator, touch flick and icon radial menu. Physic
 touchscreen latency remains untested; prior broader limitations still apply.
 
 
+## Vanilla compositor baseline and touch widgets — 2026-10-21
+
+`session/hyprland.lua` now stays close to vanilla Hyprland. It retains only the
+native `tessarchy-tape` scrolling workspace/plugin, theme-derived glass and
+wallpaper handoff, session startup, rotation preferences, and small Tessa
+keyboard fallbacks. Phone maximization/tagging, desktop auto-floating,
+hyprbars, compositor window refitting, workspace remapping, and custom focus
+bindings were removed. Legacy tests for those removed policies are retained as
+explicit skips; the new baseline regression verifies that no window policy is
+registered.
+
+The first touch widget surface is `DesktopWidgets.qml`: calendar, weather,
+media, and battery cards use existing Quickshell services and theme tokens.
+The widget grid is one column on phones, two on tablets, and four on wide
+desktop outputs; the widget test covers the narrow layout and refresh signal.
+The latest full check passed: 224 Python, 105 Qt Quick, and 11 Node results;
+three legacy compositor-policy tests are explicitly skipped because those
+policies were removed from the vanilla baseline.
+GitHub pattern review and license notes are in
+[touch-widget-research.md](touch-widget-research.md).
+
+
 ## Native ChatGPT panel — 2026-10-21
 
 Tessa now exposes an icon-only ChatGPT shortcut in the tablet status area,

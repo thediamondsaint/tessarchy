@@ -1,8 +1,6 @@
 pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Layouts
-import Quickshell
-
 ColumnLayout {
     id: page
     required property var backend
@@ -118,7 +116,7 @@ ColumnLayout {
         }
     }
     Text {
-        text: "Automatic follows the usable display size, including rotation. Override it to keep a layout. New apps fill Phone/Tablet layouts; Desktop starts apps tiled. Existing windows stay in place. Desktop and wide tablets show a workspace strip in the status bar."
+        text: "Automatic follows the usable display size, including rotation. Override it to keep a layout. Phone and Tablet keep touch navigation; Desktop uses the normal Hyprland layout. Existing windows stay in place. Desktop and wide tablets show a workspace strip in the status bar."
         color: Theme.textMuted
         font.pixelSize: 13
         Layout.fillWidth: true
@@ -472,26 +470,6 @@ ColumnLayout {
             bold: true
             letterSpacing: 2
         }
-    }
-    TouchButton {
-        text: page.preferences.desktopWindows === "windowed" ? "Windows open floating" : "Windows open tiled"
-        selected: page.preferences.desktopWindows === "windowed"
-        accentColor: page.accentColor
-        Layout.fillWidth: true
-        Accessible.name: text + ", button"
-        onClicked: {
-            page.preferences.desktopWindows = page.preferences.desktopWindows === "windowed" ? "tiled" : "windowed";
-            page.preferences.sync();
-            // The window style lives in the compositor config, so reload it.
-            Quickshell.execDetached(["hyprctl", "reload"]);
-        }
-    }
-    Text {
-        text: "Desktop mode only. Floating windows keep their own size and position; tiled windows share the screen in a row."
-        color: Theme.textMuted
-        font.pixelSize: 12
-        Layout.fillWidth: true
-        wrapMode: Text.WordWrap
     }
     Text {
         text: "ROTATION"

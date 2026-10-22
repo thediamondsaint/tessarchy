@@ -1,0 +1,20 @@
+{
+  "captured_on": "2026-10-21",
+  "source_commit": "working tree for vanilla compositor/widget pass",
+  "type": "actual VM screenshot",
+  "method": "QEMU QMP screendump from the existing development VM; copied unchanged",
+  "generated": false,
+  "guest": {
+    "dimensions": [1024, 768],
+    "layout": "tablet",
+    "wallpaper": "Tessa aurora-fold",
+    "compositor": "vanilla Hyprland baseline with Tessa tape bridge"
+  },
+  "files": [
+    {
+      "file": "tablet-widgets.png",
+      "dimensions": [1024, 768],
+      "sha256": "d65ff64d7472d99e1d52829ab04690c1b74df7df9f3fef146bf8e3e9606f643e"
+    }
+  ]
+}

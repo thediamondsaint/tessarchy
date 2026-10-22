@@ -1089,6 +1089,7 @@ assert(#commands == 4, "unexpected extra autostart commands")
         self.assertFalse(list((source / 'build').glob('source-share.*')))
 
     def test_new_windows_follow_saved_mode_without_touching_dialogs(self):
+        self.skipTest('legacy mobile/window policy removed from the vanilla Hyprland baseline')
         import shutil
         if not shutil.which('lua'):
             self.skipTest('Lua interpreter unavailable')
@@ -1164,6 +1165,7 @@ check("desktop", 1280, 800, 1, 0, false, 0, 0, {name="tessarchy-tape"})
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
     def test_mobile_policy_keeps_active_app_maximized_and_fits_dialogs(self):
+        self.skipTest('legacy mobile/window policy removed from the vanilla Hyprland baseline')
         import shutil
         if not shutil.which('lua'):
             self.skipTest('Lua interpreter unavailable')
@@ -1250,6 +1252,7 @@ assert(#fire("window.open", dialog) == 0, "desktop dialogs are left alone")
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
     def test_windowed_desktop_floats_new_windows_and_honors_settings_toggle(self):
+        self.skipTest('legacy desktop window policy removed from the vanilla Hyprland baseline')
         import shutil
         if not shutil.which('lua'):
             self.skipTest('Lua interpreter unavailable')
@@ -1305,6 +1308,41 @@ local phone = { floating = false, fullscreen = 0, monitor = monitor(720, 1440) }
 a = fire("window.open", phone)
 assert(#a == 4 and a[1].kind == "tag" and a[2].kind == "float")
 assert(a[3].kind == "resize" and a[3].x == 720 and a[3].y == 1440)
+'''
+        result = subprocess.run(['lua', '-', str(ROOT / 'session/hyprland.lua')],
+                                input=script, text=True, capture_output=True, env=self.env)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_hyprland_baseline_keeps_tessa_bridges_without_window_policy(self):
+        import shutil
+        if not shutil.which('lua'):
+            self.skipTest('Lua interpreter unavailable')
+        script = r'''local callbacks, binds, seen = {}, {}, {}
+local noop = function() return {} end
+hl = {
+    monitor = function() end,
+    config = function(value) seen.config = value end,
+    layer_rule = function() end,
+    workspace_rule = function(value) seen.workspace = value end,
+    bind = function(keys, dispatcher, flags) binds[keys] = {dispatcher = dispatcher, flags = flags} end,
+    on = function(name, callback) callbacks[name] = callback end,
+    exec_cmd = noop,
+    dsp = {exec_cmd = function(command) return {exec = command} end,
+           focus = noop, layout = noop, no_op = noop,
+           window = {fullscreen = noop, close = noop}},
+}
+dofile(arg[1])
+assert(seen.config.scrolling.column_width == 1.0, "native scrolling config missing")
+assert(seen.workspace.layout == "scrolling", "tape workspace must use scrolling")
+assert(callbacks["window.open"] == nil and callbacks["window.active"] == nil,
+       "vanilla baseline must not mutate application windows")
+assert(callbacks["monitor.layout_changed"] == nil and callbacks["layer.opened"] == nil,
+       "vanilla baseline must not refit windows around shell layers")
+for _, key in ipairs({"SUPER + T", "SUPER + SPACE", "SUPER + bracketleft", "SUPER + bracketright"}) do
+    assert(binds[key], "missing Tessa bridge bind: " .. key)
+end
+assert(binds["SUPER + 1"] == nil and binds["SUPER + left"] == nil,
+       "vanilla baseline must not replace normal workspace/focus bindings")
 '''
         result = subprocess.run(['lua', '-', str(ROOT / 'session/hyprland.lua')],
                                 input=script, text=True, capture_output=True, env=self.env)
