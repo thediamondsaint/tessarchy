@@ -106,7 +106,7 @@ Item {
         onCanceled: pet.pressed = false
         onClicked: pet.clicked()
     }
-    focus: true
+    focus: false
     activeFocusOnTab: true
     Keys.onReturnPressed: pet.clicked()
     Keys.onSpacePressed: pet.clicked()

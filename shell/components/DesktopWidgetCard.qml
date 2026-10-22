@@ -109,7 +109,7 @@ Rectangle {
 
     Accessible.role: card.interactive ? Accessible.Button : Accessible.StaticText
     Accessible.name: card.title + (card.subtitle.length > 0 ? ", " + card.subtitle : "")
-    focus: card.interactive
+    focus: false
     activeFocusOnTab: card.interactive
     Keys.onReturnPressed: if (card.interactive) card.clicked()
     Keys.onSpacePressed: if (card.interactive) card.clicked()

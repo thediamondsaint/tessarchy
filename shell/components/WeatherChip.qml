@@ -60,7 +60,7 @@ Item {
         onTapped: chip.clicked()
     }
     HoverHandler { onHoveredChanged: chip.hovered = hovered }
-    focus: true
+    focus: false
     activeFocusOnTab: true
     Keys.onReturnPressed: chip.clicked()
     Keys.onSpacePressed: chip.clicked()

@@ -70,7 +70,7 @@ Item {
         onCanceled: indicator.pressed = false
         onClicked: indicator.clicked()
     }
-    focus: true
+    focus: false
     activeFocusOnTab: true
     Keys.onReturnPressed: indicator.clicked()
     Keys.onSpacePressed: indicator.clicked()
