@@ -35,6 +35,8 @@ Item {
     // keeping that slot in the height budget prevents its icon from colliding
     // with the first row on narrow touch layouts.
     readonly property int expandedHeight: hasRecents ? 408 : 344
+    Accessible.role: Accessible.Button
+    Accessible.description: control.tessaCube ? "Opens recent apps, launcher, navigation, controls, and desktop actions" : "Opens native Hyprland window scrolling controls"
     implicitWidth: Math.min(maxControlWidth, radialOpen ? 320 : expanded ? expandedWidth : (tessaCube ? 68 : 128))
     implicitHeight: radialOpen ? 320 : expanded && tessaCube ? expandedHeight : 68
 

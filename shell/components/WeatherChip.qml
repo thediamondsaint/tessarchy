@@ -8,6 +8,7 @@ Item {
     property bool iconOnly: false
     signal clicked
     property bool pressed: false
+    property bool hovered: false
     Layout.minimumWidth: 56
     Layout.minimumHeight: 48
     implicitWidth: iconOnly ? 56 : weatherRow.implicitWidth + 20
@@ -17,10 +18,10 @@ Item {
     Rectangle {
         anchors.fill: parent
         radius: Theme.radius("button", 20, height)
-        color: chip.pressed ? Qt.alpha(Theme.accent, 0.24) : Theme.glass
+        color: chip.pressed ? Qt.alpha(Theme.accent, 0.24) : chip.hovered ? Qt.alpha(Theme.accent, 0.12) : Theme.glass
         border.width: Theme.borderWidth(1)
-        border.color: chip.pressed ? Theme.accent : Theme.glassBorder
-        scale: chip.pressed ? 0.96 : 1
+        border.color: chip.pressed ? Theme.accent : chip.hovered ? Qt.alpha(Theme.accent, 0.46) : Theme.glassBorder
+        scale: chip.pressed ? 0.96 : chip.hovered ? 1.03 : 1
         Behavior on scale { NumberAnimation { duration: 90; easing.type: Easing.OutCubic } }
         Rectangle {
             anchors.fill: parent
@@ -58,4 +59,10 @@ Item {
         onPressedChanged: chip.pressed = pressed
         onTapped: chip.clicked()
     }
+    HoverHandler { onHoveredChanged: chip.hovered = hovered }
+    focus: true
+    activeFocusOnTab: true
+    Keys.onReturnPressed: chip.clicked()
+    Keys.onSpacePressed: chip.clicked()
+    Accessible.description: chip.conditions.stale ? "Weather data is stale; tap to refresh" : "Tap to refresh weather"
 }

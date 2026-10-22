@@ -10,9 +10,13 @@ Item {
     property bool engaged: false
     property int attention: 0
     property color accentColor: Theme.accent
+    property bool hovered: false
+    property bool pressed: false
     signal clicked
     implicitWidth: 56
     implicitHeight: 56
+    scale: pet.pressed ? 0.94 : pet.hovered ? 1.04 : 1
+    Behavior on scale { NumberAnimation { duration: pet.reducedMotion ? 0 : 100; easing.type: Easing.OutCubic } }
     Accessible.role: Accessible.Button
     Accessible.name: engaged ? "Tessa companion is active" : "Tessa companion"
 
@@ -35,9 +39,9 @@ Item {
         radius: Theme.radius("button", 20, height)
         color: pet.engaged ? Qt.alpha(pet.accentColor, 0.24) : Theme.glass
         border.width: Theme.borderWidth(1)
-        border.color: pet.engaged ? Qt.alpha(pet.accentColor, 0.72) : Theme.glassBorder
+        border.color: pet.pressed ? pet.accentColor : pet.engaged ? Qt.alpha(pet.accentColor, 0.72) : pet.hovered ? Qt.alpha(pet.accentColor, 0.48) : Theme.glassBorder
         gradient: Gradient {
-            GradientStop { position: 0; color: Qt.alpha(Theme.text, pet.engaged ? 0.18 : 0.12) }
+            GradientStop { position: 0; color: Qt.alpha(pet.pressed ? pet.accentColor : Theme.text, pet.pressed ? 0.26 : pet.engaged ? 0.18 : 0.12) }
             GradientStop { position: 0.52; color: Theme.glass }
             GradientStop { position: 1; color: Qt.alpha(Theme.darkerBackground, 0.22) }
         }
@@ -94,6 +98,16 @@ Item {
     MouseArea {
         anchors.fill: parent
         cursorShape: Qt.PointingHandCursor
+        hoverEnabled: true
+        onEntered: pet.hovered = true
+        onExited: pet.hovered = false
+        onPressed: pet.pressed = true
+        onReleased: pet.pressed = false
+        onCanceled: pet.pressed = false
         onClicked: pet.clicked()
     }
+    focus: true
+    activeFocusOnTab: true
+    Keys.onReturnPressed: pet.clicked()
+    Keys.onSpacePressed: pet.clicked()
 }

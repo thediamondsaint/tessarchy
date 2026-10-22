@@ -23,6 +23,7 @@ Item {
     opacity: !canPan ? 0.35 : dragging || recentlyUsed ? 1 : 0.94
     Behavior on opacity { NumberAnimation { duration: dial.reducedMotion ? 0 : 180 } }
     Accessible.name: vertical ? "Vertical window wheel" : "Horizontal window slider"
+    Accessible.description: vertical ? "Drag up or down to move through native Hyprland scrolling windows" : "Drag left or right to move through native Hyprland scrolling windows"
 
     function flush() {
         const delta = Math.round(pending);

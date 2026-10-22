@@ -11,6 +11,8 @@ Item {
     readonly property var matches: Apps.search(applications, search.text)
     signal launched(string appId)
     signal dismissed()
+    Accessible.role: Accessible.Dialog
+    Accessible.name: "Tessa application launcher"
     implicitWidth: 560
     implicitHeight: 120 + Math.max(1, Math.min(matches.length, 7)) * 64
     function resetSearchAndFocus() {
@@ -41,6 +43,8 @@ Item {
             Layout.fillWidth: true
             Layout.minimumHeight: 56
             placeholderText: "Search apps…"
+            Accessible.name: "Search installed applications"
+            Accessible.description: "Type to filter applications, then use arrow keys and Enter"
             placeholderTextColor: Theme.inputPlaceholder
             color: Theme.inputText
             selectionColor: Theme.inputSelection
@@ -99,6 +103,7 @@ Item {
             Layout.fillWidth: true
             Layout.leftMargin: 4
             Layout.preferredHeight: 20
+            Accessible.name: text
         }
     }
 }

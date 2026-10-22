@@ -14,6 +14,7 @@ Item {
     // a real value, instead of a crossed-out glyph.
     property bool showFallback: false
     property bool pressed: false
+    property bool hovered: false
     property int touchSlot: 48
     property int fallbackLevel: 2
     signal clicked
@@ -28,9 +29,9 @@ Item {
         width: 44
         height: 44
         radius: Theme.radius("button", 20, height)
-        color: indicator.pressed ? Qt.alpha(Theme.accent, 0.24) : indicator.uniform ? Qt.alpha(Theme.text, 0.11) : Theme.glass
+        color: indicator.pressed ? Qt.alpha(Theme.accent, 0.24) : indicator.hovered ? Qt.alpha(Theme.accent, 0.12) : indicator.uniform ? Qt.alpha(Theme.text, 0.11) : Theme.glass
         border.width: Theme.borderWidth(1)
-        border.color: indicator.pressed ? Theme.accent : Qt.alpha(indicator.uniform ? Theme.text : Theme.accent, indicator.uniform ? 0.18 : 0.16)
+        border.color: indicator.pressed ? Theme.accent : indicator.hovered ? Qt.alpha(Theme.accent, 0.46) : Qt.alpha(indicator.uniform ? Theme.text : Theme.accent, indicator.uniform ? 0.18 : 0.16)
         scale: indicator.pressed ? 0.94 : 1
         Behavior on scale { NumberAnimation { duration: 90; easing.type: Easing.OutCubic } }
         Rectangle {
@@ -61,9 +62,16 @@ Item {
     MouseArea {
         anchors.fill: parent
         cursorShape: Qt.PointingHandCursor
+        hoverEnabled: true
+        onEntered: indicator.hovered = true
+        onExited: indicator.hovered = false
         onPressed: indicator.pressed = true
         onReleased: indicator.pressed = false
         onCanceled: indicator.pressed = false
         onClicked: indicator.clicked()
     }
+    focus: true
+    activeFocusOnTab: true
+    Keys.onReturnPressed: indicator.clicked()
+    Keys.onSpacePressed: indicator.clicked()
 }

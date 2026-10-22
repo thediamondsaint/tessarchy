@@ -1,5 +1,6 @@
 pragma ComponentBehavior: Bound
 import QtQuick
+import QtQuick.Controls
 import QtQuick.Layouts
 
 Item {
@@ -14,6 +15,7 @@ Item {
     signal openPage(string page)
     signal refreshWeather
     signal mediaAction(string action)
+    Accessible.name: widgets.mode === "desktop" ? "Desktop widgets" : "Touch widgets"
 
     readonly property int columns: mode === "phone" ? 1 : width >= 920 ? 4 : 2
     readonly property real gap: 12
@@ -37,6 +39,10 @@ Item {
         interactive: widgets.mode !== "desktop"
         boundsBehavior: Flickable.StopAtBounds
         flickDeceleration: 1800
+        ScrollBar.vertical: ScrollBar {
+            visible: widgets.mode !== "desktop" && scroller.contentHeight > scroller.height
+            policy: ScrollBar.AsNeeded
+        }
 
         Flow {
             id: flow

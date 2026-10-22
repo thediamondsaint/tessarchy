@@ -9,7 +9,9 @@ Button {
     implicitWidth: 120
     implicitHeight: 56
     padding: 10
-    focusPolicy: Qt.NoFocus
+    // Touch remains the primary input, but every shared button can also be
+    // reached with Tab/Enter on desktop keyboards.
+    focusPolicy: Qt.TabFocus
     property color accentColor: Theme.accent
     property bool destructive: false
     property bool selected: false
@@ -29,8 +31,8 @@ Button {
     }
     background: Rectangle {
         radius: Theme.radius("button", 12, height)
-        color: control.down ? Theme.pressed(control.accentColor) : control.destructive ? Theme.dangerSurface : control.selected ? Theme.selected(control.accentColor) : Theme.glass
-        border.color: control.destructive ? Theme.danger : control.down ? control.accentColor : control.selected ? control.accentColor : Theme.glassBorder
+        color: control.down ? Theme.pressed(control.accentColor) : control.destructive ? Theme.dangerSurface : control.selected ? Theme.selected(control.accentColor) : control.hovered ? Qt.alpha(control.accentColor, 0.10) : Theme.glass
+        border.color: control.destructive ? Theme.danger : control.down ? control.accentColor : control.visualFocus ? control.accentColor : control.selected ? control.accentColor : control.hovered ? Qt.alpha(control.accentColor, 0.42) : Theme.glassBorder
         border.width: Theme.borderWidth(1)
         Rectangle {
             anchors.fill: parent
@@ -38,8 +40,9 @@ Button {
             radius: Math.max(0, parent.radius - 2)
             color: "transparent"
             border.width: 1
-            border.color: Qt.alpha(Theme.text, control.down ? 0.22 : 0.09)
+            border.color: Qt.alpha(Theme.text, control.down ? 0.22 : control.visualFocus ? 0.24 : control.hovered ? 0.16 : 0.09)
         }
     }
     Accessible.name: text
+    Accessible.role: Accessible.Button
 }
