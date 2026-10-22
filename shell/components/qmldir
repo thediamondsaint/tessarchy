@@ -23,6 +23,7 @@ NavButton 1.0 NavButton.qml
 NightLightToggle 1.0 NightLightToggle.qml
 NotificationCard 1.0 NotificationCard.qml
 NotificationCenter 1.0 NotificationCenter.qml
+NotificationPopupQueue 1.0 NotificationPopupQueue.qml
 PhoneApp 1.0 PhoneApp.qml
 PinLoginController 1.0 PinLoginController.qml
 PinScreen 1.0 PinScreen.qml

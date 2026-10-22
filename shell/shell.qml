@@ -183,14 +183,16 @@ ShellRoot {
     // while pop-ups are ephemeral views over at most the three newest items.
     // Capability flags match what the card actually renders: plain body text.
     readonly property int notificationCount: notificationServer.trackedNotifications.values.length
-    property var popupNotifications: []
+    readonly property var popupNotifications: notificationPopups.items
+    NotificationPopupQueue {
+        id: notificationPopups
+        trackedModel: notificationServer.trackedNotifications
+    }
     function queuePopup(notification) {
-        const next = root.popupNotifications.slice();
-        next.unshift(notification);
-        root.popupNotifications = next.slice(0, 3);
+        notificationPopups.add(notification);
     }
     function hidePopup(notification) {
-        root.popupNotifications = root.popupNotifications.filter(n => n !== notification);
+        notificationPopups.remove(notification);
     }
     function closeNotification(notification) {
         root.hidePopup(notification);

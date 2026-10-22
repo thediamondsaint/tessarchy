@@ -22,6 +22,10 @@ if [[ -n "$runner" && -n "$qml_root" ]]; then
     HOME="$scratch" XDG_CONFIG_HOME="$scratch/config" QT_QPA_PLATFORM=offscreen QT_QPA_PLATFORMTHEME='' \
         QML2_IMPORT_PATH="$qml_root" "$runner" -input tests/qml
 else echo "SKIP: Qt Quick Test unavailable"; fi
+# Native notification semantics on a new private bus; never the user bus/UI.
+if command -v qs >/dev/null && command -v dbus-run-session >/dev/null && command -v gdbus >/dev/null; then
+    "$py" tests/quickshell/notification-lifecycle.py
+else echo "SKIP: isolated native notification test requires qs, dbus-run-session and gdbus"; fi
 compiler=$(command -v luac || command -v luac5.4 || true)
 if [[ -n "$compiler" ]]; then "$compiler" -p session/hyprland.lua session/window-controls.lua session/preferences.example.lua session/greeter.lua; else echo "SKIP: luac unavailable"; fi
 if command -v fish >/dev/null; then fish -n iso/airootfs/etc/skel/.config/fish/config.fish; else echo "SKIP: fish unavailable"; fi

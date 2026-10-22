@@ -1,0 +1,184 @@
+{
+  "date_utc": "2026-10-22",
+  "scope": "PR96/T06 notification popup lifecycle subset",
+  "controlled_qt_red": {
+    "passed_including_lifecycle": 8,
+    "failed": 8,
+    "skipped": 0,
+    "source": "original queue behaviour extracted into production component"
+  },
+  "native_original_control": {
+    "result": "expected failure",
+    "control": "original upstream queue functions mechanically extracted unchanged",
+    "failure_step": "app-withdrawal-no-resurrection",
+    "actual_snapshot": {
+      "deliveries": 4,
+      "popups": [
+        null,
+        "three",
+        "two"
+      ],
+      "history": [
+        "replaced",
+        "two",
+        "three"
+      ]
+    }
+  },
+  "checks": {
+    "python_tests_run": 214,
+    "python_skipped": 1,
+    "qt_results_passed": 93,
+    "website_tests_passed": 4,
+    "available_syntax_config_and_qml_checks": "pass",
+    "optional_missing": [
+      "fish",
+      "shellcheck"
+    ]
+  },
+  "native_bus_actual": {
+    "result": "pass",
+    "quickshell": "0.3.1",
+    "isolation": "new private session bus, offscreen, scratch HOME/runtime",
+    "steps": [
+      {
+        "step": "empty",
+        "deliveries": 0,
+        "popups": [],
+        "history": []
+      },
+      {
+        "step": "delivery",
+        "deliveries": 1,
+        "popups": [
+          "one"
+        ],
+        "history": [
+          "one"
+        ]
+      },
+      {
+        "step": "replacement",
+        "deliveries": 1,
+        "popups": [
+          "replaced"
+        ],
+        "history": [
+          "replaced"
+        ]
+      },
+      {
+        "step": "overflow",
+        "deliveries": 4,
+        "popups": [
+          "four",
+          "three",
+          "two"
+        ],
+        "history": [
+          "replaced",
+          "two",
+          "three",
+          "four"
+        ]
+      },
+      {
+        "step": "app-withdrawal-no-resurrection",
+        "deliveries": 4,
+        "popups": [
+          "three",
+          "two"
+        ],
+        "history": [
+          "replaced",
+          "two",
+          "three"
+        ]
+      },
+      {
+        "step": "body-hide-retains-history",
+        "deliveries": 4,
+        "popups": [
+          "two"
+        ],
+        "history": [
+          "replaced",
+          "two",
+          "three"
+        ]
+      },
+      {
+        "step": "dismiss-removes-history",
+        "deliveries": 4,
+        "popups": [],
+        "history": [
+          "replaced",
+          "three"
+        ]
+      },
+      {
+        "step": "muted-delivery-in-history",
+        "deliveries": 5,
+        "popups": [],
+        "history": [
+          "replaced",
+          "three",
+          "muted"
+        ]
+      },
+      {
+        "step": "unmute-does-not-replay",
+        "deliveries": 5,
+        "popups": [],
+        "history": [
+          "replaced",
+          "three",
+          "muted"
+        ]
+      },
+      {
+        "step": "urgent-delivery",
+        "deliveries": 6,
+        "popups": [
+          "urgent"
+        ],
+        "history": [
+          "replaced",
+          "three",
+          "muted",
+          "urgent"
+        ]
+      },
+      {
+        "step": "urgent-withdrawal",
+        "deliveries": 6,
+        "popups": [],
+        "history": [
+          "replaced",
+          "three",
+          "muted"
+        ]
+      },
+      {
+        "step": "bulk-cleanup",
+        "deliveries": 6,
+        "popups": [],
+        "history": []
+      }
+    ]
+  },
+  "limitations": [
+    "Offscreen private-bus protocol/model tests, not desktop popup rendering or physical touch.",
+    "No ASUS deployment or input, VM lifecycle/native compositor/package/service changes.",
+    "Not the entire T06 acceptance matrix; no notification policy/expiry/history persistence changes."
+  ],
+  "sources_sha256": {
+    "shell/components/NotificationPopupQueue.qml": "3d2cdc3a650c3cbab9e4a43cb29f3c6a2df3662ec4c338edf91d6611d1079e59",
+    "shell/components/qmldir": "bf54294064e277e36227665b17b29badbab5d7833420e429625223f1332a5879",
+    "shell/shell.qml": "67fa4e3f741781e710e55893c49b2d3a21ce9d202c0f2f690ba7116772ed887a",
+    "scripts/check.sh": "50dd339b919c721ad3a3c6577f168c765b5b7d57140e15dd7f024a4a34e39b1b",
+    "tests/qml/tst_notificationpopups.qml": "b389ac7d2cfbcdbaa88a46e16a54df9b956a16a3a0e0d674ed12aa9a3765995a",
+    "tests/quickshell/notification-lifecycle.py": "412c1f0209d57f5ab417216a94a261877b99dab0b89ddcc7402f4f6447bd9ccc",
+    "tests/quickshell/notification-lifecycle.qml": "4e9454978e7f417666fed0ab61006b14b4d4c7f699599bd17b7b574ef160188c"
+  }
+}

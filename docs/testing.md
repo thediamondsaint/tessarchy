@@ -2334,3 +2334,41 @@ restored 18/true/0, with empty configerrors. Ubuntu source CI now uses the
 supported 26.04 runner for QtQuick.Effects; every source/build job declares the
 portal's GTK/GLib build dependencies. Terminal Fn exposes navigation/F1–F12
 without adding short key rows.
+
+### Notification popup lifecycle software checkpoint (2026-10-22, PR96)
+
+Implemented and software-verified 2026-10-22. The production queue follows the
+server model's removal signal without changing history. Original behaviour,
+extracted unchanged, produced eight controlled Qt failures and failed an actual
+private-bus withdrawal: its array retained a dead object (`null`) while server
+history had already removed it. The corrected native run passed 12 actual
+snapshot steps: delivery, in-place replacement, overflow, app withdrawal,
+body-hide versus dismissal, muted history/unmute and urgent withdrawal/cleanup.
+No original/native replacement-duplication defect is claimed.
+
+A controlled test also covers native emit-before-model-insertion ordering. An
+unrelated history change preserves the popup array identity, avoiding accidental
+timer restarts. Existing timers/window focus/layering and DND caller guard remain
+unchanged. `scripts/check.sh` now runs the isolated native test when its existing
+qs/dbus-run-session/gdbus dependencies are present.
+
+Final repository checks: 214 Python tests run, one GI-dependent skip; 93 Qt
+results pass; four website tests pass; available syntax, config and QML checks
+pass. Optional fish and shellcheck are absent. Actual private-bus data and source
+hashes are in `docs/evidence/notification-popup-lifecycle.json`. No installed
+source or device changed. Desktop rendering, physical touch and the rest of the
+T06 matrix are not claimed. Draft remains open.
+
+Test isolation notes: native qs resolves the configuration under `qs:@/qs`, so
+stage exact fixture/production queue bytes beneath one scratch config root
+instead of importing above it. Use a short `/tmp` runtime root for Unix IPC;
+separate session bus, offscreen platform and scratch HOME/config/cache/runtime;
+no system bus/display environment or existing shell restart. The test reaps only
+its owned qs child. A private bus is always created by the runner entry point.
+
+Authoritative ordering reference inspected during diagnosis:
+https://github.com/quickshell-mirror/quickshell/blob/master/src/services/notifications/server.cpp
+(`Notify`: emit new notification, test retention, then insert model; replacement
+updates existing properties without another delivery signal). The actual tested
+native version is recorded in the artifact; source-reference master is not a
+claim about every Quickshell version.
