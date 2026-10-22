@@ -1,0 +1,40 @@
+{
+  "date_utc": "2026-10-22",
+  "kind": "Actual helper subprocess and available repository checks; not GUI acceptance",
+  "branch": "fix/screenshot-failure-notification",
+  "baseline_focused": {
+    "run": 16,
+    "failed": 8
+  },
+  "implemented_focused": {
+    "run": 16,
+    "failed": 0
+  },
+  "repository_python": {
+    "run": 230,
+    "skipped": 1,
+    "skip_reason": "GObject metadata not installed",
+    "failed": 0
+  },
+  "qt_software": {
+    "passed": 76,
+    "failed": 0
+  },
+  "website": {
+    "passed": 4,
+    "failed": 0
+  },
+  "check_script_exit_code": 0,
+  "unavailable_checks": [
+    "fish syntax",
+    "shellcheck"
+  ],
+  "qml_metadata_warnings": true,
+  "gui_capture_acceptance": false,
+  "notification_display_acceptance": false,
+  "device_deployment": false,
+  "source_sha256": {
+    "session/tessera-screenshot": "a85aaaa936c866d98daf3edcf373d3d1c43ae4fa428704f7d90152c029911935",
+    "tests/test_screenshot_failure.py": "de3e121095eae190848d7b95f9608f11b916785ce85711234a8d1f0270a3fab5"
+  }
+}

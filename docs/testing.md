@@ -2334,3 +2334,38 @@ restored 18/true/0, with empty configerrors. Ubuntu source CI now uses the
 supported 26.04 runner for QtQuick.Effects; every source/build job declares the
 portal's GTK/GLib build dependencies. Terminal Fn exposes navigation/F1–F12
 without adding short key rows.
+
+
+## Screenshot failure reporting — 2026-10-22 UTC
+
+Implemented optional, fixed stage-specific failure notifications for missing
+grim, destination preparation, private-file creation and capture failure. EXIT
+cleanup preserves the original status/stderr and removes only the attempt's
+partial file. Success handling disables failure cleanup before notification or
+stdout output, so a broken notification or pipe cannot discard a saved capture.
+Usage rejection remains notification-free.
+
+Actual verification:
+
+- Original helper:16 focused cases run, eight failed on absent failure notices;
+  the other eight preservation controls passed.
+- Implemented helper:16/16 focused subprocess cases pass in scratch HOME with
+  controlled commands (no desktop captured or notification displayed).
+- `bash scripts/check.sh`:230 Python cases run, one skip (GObject metadata not
+  installed);76 Qt software results and four website cases pass. Bash/Lua syntax,
+  isolated native config parsing, QML lint and the remaining available checks
+  completed. QML metadata warnings remain; fish and shellcheck unavailable.
+- Bash syntax and `git diff --check` pass. Tests cover original exit status and
+  stderr, partial-file cleanup, unrelated-file survival, literal paths, unique
+  private0600 files, missing/broken notifications and broken stdout after success.
+
+Reproduce from repository root:
+
+```sh
+python3 -m unittest discover -s tests -p test_screenshot_failure.py -v
+bash scripts/check.sh
+```
+
+[Machine-readable helper checkpoint](evidence/screenshot-failure-cpu.json).
+No actual compositor capture, Print/pull-down interaction or desktop notification
+display tested: T03 end-to-end acceptance remains open. PR stays draft.

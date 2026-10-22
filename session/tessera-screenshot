@@ -2,14 +2,33 @@
 # Save a full-screen Wayland capture to a unique private file.
 set -euo pipefail
 [[ $# -eq 0 ]] || { echo "usage: tessera-screenshot" >&2; exit 64; }
+
+notify() {
+    if command -v notify-send >/dev/null; then
+        notify-send -a Tessera "$@" || true
+    fi
+}
+
+file=
+reason='The screenshot capture tool is unavailable.'
+failed() {
+    local status=$?
+    trap - EXIT
+    if (( status != 0 )); then
+        if [[ -n "$file" ]]; then rm -f -- "$file" || true; fi
+        notify 'Screenshot failed' "$reason"
+    fi
+    exit "$status"
+}
+trap failed EXIT
 command -v grim >/dev/null || { echo "grim is required to take screenshots" >&2; exit 1; }
 directory=${XDG_PICTURES_DIR:-$HOME/Pictures}/Screenshots
+reason='The screenshot destination could not be prepared.'
 mkdir -p -- "$directory"
+reason='A private screenshot file could not be created.'
 file=$(mktemp -- "$directory/tessarchy-$(date +%Y%m%d-%H%M%S)-XXXXXX.png")
-trap 'rm -f -- "$file"' EXIT
+reason='The screen capture could not be saved.'
 grim "$file"
 trap - EXIT
-if command -v notify-send >/dev/null; then
-    notify-send -a Tessera "Screenshot saved" "$(basename -- "$file")" || true
-fi
+notify 'Screenshot saved' "$(basename -- "$file")"
 printf '%s\n' "$file"
