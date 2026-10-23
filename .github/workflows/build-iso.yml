@@ -48,7 +48,7 @@ jobs:
             --env "TESSARCHY_COMMIT=$GITHUB_SHA" \
             --env "TESSARCHY_REPO_URL=${REPO_URL:-}" \
             archlinux:base bash -euo pipefail -c '
-              pacman -Syu --noconfirm --needed archiso ffmpeg base-devel gtk3 glib2
+              pacman -Syu --noconfirm --needed archiso ffmpeg base-devel git gtk3 glib2
               # The medium carries the packages an installed machine updates from,
               # so build the repository first: staging refuses an image without it.
               useradd -m builder

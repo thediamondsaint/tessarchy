@@ -2734,3 +2734,8 @@ This is software-only evidence. Prior PR #91 records ASUS touch acceptance for
 the same policy, but the current-main port has not been installed or runtime
 checked in a guest. See [the scope and test procedure](osk-window-lift.md) and
 [current source hashes and probe results](evidence/issue80-lua-policy.json).
+
+The live-ISO workflow's disposable Arch container now installs Git because
+`scripts/package.sh` requires the checkout's commit identity when building the
+package repository. The container previously omitted Git and stopped before ISO
+staging; the updated workflow still needs its next CI run to confirm the build.

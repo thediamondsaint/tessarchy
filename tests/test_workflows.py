@@ -1057,6 +1057,10 @@ assert(#commands == 4, "unexpected extra autostart commands")
     def test_build_iso_requires_explicit_archiso_install(self):
         self.run_script('build-iso.sh', expected=1)
 
+    def test_iso_build_container_has_git_for_package_provenance(self):
+        workflow = (ROOT / '.github/workflows/build-iso.yml').read_text()
+        self.assertIn('archiso ffmpeg base-devel git gtk3 glib2', workflow)
+
     def test_export_vm_source_keeps_existing_snapshot_idempotent(self):
         repo = self.home / 'source'
         self.copy_repo(repo, ('shell', 'session', 'scripts', 'packaging', 'iso',
