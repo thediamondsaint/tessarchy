@@ -50,7 +50,9 @@ TestCase {
         for (const symbol of ["wifi", "cellular"]) {
             const icon = createTemporaryObject(signalFactory, this, {symbol: symbol, strength: data.value});
             compare(icon.level, data.level);
-            tryCompare(findChild(icon, "signalLevelImage"), "status", Image.Ready);
+            const expectedLevel = Math.max(0, data.level);
+            compare(findChild(icon, "signalLevelImage").source.toString(),
+                    "../icons/" + symbol + "-level-" + expectedLevel + ".svg");
             compare(icon.reported, data.level >= 0);
             compare(findChild(icon, "unavailableSlash").visible, data.level < 0);
             verify(icon.Accessible.name.indexOf(data.level < 0 ? "unavailable" : "signal") >= 0);
