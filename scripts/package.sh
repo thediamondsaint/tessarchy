@@ -8,6 +8,8 @@ source_archive="$root/dist/tessarchy-$version.tar.gz"
 # Package identity: only a clean, recorded checkout may be packaged, so a later
 # bundle can never label one revision's files as another revision's package.
 if ! git -C "$root" diff-index --quiet HEAD --; then
+    echo "error: tracked files changed during validation:" >&2
+    git -C "$root" status --short --untracked-files=no >&2
     echo "error: refuse to package a dirty source tree (commit your changes first)" >&2
     exit 1
 fi
