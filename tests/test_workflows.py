@@ -105,6 +105,16 @@ class Workflows(unittest.TestCase):
         taskbar = panel[panel.index('visible: surface.mode === "desktop"\n'):]
         self.assertIn('Layout.preferredHeight: surface.bar.row\n', taskbar[:200])
 
+    def test_desktop_status_surface_does_not_reserve_an_empty_top_strip(self):
+        shell = (ROOT / 'shell/shell.qml').read_text()
+        status = shell[shell.index('id: statusBar\n'):]
+        panel = shell[shell.index('id: panel\n'):shell.index('id: statusBar\n')]
+        self.assertIn('visible: surface.mode !== "desktop" || drawerOpen', status)
+        self.assertIn('exclusiveZone: surface.mode === "desktop" ? 0 : 48', status)
+        self.assertIn('onPanelRequested: statusBar.toggleDrawer()', panel)
+        self.assertIn('visible: surface.mode === "desktop"', panel)
+        self.assertIn('Layout.preferredHeight: surface.bar.row', panel)
+
     def test_navigation_gestures_move_touch_actions_into_the_t_cube(self):
         shell = (ROOT / 'shell/shell.qml').read_text()
         settings = (ROOT / 'shell/components/SettingsPage.qml').read_text()
