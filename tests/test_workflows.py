@@ -1754,5 +1754,12 @@ esac
         self.assertEqual(result.returncode, 1)
         self.assertIn('build-packages.sh', result.stderr)
 
+    def test_package_build_containers_install_git(self):
+        for workflow in ('.github/workflows/build-iso.yml', '.github/workflows/pages.yml',
+                         '.github/workflows/checks.yml'):
+            content = (ROOT / workflow).read_text()
+            with self.subTest(workflow=workflow):
+                self.assertRegex(content, r'pacman -Syu[^\n]*git')
+
 if __name__ == '__main__':
     unittest.main()
