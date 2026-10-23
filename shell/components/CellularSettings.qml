@@ -69,7 +69,7 @@ ColumnLayout {
         text: "Add or manage eSIM profiles"
         Layout.fillWidth: true; focusPolicy: Qt.StrongFocus
         enabled: !!page.backend.state.esimManagerAvailable
-        onClicked: Quickshell.execDetached(["lpa-gtk"])
+        onClicked: Quickshell.execDetached(["tessarchy-launch", "lpa-gtk"])
     }
     Text { text: "Profile detection uses lpac and your configured eUICC reader. Add profiles with eSIM Manager (lpa-gtk)."; color: Theme.hintText; font.pixelSize: 12; Layout.fillWidth: true; wrapMode: Text.WordWrap }
     ColumnLayout {

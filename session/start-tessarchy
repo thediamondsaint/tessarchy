@@ -24,6 +24,12 @@ export XDG_SESSION_TYPE=wayland
 # Prefer the login user bus so portals, audio and authorization share the session.
 if [[ -S ${XDG_RUNTIME_DIR:-/run/user/$UID}/bus ]]; then
     export DBUS_SESSION_BUS_ADDRESS="unix:path=${XDG_RUNTIME_DIR:-/run/user/$UID}/bus"
-    exec systemd-cat --identifier=tessarchy-session start-hyprland -- --config "$share/session/hyprland.lua"
+    # The compositor owns the session. Stop its application target on logout,
+    # not on shell reload, restart or crash.
+    trap 'if command -v systemctl >/dev/null; then systemctl --user stop tessarchy-apps.target || true; fi' EXIT
+    trap 'exit 143' TERM
+    trap 'exit 130' INT
+    systemd-cat --identifier=tessarchy-session start-hyprland -- --config "$share/session/hyprland.lua"
+    exit $?
 fi
 exec systemd-cat --identifier=tessarchy-session dbus-run-session -- start-hyprland -- --config "$share/session/hyprland.lua"

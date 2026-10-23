@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# Put applications in the user manager, outside tessera-shell.service's cgroup.
+set -euo pipefail
+if [[ ${1-} == --working-directory ]]; then
+    [[ $# -ge 3 && -n $2 ]] || { echo 'Missing working directory' >&2; exit 2; }
+    directory=$2
+    shift 2
+else
+    directory=
+fi
+[[ $# -ge 1 && -n $1 ]] || { echo 'Usage: tessarchy-launch [--working-directory DIR] COMMAND [ARG...]' >&2; exit 2; }
+command -v systemd-run >/dev/null || { echo 'systemd-run is required to isolate applications' >&2; exit 127; }
+options=(--user --quiet --collect --service-type=exec --expand-environment=no
+    --property=PartOf=tessarchy-apps.target)
+if [[ -n $directory ]]; then options+=(--working-directory="$directory"); else options+=(--same-dir); fi
+# Transient services inherit only the manager environment by default. Carry
+# the caller's session and application environment without shell parsing.
+while IFS= read -r -d '' entry; do
+    name=${entry%%=*}
+    [[ $name =~ ^[a-zA-Z_][a-zA-Z_0-9]*$ ]] || continue
+    options+=(--setenv="$name")
+done < <(env -0)
+exec systemd-run "${options[@]}" -- "$@"

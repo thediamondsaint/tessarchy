@@ -1,6 +1,6 @@
 pkgname=tessarchy-session
 pkgver=0.1.0
-pkgrel=5
+pkgrel=6
 pkgdesc='Tessarchy prototype Hyprland session'
 arch=('any')
 license=('MIT' 'GPL-3.0-or-later')
@@ -27,6 +27,8 @@ package() {
     install -Dm755 "$srcdir/session/tessarchy-osk" "$pkgdir/usr/bin/tessarchy-osk"
     install -Dm755 "$srcdir/session/tessarchy-theme" "$pkgdir/usr/bin/tessarchy-theme"
     install -Dm755 "$srcdir/session/tessarchy-run" "$pkgdir/usr/bin/tessarchy-run"
+    install -Dm755 "$srcdir/session/tessarchy-launch" "$pkgdir/usr/bin/tessarchy-launch"
+    install -Dm644 "$srcdir/session/tessarchy-apps.target" "$pkgdir/usr/lib/systemd/user/tessarchy-apps.target"
     install -Dm755 "$srcdir/session/tessera-chatgpt-status" "$pkgdir/usr/bin/tessera-chatgpt-status"
     install -Dm755 "$srcdir/session/tessera-chatgpt-status" "$pkgdir/usr/share/tessarchy/session/tessera-chatgpt-status"
     install -Dm644 "$srcdir/session/tessarchy-chatgpt.desktop" "$pkgdir/usr/share/applications/tessarchy-chatgpt.desktop"
