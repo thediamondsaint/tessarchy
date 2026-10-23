@@ -1,50 +1,22 @@
-# Tessarchy project site
+# Tessarchy website
 
-Dependency-free static site for https://thediamondsaint.github.io/tessarchy/.
-Source lives here; artwork comes from `shell/artwork`, real VM captures from
-`assets/screenshots`. Generated output belongs in ignored `dist/`.
+The public site introduces Tess, the mascot and guide, and Tessa, the Arch-based desktop project she presents. Its visual system uses warm paper, deep green, and three original portraits of Tess presenting a phone, tablet, and desktop.
 
-Build into a **new** directory:
+## Site artwork
 
-```bash
+`assets/tess-phone.webp`, `assets/tess-tablet.webp`, and `assets/tess-desktop.webp` are optimized campaign illustrations based on the supplied Tess portrait. Their screens are concept art, not captures of the running operating system. The page says so beside the device gallery. `assets/tess-social.jpg` is the share-card copy of the phone portrait. `assets/tess-mark.svg` is the matching small portrait mark used by the header and favicon.
+
+## Build and publish
+
+The dependency-free site builder writes a fresh output directory:
+
+```sh
 python3 scripts/build-site.py --output dist/website
 python3 -m http.server 8765 --directory dist/website --bind 127.0.0.1
 ```
 
-The builder refuses existing destinations. Pick a new output for another build.
-No Node packages or host dependencies are installed.
+The builder refuses to overwrite an existing destination. It copies the page, styling, script, and the Tess portraits, social preview, and portrait mark, then bundles the public release metadata in `project.json`. It does not publish the development VM screenshots as marketing images.
 
-The Pages workflow rebuilds and publishes on changes to source, shell, docs,
-reference brief and screenshots on `main`, which is also the activity source.
-GitHub Pages uses Actions deployments. The legacy `build/live-iso` branch does
-not deploy automatically, so an older branch cannot replace the integrated site.
-No source is merged automatically.
+The browser refreshes public release and commit information from the GitHub API. If that request is unavailable, the page’s built-in Alpha 17 release links remain usable. The site uses no accounts, analytics, paid services, or remote fonts.
 
-A build bundles current public release metadata; the browser additionally reads
-public GitHub release and commit metadata, with usable fallback links on failure.
-Release tags do not deploy to the branch-protected Pages environment. Visitors
-receive fresh release metadata from the public API; source pushes and manual
-dispatch rebuild the bundled fallback without changing deployment protections.
-No token is sent to visitors. Screenshots and feature descriptions are reviewed
-content: refresh them when behavior changes. Keep development features separate
-from features in published ISO releases. UI changes do not rebuild an ISO.
-
-The website's model tabs support arrow keys, Home/End, visible keyboard focus,
-image enlargement, original downloads, and a screenshot ZIP. Reduced motion is
-respected. There are no accounts, analytics, paid services, or remote fonts.
-
-The 2026-10-19 showcase includes twenty-one refreshed real VM screenshots, the device roadmap,
-390x844 phone captures, new-session PIN login evidence, and a share panel.
-The live-launcher capture identifies its development ISO separately from the
-published Alpha 4 download. Open Graph/Twitter metadata
-uses an actual desktop capture. Sharing uses the system share sheet when
-available, otherwise copies the public URL, with a visible fallback address.
-Branding downloads are hosted on the separate `brand-kit-20261017` asset release;
-they do not alter the tester ISO. Release discovery selects only releases with
-an `.iso` asset so a branding release cannot replace the tester download.
-
-The roadmap poster is curated source artwork under `assets/roadmap`; regenerating
-it is a deliberate editorial task. Its full prompt is in
-`docs/device-roadmap-image-prompt.txt`. Planned hardware milestones and concept
-renders are labelled separately from actual VM captures. Generated site output,
-ZIP bundles and browser-review screenshots stay in ignored `dist/` and `build/`.
+The Pages workflow rebuilds and deploys from `main`. The site source is `website/`; release files and project documentation remain in the repository and are linked from the page. Changing the website does not rebuild an ISO.

@@ -10,12 +10,8 @@ async function page(releases = [], commits = [], bundled = {}) {
   const nodes = new Map();
   function element() {
     return {
-      dataset: {}, events: {}, textContent: '', href: '', alt: '',
+      events: {}, textContent: '', href: '',
       addEventListener(name, handler) { this.events[name] = handler; },
-      setAttribute(name, value) { this[name] = value; },
-      focus() { this.focused = true; },
-      showModal() { this.open = true; }, close() { this.open = false; },
-      querySelector() { return this.image; }
     };
   }
   const document = {
@@ -23,16 +19,8 @@ async function page(releases = [], commits = [], bundled = {}) {
       if (!nodes.has(selector)) nodes.set(selector, element());
       return nodes.get(selector);
     },
-    querySelectorAll(selector) { return selector === '[data-mode]' ? tabs : shots; }
+    querySelectorAll() { return []; }
   };
-  const tabs = ['phone', 'tablet', 'desktop'].map(mode =>
-    Object.assign(element(), {id: 'tab-' + mode, dataset: {mode}, textContent: mode}));
-  const preview = element();
-  const image = document.querySelector('#layout-image');
-  image.parentElement = preview;
-  preview.image = image;
-  const controls = document.querySelector('#layout-controls-shot');
-  const shots = [preview, controls];
   document.querySelector('#release-link').href = root + 'releases/tag/fallback';
   const requests = [];
   const fetch = async url => {
@@ -41,7 +29,7 @@ async function page(releases = [], commits = [], bundled = {}) {
     return {ok: true, json: async () => data};
   };
   await vm.runInNewContext(source, {document, fetch, AbortSignal, navigator: {}});
-  return {nodes, tabs, shots, requests};
+  return {nodes, requests};
 }
 
 test('release discovery reaches an ISO beyond five newer non-ISO releases and ignores drafts', async () => {
@@ -59,7 +47,7 @@ test('invalid metadata keeps fallback links and does not prevent other updates',
     commit: 'a'.repeat(40), release: {html_url: 123}
   });
   assert.equal(result.nodes.get('#release-link').href, root + 'releases/tag/fallback');
-  assert.equal(result.nodes.get('#build-stamp').textContent, 'Site built from aaaaaaa');
+  assert.equal(result.nodes.get('#build-stamp').textContent, 'Site snapshot aaaaaaa · Built from the Tessarchy source');
   const malformed = await page([{assets: {name: 'not-an-array'}}], {message: 'Invalid commits'});
   assert.equal(malformed.nodes.get('#release-link').href, root + 'releases/tag/fallback');
 });
@@ -72,20 +60,23 @@ test('commit summaries render as literal text and untrusted destinations are ign
   assert.equal(result.nodes.get('#commit-message').textContent, '<b>Literal title</b>');
 });
 
-test('layout keyboard navigation updates gallery image, dimensions and control caption', async () => {
-  const result = await page();
-  let prevented = false;
-  result.tabs[0].events.keydown({key: 'End', preventDefault() { prevented = true; }});
-  assert.ok(prevented);
-  assert.equal(result.tabs[2]['aria-selected'], 'true');
-  assert.ok(result.tabs[2].focused);
-  const image = result.nodes.get('#layout-image');
-  assert.equal(image.width, 1280);
-  assert.equal(image.height, 800);
-  result.shots[0].events.click();
-  assert.match(result.nodes.get('#gallery-image').src, /desktop-home/);
-  assert.equal(result.nodes.get('#gallery-image').alt, image.alt);
-  result.nodes.get('#layout-controls-shot').events.click();
-  assert.match(result.nodes.get('#gallery-image').src, /desktop-controls/);
-  assert.match(result.nodes.get('#gallery-image').alt, /desktop layout showing/);
+test('release metadata updates the alpha link and signed VM image links', async () => {
+  const disk = 'Arch-Linux-x86_64-basic-20261015.611680.qcow2';
+  const base = root + 'releases/download/tester/';
+  const release = {
+    tag_name: 'v0.1.0-alpha.17', name: 'Tessarchy Alpha 17',
+    html_url: root + 'releases/tag/tester',
+    assets: [
+      {name: 'tessarchy.iso.part001'},
+      {name: disk, browser_download_url: base + disk},
+      {name: disk + '.SHA256', browser_download_url: base + disk + '.SHA256'},
+      {name: disk + '.sig', browser_download_url: base + disk + '.sig'}
+    ]
+  };
+  const result = await page([release]);
+  assert.equal(result.nodes.get('#release-link').textContent, 'Get v0.1.0-alpha.17 ↓');
+  assert.match(result.nodes.get('#release-note').textContent, /Tessarchy Alpha 17/);
+  assert.equal(result.nodes.get('#vm-image-link').href, base + disk);
+  assert.equal(result.nodes.get('#vm-checksum-link').href, base + disk + '.SHA256');
+  assert.equal(result.nodes.get('#vm-signature-link').href, base + disk + '.sig');
 });

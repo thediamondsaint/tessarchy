@@ -226,23 +226,22 @@ class Workflows(unittest.TestCase):
         self.env['DBUS_SYSTEM_BUS_ADDRESS'] = 'unix:path=/nonexistent/tessarchy-test-bus'
         self.run_quickshell_harness('power', 'POWER')
 
-    def test_site_builder_refuses_existing_output_and_bundles_originals(self):
+    def test_site_builder_refuses_existing_output_and_bundles_tess_artwork(self):
         import sys
-        import zipfile
         destination = self.home / 'site'
         command = [sys.executable, str(ROOT / 'scripts/build-site.py'),
                    '--output', str(destination)]
         result = subprocess.run(command, capture_output=True, text=True)
         self.assertEqual(result.returncode, 0, result.stderr)
-        with zipfile.ZipFile(destination / 'assets/screenshots.zip') as archive:
-            count = sum(name.endswith('.png') for name in archive.namelist())
-            page = (destination / 'index.html').read_text()
-            self.assertIn(f'includes {count} published captures', page)
-            self.assertNotIn('{{SCREENSHOT_COUNT}}', page)
-            self.assertEqual(archive.read('phone-switcher.png'),
-                             (ROOT / 'assets/screenshots/phone-switcher.png').read_bytes())
-            self.assertEqual(archive.read('phone-login.png'),
-                             (ROOT / 'assets/screenshots/phone-login.png').read_bytes())
+        page = (destination / 'index.html').read_text()
+        self.assertIn('Meet Tess.', page)
+        self.assertNotIn('Quiet Edge', page)
+        self.assertNotIn('screenshots.zip', page)
+        for name in ('tess-mark.svg', 'tess-phone.webp', 'tess-tablet.webp',
+                     'tess-desktop.webp', 'tess-social.jpg'):
+            self.assertEqual((destination / 'assets' / name).read_bytes(),
+                             (ROOT / 'website/assets' / name).read_bytes())
+        self.assertFalse((destination / 'assets/screenshots.zip').exists())
         sentinel = destination / 'keep.txt'
         sentinel.write_text('unrelated content')
         result = subprocess.run(command, capture_output=True, text=True)
