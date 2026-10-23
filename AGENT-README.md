@@ -168,7 +168,7 @@ after the last assigned ID; preserve existing IDs when reorganizing sections.
 
 | Task ID | Status | Owner | Branch / PR | Next action or evidence |
 | --- | --- | --- | --- | --- |
-| T83 | Review | Codex | fix/issue-65-current-main | Current-main source checks pass; prior PR #67 QEMU touch evidence covers the fix; include in next VM retest |
+| T83 | Review | Codex | PR #100 | Current-main source checks pass; prior PR #67 QEMU touch evidence covers the fix; include in next VM retest |
 | T81 | In progress | Codex | fix/89-osk-dismiss-button | Add a 48px+ OSK toggle in the mobile status bar; check Phone and Tablet placement |
 | T80 | In progress | Codex | feat/operation-tessa | Integrate #61/#85 and #58, cube/radial/launcher, VM acceptance |
 | T79 | Review | Codex | docs/touch-window-tape | Native Hyprland scrolling prototype #61 |
