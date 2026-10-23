@@ -168,6 +168,7 @@ after the last assigned ID; preserve existing IDs when reorganizing sections.
 
 | Task ID | Status | Owner | Branch / PR | Next action or evidence |
 | --- | --- | --- | --- | --- |
+| T86 | Review | Codex | PR #103 | Current-main source and VM-policy tests pass; prior #91 ASUS evidence, this port still needs guest recheck |
 | T85 | Review | Codex | PR #102 | Current-main source checks pass; earlier PR #79 VM evidence needs current-main runtime recheck |
 | T83 | Review | Codex | PR #100 | Current-main source checks pass; prior PR #67 QEMU touch evidence covers the fix; include in next VM retest |
 | T84 | Review | Codex | PR #101 | Current-main status indicators pass source checks; real device/service acceptance remains |

@@ -2760,6 +2760,29 @@ and native ChatGPT window rendering remain unverified.
 
 [Actual VM capture and provenance](../assets/screenshots/tessa-chatgpt/README.md).
 
+## OSK-resistant dialog lift on current main — 2026-10-23
+
+Ported only #80's floating-dialog/OSK policy into the vanilla compositor
+baseline. It reads the selected or inferred Phone/Tablet layout, checks mapped
+`osk`/`squeekboard` layers, requests a fit once, observes compositor goal
+geometry for a client minimum-size correction, and lifts only the affected
+floating dialog when needed. It restores policy-owned placement after the OSK
+hides and respects later manual movement. Desktop, tiled windows, and tagged
+Phone app windows remain outside the policy.
+
+`python3 scripts/probe-osk-window-lift.py` passed: baseline controls 2/2,
+baseline red controls 15 expected failures/20, changed policy 20/20, workflow
+subset 70 passed with three legacy skips, and `luac -p` passed. The native portal
+build workflow test is explicitly excluded from that targeted workflow subset.
+This is software-only evidence. Prior PR #91 records ASUS touch acceptance for
+the same policy, but the current-main port has not been installed or runtime
+checked in a guest. See [the scope and test procedure](osk-window-lift.md) and
+[current source hashes and probe results](evidence/issue80-lua-policy.json).
+
+The live-ISO workflow's disposable Arch container now installs Git because
+`scripts/package.sh` requires the checkout's commit identity when building the
+package repository. The container previously omitted Git and stopped before ISO
+staging; the updated workflow still needs its next CI run to confirm the build.
 ## OSK gesture strip reconciliation on current main — 2026-10-23
 
 Integrated #78's Bottom-layer reservation with current main's newer OSK toggle
