@@ -58,7 +58,13 @@ jobs:
               test -f dist/repo/x86_64/repo-info.json
               mkarchiso -v -w build/iso-work -o dist build/iso-profile 2>&1 | tee dist/build.log
               cp build/iso-work/iso/arch/pkglist.x86_64.txt dist/packages.txt
+              iso_bytes=$(stat -c %s dist/tessarchy-*.iso)
+              if ((iso_bytes >= 2147483648)); then
+                echo "ISO is ${iso_bytes} bytes; GitHub Releases requires each asset below 2 GiB." >&2
+                exit 1
+              fi
               printf "Commit: %s\nBuilt: %s\n" "$TESSARCHY_COMMIT" "$(date -u --iso-8601=seconds)" > dist/build-info.txt
+              printf "ISO bytes: %s\n" "$iso_bytes" >> dist/build-info.txt
               pacman -Q archiso >> dist/build-info.txt
               cd dist
               sha256sum tessarchy-*.iso > SHA256SUMS

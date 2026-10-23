@@ -22,7 +22,7 @@ iso_application="Tessarchy live image"
 iso_version="0.1.0-$(date +%Y%m%d)"
 arch="x86_64"
 kernel_params_x86_64="quiet splash loglevel=3 systemd.show_status=false"
-airootfs_image_tool_options=('-comp' 'zstd' '-Xcompression-level' '3' '-b' '1M')
+airootfs_image_tool_options=('-comp' 'xz' '-Xbcj' 'x86' '-Xdict-size' '100%' '-b' '1M')
 file_permissions+=(
   ["/etc/shadow"]="0:0:400"
   ["/home/tess"]="1000:1000:750"
@@ -85,6 +85,24 @@ mkdir -p "$manifest_dir"
 python3 "$root/scripts/runtime-source-manifest.py" --root "$root" \
     --commit "$source_commit" --output "$manifest_dir/tessera-shell.json"
 cp -- "$manifest_dir/tessera-shell.json" "$manifest_dir/tessarchy-session.json"
+# mkarchiso applies these modes after pacstrap has installed the local
+# Tessarchy packages. Keep executable bits on the immutable source copy in
+# sync with its manifest; /usr/bin launchers are set separately below.
+python3 - "$manifest_dir/tessera-shell.json" "$profile/profiledef.sh" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+manifest_path, profile_path = map(Path, sys.argv[1:])
+manifest = json.loads(manifest_path.read_text())
+executables = [entry['path'] for entry in manifest['files'] if entry['executable']]
+with profile_path.open('a') as profile:
+    profile.write('\n# Preserve executable modes in the package-owned runtime source tree.\n')
+    profile.write('file_permissions+=(\n')
+    for relative in executables:
+        profile.write(f'  ["/usr/share/tessarchy/{relative}"]="0:0:755"\n')
+    profile.write(')\n')
+PY
 install -m755 "$root/session/tessarchy-install" "$root/session/tessarchy-install-ui" "$airoot/usr/bin/"
 install -m755 "$root/session/start-tessarchy" "$root/session/tessera-shell" "$root/session/tessera-chatgpt-status" "$root/session/tessarchy-osk" "$root/session/tessarchy-theme" "$root/session/tessarchy-run" "$root/session/tessarchy-launch" "$root/session/tessera-screenshot" "$root/session/tessera-brightness" "$root/session/tessera-nightlight" "$root/session/tessera-rotate" "$root/session/tessarchy-session-services" "$root/session/tessa-ai" "$root/session/tessarchy-ssh" "$root/session/tessarchy-readiness" "$airoot/usr/bin/"
 install -Dm644 "$root/session/tessarchy-apps.target" "$airoot/usr/lib/systemd/user/tessarchy-apps.target"

@@ -1090,6 +1090,7 @@ assert(#commands == 4, "unexpected extra autostart commands")
     def test_iso_build_container_has_git_for_package_provenance(self):
         workflow = (ROOT / '.github/workflows/build-iso.yml').read_text()
         self.assertIn('archiso ffmpeg base-devel git gtk3 glib2', workflow)
+        self.assertIn('iso_bytes >= 2147483648', workflow)
 
     def test_export_vm_source_keeps_existing_snapshot_idempotent(self):
         repo = self.home / 'source'
@@ -1691,6 +1692,12 @@ esac
                          (manifests / 'tessarchy-session.json').read_bytes())
         self.assertEqual(json.loads((manifests / 'tessera-shell.json').read_text())['commit'],
                          'a' * 40)
+        profile_definition = (profile / 'profiledef.sh').read_text()
+        self.assertIn("airootfs_image_tool_options=('-comp' 'xz'", profile_definition)
+        self.assertIn('["/usr/share/tessarchy/session/start-tessarchy"]="0:0:755"',
+                      profile_definition)
+        self.assertIn('["/usr/share/tessarchy/session/tessarchy-launch"]="0:0:755"',
+                      profile_definition)
         if (ROOT / 'etc/pacman.conf').is_file():
             staged_pacman = (profile / 'airootfs/etc/pacman.conf').read_text()
             self.assertIn('Include = /etc/pacman.d/tessarchy.conf', staged_pacman)
