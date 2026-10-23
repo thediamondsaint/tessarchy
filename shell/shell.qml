@@ -256,7 +256,7 @@ ShellRoot {
     }
     // ChatGPT stays a normal desktop app; this bridge only reads the official
     // app-server usage surface and exposes truthful signed-out state to QML.
-    readonly property string chatgptStatusCommand: (Quickshell.env("TESSARCHY_DATA_DIR") || ((Quickshell.env("XDG_DATA_HOME") || (Quickshell.env("HOME") + "/.local/share")) + "/tessarchy")) + "/session/tessera-chatgpt-status"
+    readonly property string chatgptStatusCommand: decodeURIComponent(Qt.resolvedUrl("../session/tessera-chatgpt-status").toString().replace("file://", ""))
     property var chatgptStatus: ({installed: false, state: "checking", message: "Checking ChatGPT", usage: ({connected: false, windows: []})})
     function refreshChatGPT() { chatgptProbe.running = true; }
     Process {

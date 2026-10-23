@@ -1,13 +1,20 @@
 #!/usr/bin/env bash
 set -euo pipefail
 share=${TESSARCHY_DATA_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}/tessarchy}
-if [[ ! -f "$share/shell/shell.qml" ]]; then share=/usr/share/tessarchy; fi
-[[ -f "$share/shell/shell.qml" ]] || { echo "Tessa source not installed" >&2; exit 1; }
+if [[ -n ${TESSARCHY_RUNTIME_HOME:-} ]]; then
+    shell_path=$TESSARCHY_RUNTIME_HOME/bootstrap/shell.qml
+elif [[ -f "$share/shell/shell.qml" ]]; then
+    shell_path=$share/shell/shell.qml
+else
+    share=/usr/share/tessarchy
+    shell_path=$share/shell/shell.qml
+fi
+[[ -f "$shell_path" ]] || { echo "Tessa source not installed" >&2; exit 1; }
 export PATH="$HOME/.local/bin:$PATH"
 # `tessera-shell ipc call <target> <function> ...` talks to the running shell.
 if [[ ${1-} == ipc ]]; then
     shift
-    exec qs ipc --path "$share/shell/shell.qml" "$@"
+    exec qs ipc --path "$shell_path" "$@"
 fi
 # The shell keeps its audio integration loaded and follows PipeWire's live
 # availability, so a late-starting media service is still detected.
@@ -16,4 +23,4 @@ export TESSARCHY_OSK=0
 if command -v squeekboard >/dev/null && command -v tessarchy-osk >/dev/null; then
     export TESSARCHY_OSK=1
 fi
-exec qs --no-duplicate --path "$share/shell/shell.qml" "$@"
+exec qs --no-duplicate --path "$shell_path" "$@"

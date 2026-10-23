@@ -37,8 +37,8 @@ install the four session/profile packages together (select exact build filenames
 
 ```bash
 sudo pacman -Syu
-sudo pacman -U dist/tessera-shell-0.1.0-4-any.pkg.tar.zst \
-  dist/tessarchy-session-0.1.0-4-any.pkg.tar.zst \
+sudo pacman -U dist/tessera-shell-0.1.0-5-any.pkg.tar.zst \
+  dist/tessarchy-session-0.1.0-6-any.pkg.tar.zst \
   dist/tessarchy-bootsplash-0.1.0-2-any.pkg.tar.zst \
   dist/tessarchy-tablet-0.1.0-3-x86_64.pkg.tar.zst
 ```

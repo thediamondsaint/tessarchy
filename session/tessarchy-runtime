@@ -1,0 +1,434 @@
+#!/usr/bin/env python3
+"""Stage and activate immutable Tessarchy source generations."""
+from __future__ import annotations
+
+import argparse
+import fcntl
+import hashlib
+import json
+import os
+from pathlib import Path, PurePosixPath
+import re
+import shutil
+import subprocess
+import sys
+import tempfile
+import time
+import uuid
+
+
+PAYLOADS = ("shell", "session", "themes")
+REQUIRED = (
+    "shell/shell.qml",
+    "shell/components/ThemeLoader.qml",
+    "shell/audio/ringtones/manifest.json",
+    "shell/helpers/radios.py",
+    "session/hyprland.lua",
+    "session/window-controls.lua",
+    "session/window-tape.lua",
+    "session/hypridle.conf",
+    "session/osk/squeekboard/keyboards/us.yaml",
+    "session/tessera-chatgpt-status",
+    "session/runtime-shell.qml",
+    "session/runtime-hyprland.lua",
+    "themes/tessera/colors.toml",
+)
+ID_PATTERN = re.compile(r"^[0-9a-f]{64}$")
+
+
+class RuntimeErrorMessage(RuntimeError):
+    """A user-facing runtime deployment error."""
+
+
+def default_runtime() -> Path:
+    xdg = Path(os.environ.get("XDG_DATA_HOME", Path.home() / ".local/share"))
+    return Path(os.environ.get("TESSARCHY_RUNTIME_HOME", xdg / "tessarchy/runtime"))
+
+
+def atomic_write(path: Path, data: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, temporary = tempfile.mkstemp(prefix=f".{path.name}.", dir=path.parent)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as stream:
+            stream.write(data)
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(temporary, path)
+        directory_fd = os.open(path.parent, os.O_RDONLY | getattr(os, "O_DIRECTORY", 0))
+        try:
+            os.fsync(directory_fd)
+        finally:
+            os.close(directory_fd)
+    finally:
+        if os.path.exists(temporary):
+            os.unlink(temporary)
+
+
+def canonical_json(value: object) -> str:
+    return json.dumps(value, sort_keys=True, separators=(",", ":")) + "\n"
+
+
+def read_json(path: Path) -> dict:
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as error:
+        raise RuntimeErrorMessage(f"cannot read {path.name}: {error}") from error
+    if not isinstance(value, dict):
+        raise RuntimeErrorMessage(f"{path.name} must contain a JSON object")
+    return value
+
+
+def safe_manifest(manifest: dict) -> list[dict]:
+    if manifest.get("schema") != 1 or not re.fullmatch(r"[0-9a-f]{40}", str(manifest.get("commit", ""))):
+        raise RuntimeErrorMessage("package runtime manifests have an unsupported schema or commit")
+    entries = manifest.get("files")
+    if not isinstance(entries, list) or not entries:
+        raise RuntimeErrorMessage("package runtime manifest has no files")
+    result = []
+    seen = set()
+    for entry in entries:
+        if not isinstance(entry, dict):
+            raise RuntimeErrorMessage("package runtime manifest contains an invalid file record")
+        relative = PurePosixPath(str(entry.get("path", "")))
+        name = relative.as_posix()
+        if relative.is_absolute() or ".." in relative.parts or relative.parts[0] not in PAYLOADS:
+            raise RuntimeErrorMessage(f"package runtime manifest has an unsafe path: {name}")
+        digest = str(entry.get("sha256", ""))
+        if not re.fullmatch(r"[0-9a-f]{64}", digest) or not isinstance(entry.get("executable"), bool):
+            raise RuntimeErrorMessage(f"package runtime manifest has invalid metadata: {name}")
+        if name in seen:
+            raise RuntimeErrorMessage(f"package runtime manifest repeats: {name}")
+        seen.add(name)
+        result.append({"path": name, "sha256": digest, "executable": entry["executable"]})
+    if result != sorted(result, key=lambda item: item["path"]):
+        raise RuntimeErrorMessage("package runtime manifest is not sorted")
+    missing = set(REQUIRED) - seen
+    if missing:
+        raise RuntimeErrorMessage("package runtime manifest omits required source: " + ", ".join(sorted(missing)))
+    return result
+
+
+def installed_manifest(source: Path) -> dict:
+    shell = read_json(source / "package-manifests/tessera-shell.json")
+    session = read_json(source / "package-manifests/tessarchy-session.json")
+    if shell != session:
+        raise RuntimeErrorMessage("shell and session packages contain different runtime manifests; finish the package transaction")
+    safe_manifest(shell)
+    return shell
+
+
+def manifest_id(manifest: dict) -> str:
+    return hashlib.sha256((json.dumps(manifest, sort_keys=True, indent=2) + "\n").encode()).hexdigest()
+
+
+def actual_files(root: Path) -> list[str]:
+    found = []
+    for name in PAYLOADS:
+        base = root / name
+        if not base.is_dir() or base.is_symlink():
+            raise RuntimeErrorMessage(f"runtime source directory is missing or unsafe: {name}")
+        for path in base.rglob("*"):
+            if path.is_symlink():
+                raise RuntimeErrorMessage(f"runtime source must contain regular files only: {path.relative_to(root)}")
+            if path.is_dir():
+                continue
+            if not path.is_file():
+                raise RuntimeErrorMessage(f"runtime source must contain regular files only: {path.relative_to(root)}")
+            if "__pycache__" in path.parts or path.suffix in {".pyc", ".pyo"}:
+                continue
+            found.append(path.relative_to(root).as_posix())
+    return sorted(found)
+
+
+def verify_payload(root: Path, manifest: dict) -> None:
+    entries = safe_manifest(manifest)
+    expected = [entry["path"] for entry in entries]
+    present = actual_files(root)
+    if present != expected:
+        missing = sorted(set(expected) - set(present))
+        extra = sorted(set(present) - set(expected))
+        details = []
+        if missing:
+            details.append("missing: " + ", ".join(missing[:5]))
+        if extra:
+            details.append("unmanifested: " + ", ".join(extra[:5]))
+        raise RuntimeErrorMessage("runtime payload file set differs from its manifest (" + "; ".join(details) + ")")
+    for entry in entries:
+        path = root / entry["path"]
+        if hashlib.sha256(path.read_bytes()).hexdigest() != entry["sha256"]:
+            raise RuntimeErrorMessage(f"runtime payload was modified: {entry['path']}")
+        if bool(path.stat().st_mode & 0o111) != entry["executable"]:
+            raise RuntimeErrorMessage(f"runtime payload mode was modified: {entry['path']}")
+
+
+def seal_generation(root: Path, manifest: dict) -> None:
+    for path in sorted(root.rglob("*"), reverse=True):
+        if path.is_dir():
+            path.chmod(0o555)
+        elif path.name == "manifest.json":
+            path.chmod(0o444)
+        else:
+            executable = bool(path.stat().st_mode & 0o111)
+            path.chmod(0o555 if executable else 0o444)
+    root.chmod(0o555)
+
+
+def stage(source: Path, runtime: Path) -> tuple[str, dict]:
+    source = source.resolve(strict=True)
+    manifest = installed_manifest(source)
+    verify_payload(source, manifest)
+    generation = manifest_id(manifest)
+    generations = runtime / "generations"
+    generations.mkdir(parents=True, exist_ok=True)
+    destination = generations / generation
+    if destination.exists():
+        verify_generation(runtime, generation)
+        return generation, manifest
+    temporary = Path(tempfile.mkdtemp(prefix=".generation-", dir=generations))
+    try:
+        for name in PAYLOADS:
+            shutil.copytree(source / name, temporary / name)
+        (temporary / "manifest.json").write_text(
+            json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        verify_payload(temporary, manifest)
+        seal_generation(temporary, manifest)
+        try:
+            os.replace(temporary, destination)
+        except FileExistsError:
+            verify_generation(runtime, generation)
+    finally:
+        if temporary.exists():
+            os.chmod(temporary, 0o755)
+            shutil.rmtree(temporary)
+    return generation, manifest
+
+
+def verify_generation(runtime: Path, generation: str) -> dict:
+    if not ID_PATTERN.fullmatch(generation):
+        raise RuntimeErrorMessage("active runtime generation id is invalid")
+    root = runtime / "generations" / generation
+    if not root.is_dir() or root.is_symlink():
+        raise RuntimeErrorMessage(f"runtime generation is missing: {generation}")
+    manifest = read_json(root / "manifest.json")
+    if manifest_id(manifest) != generation:
+        raise RuntimeErrorMessage(f"runtime generation manifest identity changed: {generation}")
+    verify_payload(root, manifest)
+    return manifest
+
+
+def active_generation(runtime: Path) -> str | None:
+    marker = runtime / "active-generation"
+    if not marker.exists():
+        return None
+    generation = marker.read_text(encoding="utf-8").strip()
+    verify_generation(runtime, generation)
+    return generation
+
+
+def ensure_bootstrap(runtime: Path, generation: str) -> None:
+    source = runtime / "generations" / generation / "session"
+    bootstrap = runtime / "bootstrap"
+    session = bootstrap / "session"
+    session.mkdir(parents=True, exist_ok=True)
+    files = {
+        bootstrap / "shell.qml": source / "runtime-shell.qml",
+        session / "hyprland.lua": source / "runtime-hyprland.lua",
+    }
+    state_path = bootstrap / "manifest.json"
+    expected = {path.relative_to(bootstrap).as_posix(): hashlib.sha256(template.read_bytes()).hexdigest()
+                for path, template in files.items()}
+    if state_path.exists():
+        previous = read_json(state_path).get("files")
+        if not isinstance(previous, dict):
+            raise RuntimeErrorMessage("runtime bootstrap ownership record is invalid")
+        for path, digest in previous.items():
+            current = bootstrap / path
+            if not current.is_file() or hashlib.sha256(current.read_bytes()).hexdigest() != digest:
+                raise RuntimeErrorMessage(f"stable runtime bootstrap was locally modified: {path}")
+    elif any(path.exists() for path in files):
+        raise RuntimeErrorMessage("stable runtime bootstrap exists without an ownership record")
+    for path, template in files.items():
+        atomic_write(path, template.read_text(encoding="utf-8"))
+        path.chmod(0o444)
+    atomic_write(state_path, json.dumps({"schema": 1, "files": expected}, indent=2, sort_keys=True) + "\n")
+    state_path.chmod(0o444)
+
+
+def write_active(runtime: Path, generation: str) -> None:
+    verify_generation(runtime, generation)
+    atomic_write(runtime / "active-generation", generation + "\n")
+
+
+def lock_runtime(runtime: Path):
+    runtime.mkdir(parents=True, exist_ok=True)
+    stream = (runtime / ".lock").open("a+")
+    fcntl.flock(stream.fileno(), fcntl.LOCK_EX)
+    return stream
+
+
+def prepare(source: Path, runtime: Path) -> str:
+    runtime.mkdir(parents=True, exist_ok=True)
+    with lock_runtime(runtime):
+        if os.environ.get("WAYLAND_DISPLAY") and not os.environ.get("TESSARCHY_RUNTIME_HOME"):
+            raise RuntimeErrorMessage("this session still uses package-owned source; log out once before adopting runtime generations")
+        generation, _ = stage(source, runtime)
+        ensure_bootstrap(runtime, generation)
+        current = active_generation(runtime)
+        if current != generation:
+            if os.environ.get("WAYLAND_DISPLAY") or os.environ.get("HYPRLAND_INSTANCE_SIGNATURE"):
+                raise RuntimeErrorMessage("a running session must use 'tessarchy-runtime activate' to change generations")
+            write_active(runtime, generation)
+        return generation
+
+
+def run_command(command: list[str], timeout: float = 8.0) -> subprocess.CompletedProcess:
+    try:
+        return subprocess.run(command, capture_output=True, text=True, timeout=timeout, check=False)
+    except (OSError, subprocess.TimeoutExpired) as error:
+        raise RuntimeErrorMessage(f"could not run {Path(command[0]).name}: {error}") from error
+
+
+def compositor_errors() -> list[str]:
+    result = run_command(["hyprctl", "configerrors", "-j"])
+    if result.returncode != 0:
+        raise RuntimeErrorMessage("Hyprland did not return config errors as JSON: " + result.stderr.strip())
+    try:
+        value = json.loads(result.stdout)
+    except json.JSONDecodeError as error:
+        raise RuntimeErrorMessage("Hyprland returned invalid config error JSON") from error
+    if isinstance(value, list):
+        errors = value
+    elif isinstance(value, dict):
+        errors = value.get("errors", [])
+    else:
+        raise RuntimeErrorMessage("Hyprland config error response has an unexpected shape")
+    return [str(item) for item in errors]
+
+
+def reload_compositor() -> None:
+    result = run_command(["hyprctl", "reload"])
+    if result.returncode != 0:
+        raise RuntimeErrorMessage("Hyprland config reload failed: " + result.stderr.strip())
+    errors = compositor_errors()
+    if errors:
+        raise RuntimeErrorMessage("Hyprland rejected the new config: " + "; ".join(errors))
+
+
+def write_attempt(runtime: Path, generation: str) -> str:
+    nonce = uuid.uuid4().hex
+    atomic_write(runtime / "activation-attempt.json", json.dumps({
+        "generation": generation, "nonce": nonce, "created": time.time()}, sort_keys=True) + "\n")
+    (runtime / "activation-result.json").unlink(missing_ok=True)
+    return nonce
+
+
+def request_shell_reload(runtime: Path) -> None:
+    command = ["qs", "ipc", "--path", str(runtime / "bootstrap/shell.qml"),
+               "call", "runtime", "reload"]
+    result = run_command(command, timeout=12.0)
+    if result.returncode != 0:
+        raise RuntimeErrorMessage("Quickshell reload request failed: " + (result.stderr or result.stdout).strip())
+
+
+def wait_for_shell_ack(runtime: Path, nonce: str, generation: str, timeout: float = 12.0) -> None:
+    result_file = runtime / "activation-result.json"
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        if result_file.is_file():
+            result = read_json(result_file)
+            if result.get("nonce") == nonce:
+                if result.get("generation") != generation:
+                    raise RuntimeErrorMessage("Quickshell acknowledged the wrong runtime generation")
+                if result.get("status") != "success":
+                    raise RuntimeErrorMessage("Quickshell rejected the new generation: " + str(result.get("error", "unknown error")))
+                return
+        time.sleep(0.1)
+    raise RuntimeErrorMessage("Quickshell did not acknowledge the generation reload")
+
+
+def acknowledge(runtime: Path, status: str, detail: str, generation: str | None) -> None:
+    attempt_path = runtime / "activation-attempt.json"
+    if not attempt_path.is_file():
+        return
+    attempt = read_json(attempt_path)
+    current = attempt.get("generation")
+    if generation and generation != current:
+        return
+    if not isinstance(current, str) or not ID_PATTERN.fullmatch(current):
+        return
+    atomic_write(runtime / "activation-result.json", json.dumps({
+        "nonce": attempt.get("nonce"), "generation": current, "status": status,
+        "error": detail[:1000], "time": time.time()}, sort_keys=True) + "\n")
+
+
+def rollback(runtime: Path, previous: str, source: Path, reason: Exception) -> None:
+    write_active(runtime, previous)
+    nonce = write_attempt(runtime, previous)
+    try:
+        reload_compositor()
+        request_shell_reload(runtime)
+        wait_for_shell_ack(runtime, nonce, previous)
+    except Exception as error:
+        raise RuntimeErrorMessage(f"activation failed ({reason}); rollback also needs attention: {error}") from error
+    raise RuntimeErrorMessage(f"activation failed and the previous generation was restored: {reason}") from reason
+
+
+def activate(source: Path, runtime: Path) -> str:
+    if not os.environ.get("WAYLAND_DISPLAY") or not os.environ.get("HYPRLAND_INSTANCE_SIGNATURE"):
+        raise RuntimeErrorMessage("activate requires an active Tessarchy Hyprland session")
+    if os.environ.get("TESSARCHY_RUNTIME_HOME") != str(runtime):
+        raise RuntimeErrorMessage("this session is not using the stable runtime bootstrap; log out before adopting it")
+    with lock_runtime(runtime):
+        previous = active_generation(runtime)
+        if previous is None:
+            raise RuntimeErrorMessage("no active runtime generation; log out and start Tessarchy once before live activation")
+        generation, _ = stage(source, runtime)
+        ensure_bootstrap(runtime, generation)
+        if generation == previous:
+            print(f"Tessarchy runtime already current ({generation[:12]})")
+            return generation
+        write_active(runtime, generation)
+        nonce = write_attempt(runtime, generation)
+        try:
+            reload_compositor()
+            request_shell_reload(runtime)
+            wait_for_shell_ack(runtime, nonce, generation)
+        except Exception as error:
+            rollback(runtime, previous, source, error)
+        print(f"Activated Tessarchy runtime generation {generation[:12]} in the current session")
+        return generation
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("action", choices=("prepare", "activate", "ack"))
+    parser.add_argument("source_or_status", nargs="?", help="package source directory or acknowledgement status")
+    parser.add_argument("detail", nargs="?", default="", help="acknowledgement details")
+    parser.add_argument("generation", nargs="?", help="generation acknowledged by Quickshell")
+    parser.add_argument("--source", type=Path, default=Path("/usr/share/tessarchy"))
+    parser.add_argument("--runtime", type=Path, default=default_runtime())
+    args = parser.parse_args(argv)
+    try:
+        runtime = args.runtime.expanduser().absolute()
+        if args.action == "ack":
+            status = args.source_or_status or "failure"
+            if status not in {"success", "failure"}:
+                raise RuntimeErrorMessage("ack status must be success or failure")
+            if status == "success":
+                acknowledge(runtime, status, "", args.detail)
+            else:
+                acknowledge(runtime, status, args.detail, args.generation)
+            return 0
+        if args.action == "prepare":
+            generation = prepare(args.source, runtime)
+        else:
+            generation = activate(args.source, runtime)
+        print(generation)
+        return 0
+    except (OSError, RuntimeErrorMessage, ValueError) as error:
+        print(f"tessarchy-runtime: {error}", file=sys.stderr)
+        return 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

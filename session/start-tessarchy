@@ -8,8 +8,20 @@ for tool in start-hyprland qs dbus-run-session systemd-cat; do
     command -v "$tool" >/dev/null || { echo "Missing dependency: $tool" >&2; exit 1; }
 done
 share=${TESSARCHY_DATA_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}/tessarchy}
-if [[ ! -f "$share/session/hyprland.lua" ]]; then share=/usr/share/tessarchy; fi
-[[ -f "$share/session/hyprland.lua" ]] || { echo "Session defaults not installed" >&2; exit 1; }
+if [[ -f "$share/session/hyprland.lua" && "$share" != /usr/share/tessarchy ]]; then
+    config="$share/session/hyprland.lua"
+else
+    share=/usr/share/tessarchy
+    [[ -f "$share/session/hyprland.lua" ]] || { echo "Session defaults not installed" >&2; exit 1; }
+    runtime=${TESSARCHY_RUNTIME_HOME:-${XDG_DATA_HOME:-$HOME/.local/share}/tessarchy/runtime}
+    generation=$(tessarchy-runtime prepare --source "$share" --runtime "$runtime")
+    TESSARCHY_RUNTIME_HOME=$(realpath -e -- "$runtime")
+    export TESSARCHY_RUNTIME_HOME
+    runtime=$TESSARCHY_RUNTIME_HOME
+    share="$runtime/generations/$generation"
+    config="$runtime/bootstrap/session/hyprland.lua"
+fi
+[[ -f "$config" ]] || { echo "Session config not installed" >&2; exit 1; }
 export TESSARCHY_DATA_DIR="$share"
 export PATH="$HOME/.local/bin:$PATH"
 # Stage the saved (or default) theme before anything reads it.
@@ -29,7 +41,7 @@ if [[ -S ${XDG_RUNTIME_DIR:-/run/user/$UID}/bus ]]; then
     trap 'if command -v systemctl >/dev/null; then systemctl --user stop tessarchy-apps.target || true; fi' EXIT
     trap 'exit 143' TERM
     trap 'exit 130' INT
-    systemd-cat --identifier=tessarchy-session start-hyprland -- --config "$share/session/hyprland.lua"
+    systemd-cat --identifier=tessarchy-session start-hyprland -- --config "$config"
     exit $?
 fi
-exec systemd-cat --identifier=tessarchy-session dbus-run-session -- start-hyprland -- --config "$share/session/hyprland.lua"
+exec systemd-cat --identifier=tessarchy-session dbus-run-session -- start-hyprland -- --config "$config"

@@ -10,6 +10,12 @@ usage() { echo "Usage: $0 list | current | set <name> | apply" >&2; exit 2; }
 state=${XDG_STATE_HOME:-$HOME/.local/state}/tessarchy
 current=$state/theme
 share=${TESSARCHY_DATA_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}/tessarchy}
+if [[ -n ${TESSARCHY_RUNTIME_HOME:-} ]]; then
+    active=$(cat -- "$TESSARCHY_RUNTIME_HOME/active-generation" 2>/dev/null || true)
+    if [[ $active =~ ^[a-f0-9]{64}$ && -d $TESSARCHY_RUNTIME_HOME/generations/$active/themes ]]; then
+        share=$TESSARCHY_RUNTIME_HOME/generations/$active
+    fi
+fi
 [[ -d $share/themes ]] || share=/usr/share/tessarchy
 search=("${XDG_CONFIG_HOME:-$HOME/.config}/tessarchy/themes" "$share/themes" /usr/share/omarchy/themes)
 fallback_theme=tessera

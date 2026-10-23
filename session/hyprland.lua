@@ -3,7 +3,7 @@
 -- surfaces while this file only provides the native tape bridge, theme glass,
 -- wallpaper handoff, and a few explicit Tessa controls.
 local session = debug.getinfo(1, "S").source:sub(2):match("^(.*)/[^/]+$")
-local data = os.getenv("TESSARCHY_DATA_DIR") or session:match("^(.*)/session$")
+local data = session:match("^(.*)/session$") or os.getenv("TESSARCHY_DATA_DIR")
 TessarchyWindows = dofile(session .. "/window-controls.lua")
 TessarchyTape = dofile(session .. "/window-tape.lua")
 

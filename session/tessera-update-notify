@@ -22,7 +22,8 @@ summary=$(printf '%s\n' "$output" | sed -n '/^updates available:/,$p' | tail -n 
 if ! notify-send --app-name=Tessarchy --urgency=low \
     "Tessarchy update available" \
     "$summary
-Run: sudo tessarchy-update --apply" 2>/dev/null; then
+Run: sudo tessarchy-update --apply
+Then in Tessarchy: tessarchy-runtime activate" 2>/dev/null; then
     # No notification service on this session: leave a line in the journal
     # rather than telling nobody at all.
     printf 'tessera-update-notify: %s\n' "$summary" >&2
