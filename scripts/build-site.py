@@ -5,14 +5,9 @@ import json
 from pathlib import Path
 import shutil
 import subprocess
-import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
-SHOTS = ("phone-home", "phone-launcher", "phone-switcher", "phone-settings",
-         "tablet-home", "desktop-home", "phone-controls", "phone-bluetooth",
-         "phone-login", "phone-login-rejected", "phone-login-home",
-         "tablet-controls", "desktop-controls", "phone-dialer", "phone-contacts",
-         "phone-messages", "phone-sounds", "phone-cellular", "desktop-messages", "desktop-audio", "live-launcher")
+SITE_ART = ("tess-mark.svg", "tess-phone.webp", "tess-tablet.webp", "tess-desktop.webp", "tess-social.jpg")
 
 
 def main():
@@ -23,10 +18,10 @@ def main():
     output = args.output.absolute()
     if output.exists() or output.is_symlink():
         parser.error(f"Refusing existing output: {output}")
-    sources = [ROOT / "assets/screenshots" / f"{name}.png" for name in SHOTS]
+    sources = [ROOT / "website/assets" / name for name in SITE_ART]
     for path in sources:
         if not path.is_file():
-            parser.error(f"Missing screenshot: {path}")
+            parser.error(f"Missing site artwork: {path}")
     releases = json.loads(args.releases.read_text()) if args.releases else []
     release = next((item for item in releases if not item.get("draft") and any(
         asset.get("name", "").endswith(".iso") or ".iso.part" in asset.get("name", "")
@@ -40,26 +35,11 @@ def main():
     output.mkdir(parents=True)
     for name in ("index.html", "style.css", "app.js"):
         source = ROOT / "website" / name
-        if name == "index.html":
-            (output / name).write_text(source.read_text().replace("{{SCREENSHOT_COUNT}}", str(len(SHOTS))))
-        else:
-            shutil.copyfile(source, output / name)
+        shutil.copyfile(source, output / name)
     assets = output / "assets"
     assets.mkdir()
     for source in sources:
         shutil.copyfile(source, assets / source.name)
-    shutil.copyfile(ROOT / "assets/boot/phone-startup.png", assets / "phone-startup.png")
-    shutil.copyfile(ROOT / "session/boot/power-on.mp4", assets / "power-on.mp4")
-    shutil.copyfile(ROOT / "assets/boot/power-on-poster.png", assets / "power-on-poster.png")
-    shutil.copyfile(ROOT / "assets/boot/tablet-startup.png", assets / "tablet-startup.png")
-    shutil.copyfile(ROOT / "shell/artwork/tessarchy-mark.svg", assets / "tessarchy-mark.svg")
-    shutil.copyfile(ROOT / "assets/roadmap/tessarchy-device-roadmap.png",
-                    assets / "tessarchy-device-roadmap.png")
-    with zipfile.ZipFile(assets / "screenshots.zip", "w", zipfile.ZIP_DEFLATED) as archive:
-        for source in sources:
-            archive.write(source, source.name)
-        archive.write(ROOT / "assets/screenshots/README.md", "README.md")
-        archive.write(ROOT / "assets/screenshots/capture-manifest.json", "capture-manifest.json")
     (output / "project.json").write_text(json.dumps({"commit": commit, "release": release}) + "\n")
     (output / ".nojekyll").touch()
     print(f"Built {output} from {commit[:7]}")

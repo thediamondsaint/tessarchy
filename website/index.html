@@ -1,70 +1,143 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#09151e"><meta name="description" content="Tessarchy is an experimental touch-first Arch Linux experience. Meet Quiet Edge, the Tessa shell, and a workspace that adapts to your screen.">
-<title>Tessarchy — A quieter kind of Linux.</title>
-<link rel="canonical" href="https://thediamondsaint.github.io/tessarchy/">
-<meta property="og:type" content="website"><meta property="og:site_name" content="Tessarchy"><meta property="og:title" content="Tessarchy · From prototype to device"><meta property="og:description" content="Explore Quiet Edge: glass navigation, a mobile PIN login, real VM screenshots, a tester ISO, and the roadmap to a working handheld."><meta property="og:url" content="https://thediamondsaint.github.io/tessarchy/"><meta property="og:image" content="https://thediamondsaint.github.io/tessarchy/assets/desktop-home.png?v=20261019-refresh"><meta property="og:image:width" content="1280"><meta property="og:image:height" content="800"><meta property="og:image:alt" content="Actual Tessarchy development VM running the Quiet Edge desktop layout">
-<meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Tessarchy · From prototype to device"><meta name="twitter:description" content="A touch-first Arch Linux prototype. Real screenshots, a tester ISO, and a milestone roadmap to a handheld device."><meta name="twitter:image" content="https://thediamondsaint.github.io/tessarchy/assets/desktop-home.png?v=20261019-refresh">
-<link rel="icon" href="assets/tessarchy-mark.svg" type="image/svg+xml"><link rel="stylesheet" href="style.css"><script src="app.js?v=20261023-alpha17" defer></script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#102b2b">
+  <meta name="description" content="Meet Tess, the friendly face of Tessa: a touch-first Linux desktop in development for phones, tablets, and desktop screens.">
+  <title>Tessarchy — Meet Tess. Explore Tessa.</title>
+  <link rel="canonical" href="https://thediamondsaint.github.io/tessarchy/">
+  <link rel="icon" href="assets/tess-mark.svg" type="image/svg+xml">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Tessarchy">
+  <meta property="og:title" content="Tessarchy — Meet Tess. Explore Tessa.">
+  <meta property="og:description" content="An independent Arch-based desktop project taking shape across phone, tablet, and desktop.">
+  <meta property="og:url" content="https://thediamondsaint.github.io/tessarchy/">
+  <meta property="og:image" content="https://thediamondsaint.github.io/tessarchy/assets/tess-social.jpg">
+  <meta property="og:image:width" content="1122">
+  <meta property="og:image:height" content="1402">
+  <meta property="og:image:alt" content="Tess presenting a phone in a dark teal studio.">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Tessarchy — Meet Tess. Explore Tessa.">
+  <meta name="twitter:description" content="Meet Tess, the friendly face of Tessa, an experimental touch-first Linux desktop.">
+  <meta name="twitter:image" content="https://thediamondsaint.github.io/tessarchy/assets/tess-social.jpg">
+  <link rel="stylesheet" href="style.css?v=20261023-tess">
+  <script src="app.js?v=20261023-tess" defer></script>
 </head>
 <body>
-<a class="skip" href="#main">Skip to content</a>
-<header class="nav"><a class="wordmark" href="#"><img src="assets/tessarchy-mark.svg" alt="" width="30" height="30">TESSARCHY</a><nav aria-label="Main navigation"><a href="#experience">Experience</a><a href="#development">Development</a><a href="#roadmap">Roadmap</a><a href="https://github.com/thediamondsaint/tessarchy">GitHub ↗</a></nav><a class="button small" href="#download">Try the alpha <span>↗</span></a></header>
-<main id="main">
-<section class="hero">
-<div class="hero-copy"><p class="eyebrow"><span class="pulse"></span> INDEPENDENT. OPEN SOURCE. TAKING SHAPE.</p><h1>A quieter<br>kind of <em>Linux.</em></h1><p class="lead">Your space, from pocket to desktop.<br>A touch-first Arch experience, shaped around you.</p><div class="actions"><a class="button primary" href="#experience">Meet Quiet Edge <span>↓</span></a><a class="text-link" href="#download">Get the tester ISO ↗</a></div><p class="hero-note">Arch Linux <span> / </span> Hyprland <span> / </span> Tessa</p></div>
-<div class="hero-art"><div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><div class="phone"><img src="assets/phone-home.png?v=20261019-refresh" alt="Real Tessarchy VM screenshot showing the Quiet Edge home screen" width="390" height="844" fetchpriority="high"></div><div class="glass-tag"><img src="assets/tessarchy-mark.svg" alt="" width="28" height="28"><div>Quiet Edge<span>A little less noise. A lot more space.</span></div></div><span class="art-caption">ACTUAL DEVELOPMENT VM · PHONE LAYOUT</span></div>
-</section>
-<div class="section-rule"><span>01 / THE EXPERIENCE</span><span>DESIGNED TO GET OUT OF YOUR WAY</span></div>
-<section id="experience" class="experience">
-<div class="section-intro"><h2>Room to breathe.<br><em>Space to move.</em></h2><p>Shallow glass. Precise icons. A floating dock that keeps navigation close. Quiet Edge brings a consistent, considered shape to the Tessa shell.</p></div>
-<div class="feature-grid"><article class="switcher-feature"><div class="feature-copy"><p class="eyebrow">IN THE DEVELOPMENT BUILD</p><h3>Find your flow.</h3><p>Swipe through overlapping app cards with real window previews, app icons and names. Tap to return; swipe up or double-click with a mouse to close immediately. Alt+Tab opens a compact row of app icons for keyboard switching.</p><div class="key-row"><kbd>Alt</kbd><span>+</span><kbd>Tab</kbd><span>Quick keyboard switching.</span></div></div><button class="shot-button switcher-shot" data-image="assets/phone-switcher.png?v=20261019-refresh" aria-label="Enlarge app switcher screenshot"><img src="assets/phone-switcher.png?v=20261019-refresh" alt="Tessa glass card app switcher in the development VM" width="390" height="844" loading="lazy"></button></article><article class="settings-feature"><p class="eyebrow">MAKE IT YOURS</p><h3>Small details.<br>Your decisions.</h3><p>Choose a layout, adjust the glass, change your accent, or reduce motion. Settings stay with your session.</p><button class="shot-button settings-shot" data-image="assets/phone-settings.png?v=20261019-refresh" aria-label="Enlarge settings screenshot"><img src="assets/phone-settings.png?v=20261019-refresh" alt="Tessarchy settings with automatic, phone, tablet and desktop layouts" width="390" height="844" loading="lazy"></button></article><article class="controls-feature"><div class="feature-copy"><p class="eyebrow">PULL DOWN. TUNE IN.</p><h3>A few essentials.<br>Always within reach.</h3><p>Pull down the central status-bar handle for glass radio switches, volume, and layout controls. The close handle stays within reach while you scroll. Choose Auto, Phone, Tablet, or Desktop without leaving the panel. Airplane mode controls detected radios together; Wi-Fi, Bluetooth and cellular have their own switches.</p><p>Unavailable hardware and permission limits stay visible. Development source now includes Bluetooth adapter discovery and connections to already-paired devices. Wi-Fi network selection remains planned; physical radio acceptance is still pending.</p></div><button class="shot-button controls-shot" data-image="assets/phone-controls.png?v=20261019-refresh" aria-label="Enlarge quick controls screenshot"><img src="assets/phone-controls.png?v=20261019-refresh" alt="Actual VM pull-down quick controls with layout selection and unavailable radio hardware" width="390" height="844" loading="lazy"></button></article></div>
-</section>
-<section class="adaptive"><div class="section-intro"><div><p class="eyebrow">ONE SHELL. EVERY SCREEN.</p><h2>Grows with<br><em>your workspace.</em></h2></div><p>Tessa detects the logical display size and chooses a phone, tablet, or desktop layout. Keep it automatic, or choose your own mode.</p></div><div class="mode-tabs" role="tablist" aria-label="Display layouts"><button role="tab" aria-selected="true" aria-controls="layout-preview" id="tab-phone" data-mode="phone" tabindex="0">Phone</button><button role="tab" aria-selected="false" aria-controls="layout-preview" id="tab-tablet" data-mode="tablet" tabindex="-1">Tablet</button><button role="tab" aria-selected="false" aria-controls="layout-preview" id="tab-desktop" data-mode="desktop" tabindex="-1">Desktop</button></div><div id="layout-preview" role="tabpanel" aria-labelledby="tab-phone" class="layout-preview phone-mode"><button class="shot-button" data-image="assets/phone-home.png?v=20261019-refresh" aria-label="Enlarge layout screenshot"><img id="layout-image" src="assets/phone-home.png?v=20261019-refresh" alt="Phone layout in the Tessarchy development VM" width="390" height="844" loading="lazy"></button><div class="layout-caption"><span id="layout-label">PHONE / 390 × 844</span><span>REAL VM CAPTURE · DEVELOPMENT BUILD</span></div><button id="layout-controls-shot" class="button" data-image="assets/phone-controls.png?v=20261019-refresh" data-alt="Phone pull-down controls in the development VM">View quick controls ↗</button></div></section>
-<div class="section-rule"><span>02 / OUT IN THE OPEN</span><span>PROGRESS, WITHOUT THE GUESSWORK</span></div>
-<section id="development" class="development"><div class="section-intro"><h2>Built in public.<br><em>Still becoming.</em></h2><p>Tessarchy is an early prototype. Here is what exists today, what you can test, and where we are headed.</p></div><div class="status-columns"><article><span class="status-label available">DEVELOPMENT BUILD</span><h3>The foundation is here.</h3><ul><li>Quiet Edge glass bars and floating navigation</li><li>Pull-down radio switches and airplane mode</li><li>Stacked phone Recents and an icon-only Alt+Tab switcher</li><li>Automatic layouts and saved preferences</li><li>Animated cube branding and reduced motion</li><li>Immediate Recents dismissal; confirmed session exit</li><li>Phone PIN login verified through greetd/PAM in the VM</li><li>Phone, contacts/photos and SMS dock apps</li><li>VoidRing sound selection and SIM/eSIM options</li><li>Bluetooth discovery and already-paired device actions</li><li>Guarded media, audio-device and screenshot controls</li><li>VM-tested touchscreen gestures and audio output switching</li><li>Installer and in-place package update tooling</li><li>Battery and supported power-profile controls</li></ul></article><article><span class="status-label testing">ALPHA 17 · TESTER RELEASE</span><h3>A place to start.</h3><p>Alpha 17 brings the current Tessarchy app suite, installer and update tools into a single live image. It boots to the desktop in BIOS and UEFI QEMU checks. The live session is not persistent; keep a physical keyboard available.</p><p>The release also includes a fresh, signed Arch Basic VM disk and SHA-256 files. Find the image and ISO assembly instructions below.</p></article><article><span class="status-label planned">ON THE HORIZON</span><h3>The next edges.</h3><ul><li>Customizable navigation gestures</li><li>Further on-screen keyboard and application integration</li><li>Touch-friendly default applications</li><li>Reference hardware selection and architecture bring-up</li><li>Calling, messaging and modem research</li></ul><p class="muted">Phone hardware, cellular service and WebUSB flashing are investigation work.</p></article></div><div class="project-links"><a href="https://github.com/thediamondsaint/tessarchy/blob/main/AGENT-README.md">Agent task board ↗</a><a href="https://github.com/thediamondsaint/tessarchy/blob/main/docs/testing.md">Read the validation record ↗</a><a href="https://github.com/thediamondsaint/tessarchy/blob/main/Operation-TESSARCHY.md">Explore Operation Tessarchy ↗</a><a href="https://github.com/thediamondsaint/tessarchy/issues">Report a finding ↗</a></div><div class="update-row"><span><i class="pulse"></i> REPOSITORY UPDATE</span><a id="commit-link" href="https://github.com/thediamondsaint/tessarchy/commits/main"><span id="commit-message">See the latest development activity</span> ↗</a></div></section>
-<section id="latest" class="latest">
-<div class="section-intro"><div><p class="eyebrow">LATEST DEVELOPMENT · ALPHA 17</p><h2>More than<br><em>a new look.</em></h2></div><p>Alpha 17 brings the current Tessarchy app suite, installer and update tools into a single live image. Recent fixes cover app lifetime, honest status reporting, desktop spacing, on-screen keyboard gestures and placement, and safe runtime generations for updates.</p></div>
-<div class="evidence-grid">
-<article><a class="boot-shot" href="https://github.com/thediamondsaint/tessarchy/releases/download/v0.1.0-alpha.17/boot-uefi.png"><img src="https://github.com/thediamondsaint/tessarchy/releases/download/v0.1.0-alpha.17/boot-uefi.png" alt="Alpha 17 booted to the Tessarchy desktop in a UEFI QEMU virtual machine" width="1280" height="800" loading="lazy"></a><span class="status-label available">BIOS + UEFI · QEMU</span><h3>Booted and captured.</h3><p>Both firmware checks reached the running Tessarchy desktop. The release page includes full captures, logs and checksums.</p><a class="text-link" href="https://github.com/thediamondsaint/tessarchy/releases/download/v0.1.0-alpha.17/boot-bios.png">View BIOS capture ↗</a></article>
+  <a class="skip" href="#main">Skip to the page</a>
+  <header class="site-header">
+    <a class="brand" href="#top" aria-label="Tessarchy home">
+      <img src="assets/tess-mark.svg" width="42" height="42" alt="">
+      <span>TESSARCHY<small>THE WORLD OF TESSA</small></span>
+    </a>
+    <nav aria-label="Main navigation">
+      <a href="#meet-tess">Meet Tess</a>
+      <a href="#devices">Tessa on every screen</a>
+      <a href="#progress">Where we are</a>
+    </nav>
+    <a class="nav-cta" href="#download">Try the alpha <span aria-hidden="true">↗</span></a>
+  </header>
 
-<article><button class="shot-button" data-image="assets/phone-contacts.png?v=20261019-refresh" aria-label="Enlarge the Phone contacts app"><img src="assets/phone-contacts.png?v=20261019-refresh" alt="Actual Phone contacts page with a synthetic demo contact and imported Tessarchy-logo photo" width="390" height="844" loading="lazy"></button><h3>Your people, close.</h3><p>Phone and Messages join the glass dock. A native keypad, call controls, searchable contacts and private photos share the Quiet Edge theme.</p><a class="text-link" href="assets/phone-dialer.png?v=20261019-refresh">View the dialer ↗</a></article>
-<article><button class="shot-button" data-image="assets/desktop-messages.png?v=20261019-refresh" aria-label="Enlarge desktop Messages"><img src="assets/desktop-messages.png?v=20261019-refresh" alt="Actual desktop Messages layout with two columns and an empty composer; cellular service is unavailable in this VM" width="1280" height="800" loading="lazy"></button><h3>A little more connected.</h3><p>SMS conversations adapt from one column on phones to two on desktop. ModemManager supplies the cellular backend, SIM detection and supported device controls. Hardware acceptance is the next step.</p><a class="text-link" href="assets/phone-messages.png?v=20261019-refresh">View phone Messages ↗</a></article>
-<article><button class="shot-button" data-image="assets/phone-sounds.png?v=20261019-refresh" aria-label="Enlarge ringtone settings"><img src="assets/phone-sounds.png?v=20261019-refresh" alt="Actual glass sound settings with the supplied VoidRing tones, preview controls and MP3 import" width="390" height="844" loading="lazy"></button><h3>Make it sound like you.</h3><p>Five VoidRing tracks, saved ringtone and alert choices, previews and a glass file browser. SIM and eSIM settings sit beside the connection controls.</p><a class="text-link" href="assets/phone-cellular.png?v=20261019-refresh">View SIM &amp; eSIM options ↗</a></article>
+  <main id="main">
+    <section class="hero" id="top">
+      <div class="hero-copy">
+        <p class="kicker"><span class="spark" aria-hidden="true">✳</span> AN OPEN LINUX PROJECT, IN THE MAKING</p>
+        <h1>Meet <em>Tess.</em><br>Meet Tessa.</h1>
+        <p class="hero-lede">Tess is your guide to Tessa, a touch-first desktop growing from phone-sized screens to a full workspace.</p>
+        <p class="hero-detail">Built on Arch Linux. Shaped in the open. Still finding its way onto real devices.</p>
+        <div class="hero-actions">
+          <a class="button button-bright" href="#devices">See Tessa in action <span aria-hidden="true">↓</span></a>
+          <a class="alpha-link" href="#download">Get Alpha 17 <span aria-hidden="true">↗</span></a>
+        </div>
+        <div class="hero-facts"><span>Arch Linux</span><i></i><span>Hyprland + Quickshell</span><i></i><span>Phone · Tablet · Desktop</span></div>
+      </div>
+      <figure class="hero-portrait">
+        <img src="assets/tess-phone.webp" alt="Tess, a blonde woman in a dark teal jacket, presenting a phone with a geometric screen." width="1122" height="1402" fetchpriority="high">
+        <figcaption><span class="tess-dot" aria-hidden="true"></span> TESS · YOUR GUIDE TO TESSA <span class="art-note">CONCEPT ART</span></figcaption>
+      </figure>
+      <div class="hero-side-note" aria-hidden="true">A DESKTOP THAT MEETS YOU WHERE YOU ARE</div>
+    </section>
 
-<article><button class="shot-button" data-image="assets/live-launcher.png?v=20261019-refresh" aria-label="Enlarge the live tablet-pilot app picker"><img src="assets/live-launcher.png?v=20261019-refresh" alt="Fresh UEFI boot of the Alpha 15 mirror development ISO showing the curated main-app picker" width="1280" height="800" loading="lazy"></button><span class="status-label testing">INTEL / AMD TABLET PILOT</span><h3>Beyond the VM.</h3><p>This earlier capture shows the Alpha 15 tablet-pilot image. The tablet package profile adds firmware, Wi-Fi and Bluetooth tools, audio, the on-screen keyboard, Files, Text Editor, document and image viewers, media playback and Calculator.</p><p>The app picker now keeps one primary app per role and leaves background helpers out. Install onto an existing Arch system using the tablet guide; storage setup and physical-device acceptance stay explicit.</p><a class="text-link" href="https://github.com/thediamondsaint/tessarchy/blob/main/docs/tablet-install.md">Tablet install and acceptance guide ↗</a></article>
-<article><button class="shot-button" data-image="assets/desktop-audio.png?v=20261019-refresh" aria-label="Enlarge tested VM audio controls"><img src="assets/desktop-audio.png?v=20261019-refresh" alt="Actual software-display VM with two detected audio outputs and the fixed quick-controls close handle" width="1280" height="800" loading="lazy"></button><h3>Touch. Tune. Test.</h3><p>A dedicated pull-down handle, grouped dock shortcuts and a close handle that stays visible. Real virtual-touch gestures exercise scrolling, audio output selection, mute and volume.</p><p>The accepted VM profile keeps software display rendering and KVM CPU acceleration, with sound and multitouch enabled. Less idle polling reduces background work when hardware is absent.</p><a class="text-link" href="https://github.com/thediamondsaint/tessarchy/blob/main/docs/vm.md">Set up the development VM ↗</a></article>
-<article><video controls muted playsinline preload="metadata" poster="assets/power-on-poster.png" width="480" height="480" aria-label="Supplied eight-second Tessarchy power-on animation"><source src="assets/power-on.mp4" type="video/mp4"></video><h3>A new power-on sequence.</h3><p>The supplied eight-second animation now drives the Plymouth theme. The package plays it once, keeps its square composition on phone and tablet displays, then holds the final frame until startup finishes.</p><p>The video was observed in diskless BIOS and UEFI live boots. Physical-tablet acceptance is recorded separately.</p><a class="text-link" href="assets/power-on.mp4" download>Download the animation MP4 ↓</a><br><a class="text-link" href="assets/tablet-startup.png">View the actual UEFI startup frame ↗</a></article>
-<article><button class="shot-button" data-image="assets/phone-login.png?v=20261019-refresh" aria-label="Enlarge real phone login screenshot"><img src="assets/phone-login.png?v=20261019-refresh" alt="Actual greetd phone login in the VM, with a glass numeric keypad and four empty PIN dots" width="390" height="844" loading="lazy"></button><h3>A familiar way in.</h3><p>Four-digit account-password sign-in through greetd and PAM. Wrong-PIN rejection, successful sign-in, and return to the greeter were tested in the development VM. The greeter authenticates a new session.</p><a class="text-link" href="https://github.com/thediamondsaint/tessarchy/blob/main/docs/phone-login.md">Read the login validation ↗</a></article>
-<article><button class="shot-button" data-image="assets/phone-bluetooth.png?v=20261019-refresh" aria-label="Enlarge Bluetooth controls screenshot"><img src="assets/phone-bluetooth.png?v=20261019-refresh" alt="Actual development VM Bluetooth panel reporting that no adapter is available" width="390" height="844" loading="lazy"></button><h3>Connected, with care.</h3><p>Bluetooth controls handle missing adapters. The VM now has two audio outputs, with real signal capture, touch output selection, mute and volume checks completed. Media playback and private screenshots remain separate acceptance work.</p><a class="text-link" href="https://github.com/thediamondsaint/tessarchy/blob/main/docs/pr-triage.md">See the contributor integration record ↗</a></article>
-<article><button class="shot-button" data-image="assets/phone-login-home.png?v=20261019-refresh" aria-label="Enlarge authenticated home screenshot"><img src="assets/phone-login-home.png?v=20261019-refresh" alt="Tessa home after a successful real PAM login in the development VM" width="390" height="844" loading="lazy"></button><h3>Back to your space.</h3><p>The greeter and desktop now start through the supported Hyprland launcher. The tested user session reports no configuration errors or launcher warnings. Physical device support remains a separate milestone.</p><a class="text-link" href="https://github.com/thediamondsaint/tessarchy/pull/25">View the merged login work ↗</a></article>
-</div>
-<p class="evidence-note">Actual VM captures, not hardware mockups. Expand an image to inspect or download it. The screenshot pack includes {{SCREENSHOT_COUNT}} published captures.</p>
-</section>
-<section id="roadmap" class="roadmap-section">
-<div class="section-intro"><div><p class="eyebrow">THE PATH TO SOMETHING YOU CAN HOLD</p><h2>From prototype<br><em>to device.</em></h2></div><p>Start with one supported device. Prove each milestone before widening support. The phone path adds modem, calling and messaging validation to the tablet foundation.</p></div>
-<div class="roadmap-grid"><button class="shot-button roadmap-shot" data-image="assets/tessarchy-device-roadmap.png" aria-label="Enlarge the Tessarchy device roadmap"><img src="assets/tessarchy-device-roadmap.png" alt="Tessarchy roadmap from a VM prototype through six planned milestones to a working phone or tablet; concept device renders are labelled" width="1024" height="1536" loading="lazy"></button><div class="roadmap-copy"><span class="status-label available">NOW: VM PROTOTYPE</span><h3>Six gates.<br>One tangible goal.</h3><ol><li>Stabilize the shell, navigation and touch experience.</li><li>Select Linux-compatible reference hardware.</li><li>Boot a usable native session on that device.</li><li>Validate tablet features, then the phone-specific requirements.</li><li>Prove enrollment, updates, data protection and recovery.</li><li>Run a daily-use pilot with a repeatable image and guide.</li></ol><p>Current milestone: the VM prototype. The roadmap’s concept phone and tablet illustrate the hardware target; the screenshots show the running development session.</p><a class="button" href="assets/tessarchy-device-roadmap.png" download>Download the roadmap <span>↓</span></a></div></div>
-</section>
-<section id="press-kit" class="press-kit"><div class="section-intro"><div><p class="eyebrow">READY TO SHARE</p><h2>Give the group<br><em>the whole picture.</em></h2></div><p>Share the site, the roadmap and the actual development captures. The official logo kit includes transparent sizes, vector formats and a spinning animated GIF.</p></div><div class="share-panel"><img class="brand-mark" src="assets/tessarchy-mark.svg" alt="Official mint Tessarchy geometric logo" width="120" height="120"><div><h3>Tessarchy · Quiet Edge</h3><p>A touch-first Arch Linux prototype, moving from VM to handheld. Explore the mobile shell, real PIN login, tester ISO and hardware roadmap.</p><div class="actions"><button class="button primary" id="share-project" type="button">Share project ↗</button><a class="button" href="https://github.com/thediamondsaint/tessarchy/releases/download/brand-kit-20261017/Tessarchy-Official-Logo-Kit.zip">Official logo ZIP ↓</a><a class="text-link" href="https://github.com/thediamondsaint/tessarchy/releases/download/brand-kit-20261017/tessarchy-logo-3d-spin-512.gif">Spinning logo GIF ↓</a><a class="text-link" href="assets/screenshots.zip" download>Screenshot pack ↓</a></div><p id="share-status" role="status" aria-live="polite"></p><a class="text-link" href="https://thediamondsaint.github.io/tessarchy/">thediamondsaint.github.io/tessarchy/</a></div></div></section>
-<section id="download" class="download">
-  <img src="assets/tessarchy-mark.svg" alt="" width="68" height="68">
-  <p class="eyebrow">ALPHA 17 · BUILT 23 OCTOBER 2026</p>
-  <h2>Boot the latest<br><em>Tessarchy build.</em></h2>
-  <p>A verified x86_64 tester image, current boot evidence, and a signed Arch VM base disk. Try it in a disposable virtual machine.</p>
-  <div class="actions"><a id="release-link" class="button primary" href="https://github.com/thediamondsaint/tessarchy/releases/tag/v0.1.0-alpha.17">Download Alpha 17 <span>↓</span></a><a class="button" href="https://github.com/thediamondsaint/tessarchy">View source <span>↗</span></a></div>
-  <p class="release-note" id="release-note">ISO assembly instructions, SHA-256 checksums, VM signatures and BIOS/UEFI evidence are on the release page.</p>
-  <div class="download-grid">
-    <article><span class="status-label testing">LIVE ISO</span><h3>Assemble the image.</h3><p>Download both `.part` files and `DOWNLOAD-ISO.md` from the release. In their directory, run:</p><pre><code>cat tessarchy-0.1.0-20261023-x86_64.iso.part??? &gt; tessarchy-0.1.0-20261023-x86_64.iso
-sha256sum -c SHA256SUMS</code></pre><p>The checksum file verifies both parts and the complete ISO.</p><a class="text-link" href="https://github.com/thediamondsaint/tessarchy/releases/download/v0.1.0-alpha.17/DOWNLOAD-ISO.md">Read the ISO instructions ↗</a></article>
-    <article><span class="status-label available">VM BASE IMAGE</span><h3>Run it in Arch.</h3><p>Download the official Arch Basic qcow2, then verify it before using the development VM launcher.</p><a id="vm-image-link" class="button" href="https://github.com/thediamondsaint/tessarchy/releases/download/v0.1.0-alpha.17/Arch-Linux-x86_64-basic-20261015.611680.qcow2">Download Arch VM image ↓</a><p class="vm-assets"><a id="vm-checksum-link" href="https://github.com/thediamondsaint/tessarchy/releases/download/v0.1.0-alpha.17/Arch-Linux-x86_64-basic-20261015.611680.qcow2.SHA256">SHA-256</a><span> · </span><a id="vm-signature-link" href="https://github.com/thediamondsaint/tessarchy/releases/download/v0.1.0-alpha.17/Arch-Linux-x86_64-basic-20261015.611680.qcow2.sig">Signature</a></p><p>Place it at <code>vm/Arch-Linux-x86_64-basic.qcow2</code>. See the <a href="https://github.com/thediamondsaint/tessarchy/blob/main/docs/vm.md">VM setup guide</a>.</p></article>
-    <article><span class="status-label available">VM VERIFIED</span><h3>The desktop appears.</h3><p>Alpha 17 reached the Tessarchy desktop in both BIOS and UEFI QEMU boots. The check suite passed 270 Python and 138 Qt Quick tests.</p><a class="text-link" href="https://github.com/thediamondsaint/tessarchy/releases/download/v0.1.0-alpha.17/boot-bios.png">BIOS screenshot ↗</a><br><a class="text-link" href="https://github.com/thediamondsaint/tessarchy/releases/download/v0.1.0-alpha.17/boot-uefi.png">UEFI screenshot ↗</a></article>
-  </div>
-  <p class="release-note">The live session has no persistence. It logs into `tess` automatically; keep a physical keyboard available for recovery.</p>
-  <a class="text-link" href="assets/screenshots.zip" download>Download the screenshot pack ↓</a>
-</section>
-</main>
-<footer><a class="wordmark" href="#"><img src="assets/tessarchy-mark.svg" alt="" width="24" height="24">TESSARCHY</a><p>Built with intent. Shared in the open.</p><span id="build-stamp">From the Tessarchy repository</span></footer>
-<dialog id="gallery"><button id="gallery-close" aria-label="Close screenshot">×</button><img id="gallery-image" alt="Enlarged Tessarchy screenshot"><a id="gallery-download" download>Download original ↗</a></dialog>
-</body></html>
+    <section class="welcome section-pad" id="meet-tess">
+      <div class="welcome-mark" aria-hidden="true"><img src="assets/tess-mark.svg" alt="" width="84" height="84"></div>
+      <div class="welcome-copy">
+        <p class="kicker">FIRST, THE FACE</p>
+        <h2>This is <em>Tess.</em></h2>
+        <p class="welcome-lede">She is the curious, confident face of the project. Tessa is the Linux desktop she is here to show you.</p>
+        <p>Think of Tess as your host: she’ll introduce the little details, the experiments, and the work still ahead. The artwork is an illustration of the project’s direction; Alpha 17 is an early live build, not a finished phone operating system.</p>
+        <a class="under-link" href="https://github.com/thediamondsaint/tessarchy">Get to know the project on GitHub <span aria-hidden="true">↗</span></a>
+      </div>
+    </section>
+
+    <section class="devices section-pad" id="devices">
+      <div class="section-heading">
+        <div><p class="kicker">TESSA, IN THREE SIZES</p><h2>One Tessa.<br><em>Your kind of screen.</em></h2></div>
+        <p>These concept portraits show Tess presenting the phone, tablet, and desktop ideas. Tessa’s layouts adapt to the available space; device support is still being developed.</p>
+      </div>
+      <div class="device-grid">
+        <article class="device-card phone-card">
+          <div class="device-image"><img src="assets/tess-phone.webp" alt="Tess presents a phone with an abstract teal tile pattern on its screen." width="1122" height="1402" loading="lazy"><span class="device-number">01</span></div>
+          <div class="device-copy"><p class="card-label">SMALL SCREEN</p><h3>Tessa for the phone.</h3><p>A compact layout, touch-sized controls, a dialer, contacts, messages, and an on-screen keyboard are part of the developing experience.</p><span class="status-pill">HARDWARE WORK AHEAD</span></div>
+        </article>
+        <article class="device-card tablet-card">
+          <div class="device-image"><img src="assets/tess-tablet.webp" alt="Tess holds a tablet with an abstract teal tile pattern on its screen." width="1122" height="1402" loading="lazy"><span class="device-number">02</span></div>
+          <div class="device-copy"><p class="card-label">ROOM TO EXPLORE</p><h3>Tessa for the tablet.</h3><p>A wider touch workspace for apps, quick controls, files, settings, and the things you keep close at hand.</p><span class="status-pill">PACKAGE PROFILE IN DEVELOPMENT</span></div>
+        </article>
+        <article class="device-card desktop-card">
+          <div class="device-image"><img src="assets/tess-desktop.webp" alt="Tess gestures toward a desktop monitor displaying an abstract geometric teal wallpaper." width="1536" height="1024" loading="lazy"><span class="device-number">03</span></div>
+          <div class="device-copy"><p class="card-label">A BIGGER WORKSPACE</p><h3>Tessa at the desktop.</h3><p>A familiar pointer-and-keyboard workspace, with app switching, window controls, and room for your tools.</p><span class="status-pill">VM EXPERIENCE TESTED</span></div>
+        </article>
+      </div>
+      <p class="art-disclaimer"><span aria-hidden="true">✳</span> Tess and the device screens in these portraits are concept artwork. The running interface is evolving in the published Alpha.</p>
+    </section>
+
+    <section class="tessa-section">
+      <div class="tessa-topline"><p class="kicker">UNDER THE SURFACE</p><span>THE DESKTOP IS CALLED TESSA</span></div>
+      <div class="tessa-intro"><h2>Not a skin.<br><em>A desktop in progress.</em></h2><p>Tessa brings together a custom Quickshell interface and Hyprland on Arch Linux. The goal: one thoughtful environment that can change shape without losing its character.</p></div>
+      <div class="feature-list">
+        <article><span class="feature-index">A</span><div><h3>Layouts that respond</h3><p>Choose automatic sizing or set a phone, tablet, or desktop layout yourself.</p></div></article>
+        <article><span class="feature-index">B</span><div><h3>Controls close by</h3><p>Pull-down settings bring display, audio, navigation, and available radio controls within reach.</p></div></article>
+        <article><span class="feature-index">C</span><div><h3>Apps with a place here</h3><p>Launcher, files, settings, phone, messages, and other tools are being shaped around touch and keyboard use.</p></div></article>
+        <article><span class="feature-index">D</span><div><h3>Made in the open</h3><p>Source, package recipes, validation notes, and open work live alongside the project.</p></div></article>
+      </div>
+    </section>
+
+    <section class="progress section-pad" id="progress">
+      <div class="section-heading progress-heading">
+        <div><p class="kicker">NO MYSTERY ABOUT THE MILESTONE</p><h2>Early, open,<br><em>moving forward.</em></h2></div>
+        <p>Tessarchy is an experimental operating system. We separate what boots today from what still needs hardware, testing, and time.</p>
+      </div>
+      <div class="progress-grid">
+        <article class="progress-card progress-now"><span class="progress-index">NOW</span><h3>Try it in a VM</h3><p>Alpha 17 boots to Tessa in BIOS and UEFI QEMU runs. The live session is a disposable demonstration with no persistence.</p><a href="#download">Explore the current release <span aria-hidden="true">↓</span></a></article>
+        <article class="progress-card"><span class="progress-index">NEXT</span><h3>Pick reference hardware</h3><p>Choose a Linux-friendly device and prove the display, touch, keyboard, audio, and radio paths on physical hardware.</p></article>
+        <article class="progress-card"><span class="progress-index">LATER</span><h3>Make it dependable</h3><p>Build repeatable install, update, data-protection, and recovery paths before calling it ready for daily use.</p></article>
+      </div>
+      <div class="progress-links"><a href="https://github.com/thediamondsaint/tessarchy/blob/main/docs/testing.md">Read the validation notes ↗</a><a href="https://github.com/thediamondsaint/tessarchy/blob/main/docs/device-roadmap.md">Follow the device roadmap ↗</a><a href="https://github.com/thediamondsaint/tessarchy/issues">Report a bug or suggest a change ↗</a></div>
+      <div class="latest-commit"><span><i aria-hidden="true"></i> LATEST PROJECT ACTIVITY</span><a id="commit-link" href="https://github.com/thediamondsaint/tessarchy/commits/main"><span id="commit-message">Browse recent work on GitHub</span> ↗</a></div>
+    </section>
+
+    <section class="download-section" id="download">
+      <div class="download-copy">
+        <p class="kicker">THE CURRENT TESTER BUILD · ALPHA 17</p>
+        <h2>Say hello<br>to Tessa.</h2>
+        <p>Boot the latest x86_64 live image in a disposable virtual machine. Check the release notes before you start; this build is for curious testers and contributors.</p>
+        <div class="download-actions"><a class="button button-bright" id="release-link" href="https://github.com/thediamondsaint/tessarchy/releases/tag/v0.1.0-alpha.17">Get Alpha 17 <span aria-hidden="true">↓</span></a><a class="download-source" href="https://github.com/thediamondsaint/tessarchy">Browse the source <span aria-hidden="true">↗</span></a></div>
+        <p class="download-note" id="release-note">The release page has the split ISO parts, assembly guide, checksums, boot captures, and current VM image.</p>
+      </div>
+      <div class="download-details">
+        <article><span class="download-step">01 / THE LIVE IMAGE</span><h3>Put the parts together.</h3><p>Download both ISO parts and the guide from the release. Reassemble them in one directory, then check the published SHA-256 sums.</p><a class="detail-link" href="https://github.com/thediamondsaint/tessarchy/releases/download/v0.1.0-alpha.17/DOWNLOAD-ISO.md">Open the ISO guide ↗</a></article>
+        <article><span class="download-step">02 / THE DEVELOPMENT VM</span><h3>Start with a clean base.</h3><p>The official Arch Basic qcow2 is available with a checksum and detached signature. Follow the VM guide to use it with the project.</p><a class="vm-download" id="vm-image-link" href="https://github.com/thediamondsaint/tessarchy/releases/download/v0.1.0-alpha.17/Arch-Linux-x86_64-basic-20261015.611680.qcow2">Get the VM image ↓</a><p class="verify-links"><a id="vm-checksum-link" href="https://github.com/thediamondsaint/tessarchy/releases/download/v0.1.0-alpha.17/Arch-Linux-x86_64-basic-20261015.611680.qcow2.SHA256">Checksum</a><span> · </span><a id="vm-signature-link" href="https://github.com/thediamondsaint/tessarchy/releases/download/v0.1.0-alpha.17/Arch-Linux-x86_64-basic-20261015.611680.qcow2.sig">Signature</a><span> · </span><a href="https://github.com/thediamondsaint/tessarchy/blob/main/docs/vm.md">Setup guide</a></p></article>
+        <article><span class="download-step">03 / BEFORE YOU BOOT</span><h3>Keep expectations clear.</h3><p>The session does not save changes when you shut it down. Alpha 17 was checked in QEMU; physical device support and phone hardware acceptance are still in progress.</p><a class="detail-link" href="https://github.com/thediamondsaint/tessarchy/releases/tag/v0.1.0-alpha.17">See what’s in Alpha 17 ↗</a></article>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <a class="brand footer-brand" href="#top"><img src="assets/tess-mark.svg" width="38" height="38" alt=""><span>TESSARCHY<small>THE WORLD OF TESSA</small></span></a>
+    <p>Follow Tess as Tessa takes shape.</p>
+    <div class="footer-links"><a href="https://github.com/thediamondsaint/tessarchy">Source</a><a href="https://github.com/thediamondsaint/tessarchy/issues">Issues</a><a href="https://github.com/thediamondsaint/tessarchy/blob/main/CONTRIBUTING.md">Contribute</a></div>
+    <span id="build-stamp" class="build-stamp">An independent project, built in the open.</span>
+  </footer>
+</body>
+</html>
