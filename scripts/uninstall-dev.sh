@@ -62,6 +62,10 @@ if [[ $version != tessarchy-dev-v1 ]]; then
     rm -f -- "$manifest"
     find "$data" -depth -type d -exec rmdir -- {} \; 2>/dev/null || true
 else
+    rm -f -- "$data/shell/components/BatteryIndicator.qml" "$data/shell/StatusPolicy.js"
+    for kind in cellular wifi; do
+        for level in 0 1 2 3 4; do rm -f -- "$data/shell/icons/$kind-level-$level.svg"; done
+    done
     rm -f -- "$data/shell/shell.qml" "$data/shell/components/TouchButton.qml" "$data/shell/components/NavButton.qml" "$data/shell/components/AppTile.qml" "$data/shell/components/StatusIcon.qml" "$data/shell/components/AudioStatus.qml" "$data/shell/components/BrandMark.qml" "$data/shell/components/SettingsPage.qml" "$data/shell/components/LevelSlider.qml" "$data/shell/components/AppSwitcher.qml" "$data/shell/components/RadioBackend.qml" "$data/shell/components/RadioTile.qml" "$data/shell/components/QuickSettings.qml" "$data/shell/LayoutPolicy.js" "$data/shell/SwitcherPolicy.js"
     for icon in back home recents power browser terminal wifi cellular volume volume-muted battery settings phone tablet desktop auto controls return close airplane bluetooth; do rm -f -- "$data/shell/icons/$icon.svg"; done
     rm -f -- "$data/shell/artwork/aurora-fold.png" "$data/shell/artwork/tessarchy-mark.svg"

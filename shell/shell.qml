@@ -9,6 +9,7 @@ import Quickshell.Hyprland
 import Quickshell.Io
 import Quickshell.Wayland
 import Quickshell.Services.UPower
+import "StatusPolicy.js" as StatusPolicy
 import Quickshell.Services.Mpris
 import Quickshell.Services.SystemTray
 import Quickshell.Services.Notifications
@@ -218,7 +219,19 @@ ShellRoot {
     }
     // Bind these when wireless/modem integrations land. Never invent a signal.
     property real wifiStrength: -1
-    readonly property real cellularStrength: communications.state.cellular.signal === undefined ? -1 : communications.state.cellular.signal / 100
+    readonly property real cellularStrength: StatusPolicy.cellularStrength(communications.state.cellular)
+    readonly property string batteryState: {
+        if (!UPower.displayDevice.ready) return "unknown";
+        switch (UPower.displayDevice.state) {
+        case UPowerDeviceState.Charging: return "charging";
+        case UPowerDeviceState.Discharging: return "discharging";
+        case UPowerDeviceState.Empty: return "empty";
+        case UPowerDeviceState.FullyCharged: return "full";
+        case UPowerDeviceState.PendingCharge: return "pending-charge";
+        case UPowerDeviceState.PendingDischarge: return "pending-discharge";
+        default: return "unknown";
+        }
+    }
     // squeekboard via tessarchy-osk; it also appears by itself for text fields.
     readonly property bool oskAvailable: Quickshell.env("TESSARCHY_OSK") === "1"
     // Desktop mode must never raise the on-screen keyboard; touch modes may.
@@ -833,8 +846,9 @@ ShellRoot {
                                     cellularStrength: root.cellularStrength
                                     wifiStrength: root.wifiStrength
                                     airplaneOn: !!(radioBackend.state.airplane && radioBackend.state.airplane.enabled)
-                                    batteryPresent: UPower.displayDevice.isPresent
+                                    batteryPresent: UPower.displayDevice.ready && UPower.displayDevice.isPresent
                                     batteryPercent: UPower.displayDevice.percentage
+                                    batteryState: root.batteryState
                                     audioAvailable: root.audioAvailable
                                     audioMuted: root.audioAvailable && root.audioSink.audio.muted
                                     notificationsSelected: panel.page === "notifications"
@@ -1379,8 +1393,9 @@ ShellRoot {
                         cellularStrength: root.cellularStrength
                         wifiStrength: root.wifiStrength
                         airplaneOn: !!(radioBackend.state.airplane && radioBackend.state.airplane.enabled)
-                        batteryPresent: UPower.displayDevice.isPresent
+                        batteryPresent: UPower.displayDevice.ready && UPower.displayDevice.isPresent
                         batteryPercent: UPower.displayDevice.percentage
+                        batteryState: root.batteryState
                         audioAvailable: root.audioAvailable
                         audioMuted: root.audioAvailable && root.audioSink.audio.muted
                         notificationsSelected: panel.page === "notifications"
