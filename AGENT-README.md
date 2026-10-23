@@ -168,6 +168,7 @@ after the last assigned ID; preserve existing IDs when reorganizing sections.
 
 | Task ID | Status | Owner | Branch / PR | Next action or evidence |
 | --- | --- | --- | --- | --- |
+| T86 | In progress | Codex | fix/issue-80-current-main | Reconcile OSK-resistant dialog lift with current main; preserve ASUS and software evidence |
 | T81 | In progress | Codex | fix/89-osk-dismiss-button | Add a 48px+ OSK toggle in the mobile status bar; check Phone and Tablet placement |
 | T80 | In progress | Codex | feat/operation-tessa | Integrate #61/#85 and #58, cube/radial/launcher, VM acceptance |
 | T79 | Review | Codex | docs/touch-window-tape | Native Hyprland scrolling prototype #61 |
