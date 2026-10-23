@@ -5,3 +5,17 @@
 .evidence-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:28px}.evidence-grid article{padding:28px;border:1px solid var(--line);border-radius:24px;background:var(--glass)}.evidence-grid .shot-button{max-width:220px;margin:auto;border-radius:18px;overflow:hidden;border:1px solid var(--line)}.evidence-grid h3{font-size:24px;margin-top:28px}.evidence-grid p,.evidence-note,.roadmap-copy p,.share-panel p{font-size:13px;color:var(--muted)}.evidence-note{margin-top:28px}.roadmap-grid{display:grid;grid-template-columns:1.15fr 1fr;gap:56px;align-items:center}.roadmap-shot{border:1px solid var(--line);border-radius:20px;overflow:hidden;box-shadow:0 20px 60px #0005}.roadmap-copy h3{font-size:38px;line-height:1.15;margin-block:24px}.roadmap-copy ol{padding-left:22px;color:var(--muted);font-size:14px}.roadmap-copy li{margin-bottom:20px;padding-left:8px}.share-panel{display:grid;grid-template-columns:140px 1fr;gap:32px;padding:40px;border-radius:28px;border:1px solid var(--line);background:radial-gradient(ellipse at top left,#3f7d6940,transparent 65%),#0d1e28}.brand-mark{width:120px;height:120px;filter:drop-shadow(0 12px 24px #adebd733)}.share-panel .actions{gap:16px;margin-top:24px}.share-panel .text-link{display:inline-flex;align-items:center;min-height:48px}.nav nav a{display:inline-flex;align-items:center;min-height:48px}.project-links a,.download>.text-link,.evidence-grid .text-link{display:inline-flex;align-items:center;min-height:48px}#share-status:empty{display:none}@media(max-width:900px){.evidence-grid{gap:18px}.evidence-grid article{padding:18px}.roadmap-grid{gap:32px}.share-panel{padding:28px;grid-template-columns:100px 1fr}.brand-mark{width:90px;height:90px}.nav nav{gap:18px}}@media(max-width:650px){.evidence-grid,.roadmap-grid,.share-panel{grid-template-columns:1fr}.evidence-grid article{padding:28px}.evidence-grid .shot-button{max-width:240px}.share-panel{gap:12px;padding:28px}.roadmap-copy h3{font-size:32px}.share-panel .actions{align-items:stretch;flex-direction:column}.share-panel .text-link{overflow-wrap:anywhere}.roadmap-copy li{margin-bottom:16px}}
 
 .evidence-grid video{display:block;width:100%;height:auto;border-radius:18px;border:1px solid var(--line);background:#081224}
+
+/* Alpha 17 release downloads and verified VM evidence. */
+.download-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;max-width:1100px;margin:34px auto 0;text-align:left}
+.download-grid article{min-width:0;padding:26px;border:1px solid var(--line);border-radius:22px;background:var(--glass)}
+.download-grid h3{margin:12px 0;font-size:22px}
+.download-grid p{font-size:13px;color:var(--muted)}
+.download-grid pre{max-width:100%;overflow-x:auto;padding:14px;border:1px solid var(--line);border-radius:12px;background:#08121a;color:var(--mint);font-size:11px;line-height:1.7;white-space:pre}
+.download-grid .button{margin-top:8px}
+.vm-assets{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.vm-assets a,.download-grid p a{color:var(--mint);text-decoration:underline;text-underline-offset:3px}
+.boot-shot{display:block;width:100%;overflow:hidden;border:1px solid var(--line);border-radius:16px;background:#08121a}
+.boot-shot img{display:block;width:100%;height:auto;aspect-ratio:16/10;object-fit:cover}
+@media(max-width:900px){.download-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:650px){.download-grid{grid-template-columns:1fr}.download-grid article{padding:22px}.download-grid pre{font-size:10px}}
