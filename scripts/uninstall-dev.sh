@@ -9,10 +9,10 @@ version=$(cat "$data/.tessarchy-dev-install")
 root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 unit=${XDG_CONFIG_HOME:-$HOME/.config}/systemd/user/tessarchy-apps.target
 if [[ -e $unit || -L $unit ]]; then
-    [[ ! -L $unit && -f $unit && -f $data/session/tessarchy-apps.target ]] &&
-        cmp -s -- "$data/session/tessarchy-apps.target" "$unit" || {
+    if [[ -L $unit || ! -f $unit || ! -f $data/session/tessarchy-apps.target ]] ||
+       ! cmp -s -- "$data/session/tessarchy-apps.target" "$unit"; then
         echo "Modified or unsafe unit: $unit; preserve or remove it manually" >&2; exit 1;
-    }
+    fi
 fi
 manifest=$data/.tessarchy-dev-files
 entries=()
