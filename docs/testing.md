@@ -2715,3 +2715,18 @@ state. No credentials were entered, so authenticated usage, physical sign-in,
 and native ChatGPT window rendering remain unverified.
 
 [Actual VM capture and provenance](../assets/screenshots/tessa-chatgpt/README.md).
+
+## OSK gesture strip reconciliation on current main — 2026-10-23
+
+Integrated #78's Bottom-layer reservation with current main's newer OSK toggle
+and theme work. The keyboard now ends above the physical-edge navigation input,
+and Desktop keeps zero reservation. Theme validation retains both the existing
+`wheel_glow` token and the new `gesture_background` token.
+
+`./scripts/check.sh` passed: 232 Python tests (three expected legacy skips),
+111 Qt Quick tests, website checks, Hyprland session/greeter configuration and
+available static checks. Fish and ShellCheck were unavailable; QML lint retains
+the existing FilePicker PanelWindow creatability warning. Earlier #79 evidence
+includes VM virtual-touch spacebar taps in Phone and Tablet and the parent
+integration's ASUS geometry; this reconciliation was not separately installed
+in the guest, so the current-main source change still needs a runtime recheck.
