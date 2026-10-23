@@ -13,6 +13,25 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class Workflows(unittest.TestCase):
+    def test_osk_gesture_reservation_keeps_input_and_background_at_physical_edge(self):
+        shell = (ROOT / 'shell/shell.qml').read_text()
+        policy = (ROOT / 'shell/LayoutPolicy.js').read_text()
+        theme = (ROOT / 'shell/components/Theme.qml').read_text()
+        reservation = shell.split('WlrLayershell.namespace: "tessera-gesture-reservation"')[0].split('PanelWindow {')[-1]
+        gesture = shell.split('id: bottomGesture', 1)[1].split('id: bottomSwipe', 1)[0]
+        self.assertIn('visible: surface.gestureStripHeight > 0', reservation)
+        self.assertIn('anchors { bottom: true; left: true; right: true }', reservation)
+        self.assertIn('exclusiveZone: surface.gestureStripHeight', reservation)
+        self.assertIn('color: Theme.gestureBackground', reservation)
+        self.assertIn('WlrLayershell.layer: WlrLayer.Bottom', shell)
+        self.assertIn('implicitHeight: surface.gestureStripHeight', gesture)
+        self.assertIn('exclusionMode: ExclusionMode.Ignore', gesture)
+        self.assertIn('WlrLayershell.layer: WlrLayer.Overlay', gesture)
+        self.assertIn('anchors {', gesture)
+        self.assertIn('bottom: true', gesture)
+        self.assertIn('function gestureStripHeight(mode, gestures, reveal, edge)', policy)
+        self.assertIn('gestureBackground: token("gesture_background", "#000000")', theme)
+
     def test_shell_shape_literals_live_in_theme_tokens(self):
         # Tiny decorative marks and circular avatars retain fixed geometry.
         legacy = {'StatusIcon.qml': 1, 'ContactAvatar.qml': 1, 'shell.qml': 2}
@@ -104,6 +123,16 @@ class Workflows(unittest.TestCase):
         self.assertIn('Phone, Messages and Keyboard are in the expanded T cube', shell)
         taskbar = panel[panel.index('visible: surface.mode === "desktop"\n'):]
         self.assertIn('Layout.preferredHeight: surface.bar.row\n', taskbar[:200])
+
+    def test_desktop_status_surface_does_not_reserve_an_empty_top_strip(self):
+        shell = (ROOT / 'shell/shell.qml').read_text()
+        status = shell[shell.index('id: statusBar\n'):]
+        panel = shell[shell.index('id: panel\n'):shell.index('id: statusBar\n')]
+        self.assertIn('visible: surface.mode !== "desktop" || drawerOpen', status)
+        self.assertIn('exclusiveZone: surface.mode === "desktop" ? 0 : 48', status)
+        self.assertIn('onPanelRequested: statusBar.toggleDrawer()', panel)
+        self.assertIn('visible: surface.mode === "desktop"', panel)
+        self.assertIn('Layout.preferredHeight: surface.bar.row', panel)
 
     def test_navigation_gestures_move_touch_actions_into_the_t_cube(self):
         shell = (ROOT / 'shell/shell.qml').read_text()

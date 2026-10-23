@@ -105,6 +105,13 @@ function gestureEdgeSize(mode, expanded) {
     return {side: GESTURE_EDGE, bottom: bottom, handle: Math.min(bar.gap, bottom) / 2};
 }
 
+// A Bottom-layer reservation precedes the Top-layer keyboard; the Overlay
+// input strip stays at the physical edge, using exactly the same height.
+function gestureStripHeight(mode, gestures, reveal, edge) {
+    if (mode === "desktop") return 0;
+    return reveal ? edge.side : gestures ? edge.bottom : 0;
+}
+
 // Touch docks: Phone, Messages and the optional Keyboard, plus Back, Home and
 // Recents when gestures are off. Settings lives in the status bar and pull-down.
 function dockLayout(mode, width, keyboard, gestures) {

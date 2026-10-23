@@ -7,6 +7,13 @@ data=${XDG_DATA_HOME:-$HOME/.local/share}/tessarchy
 version=$(cat "$data/.tessarchy-dev-install")
 [[ $version == tessarchy-dev-v1 || $version == tessarchy-dev-v2 || $version == tessarchy-dev-v3 ]] || exit 1
 root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
+unit=${XDG_CONFIG_HOME:-$HOME/.config}/systemd/user/tessarchy-apps.target
+if [[ -e $unit || -L $unit ]]; then
+    if [[ -L $unit || ! -f $unit || ! -f $data/session/tessarchy-apps.target ]] ||
+       ! cmp -s -- "$data/session/tessarchy-apps.target" "$unit"; then
+        echo "Modified or unsafe unit: $unit; preserve or remove it manually" >&2; exit 1;
+    fi
+fi
 manifest=$data/.tessarchy-dev-files
 entries=()
 if [[ $version != tessarchy-dev-v1 ]]; then
@@ -25,7 +32,7 @@ if [[ $version != tessarchy-dev-v1 ]]; then
     done
 fi
 # New installs retain the installed bytes so a source update is not a user edit.
-launchers=(start-tessarchy tessera-shell tessarchy-osk tessarchy-theme tessarchy-run tessera-screenshot tessera-chatgpt-status tessa-ai tessarchy-ssh tessera-brightness tessera-nightlight tessera-rotate tessarchy-session-services)
+launchers=(start-tessarchy tessera-shell tessarchy-osk tessarchy-theme tessarchy-run tessarchy-launch tessera-screenshot tessera-chatgpt-status tessa-ai tessarchy-ssh tessera-brightness tessera-nightlight tessera-rotate tessarchy-session-services)
 originals=$root/session
 if [[ $version == tessarchy-dev-v3 ]]; then
     originals=$data/.tessarchy-dev-launchers
@@ -56,12 +63,17 @@ for launcher in "${launchers[@]}"; do
 done
 
 for launcher in "${launchers[@]}"; do rm -f -- "$HOME/.local/bin/$launcher"; done
+rm -f -- "$unit"
 # Remove only files recorded by this installation.
 if [[ $version != tessarchy-dev-v1 ]]; then
     for relative in "${entries[@]}"; do rm -f -- "$data/$relative"; done
     rm -f -- "$manifest"
     find "$data" -depth -type d -exec rmdir -- {} \; 2>/dev/null || true
 else
+    rm -f -- "$data/shell/components/BatteryIndicator.qml" "$data/shell/StatusPolicy.js"
+    for kind in cellular wifi; do
+        for level in 0 1 2 3 4; do rm -f -- "$data/shell/icons/$kind-level-$level.svg"; done
+    done
     rm -f -- "$data/shell/shell.qml" "$data/shell/components/TouchButton.qml" "$data/shell/components/NavButton.qml" "$data/shell/components/AppTile.qml" "$data/shell/components/StatusIcon.qml" "$data/shell/components/AudioStatus.qml" "$data/shell/components/BrandMark.qml" "$data/shell/components/SettingsPage.qml" "$data/shell/components/LevelSlider.qml" "$data/shell/components/AppSwitcher.qml" "$data/shell/components/RadioBackend.qml" "$data/shell/components/RadioTile.qml" "$data/shell/components/QuickSettings.qml" "$data/shell/LayoutPolicy.js" "$data/shell/SwitcherPolicy.js"
     for icon in back home recents power browser terminal wifi cellular volume volume-muted battery settings phone tablet desktop auto controls return close airplane bluetooth; do rm -f -- "$data/shell/icons/$icon.svg"; done
     rm -f -- "$data/shell/artwork/aurora-fold.png" "$data/shell/artwork/tessarchy-mark.svg"
