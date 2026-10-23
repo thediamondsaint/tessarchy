@@ -3,6 +3,7 @@ AppTile 1.0 AppTile.qml
 AudioControls 1.0 AudioControls.qml
 AudioPanel 1.0 AudioPanel.qml
 AudioStatus 1.0 AudioStatus.qml
+BatteryIndicator 1.0 BatteryIndicator.qml
 BluetoothPanel 1.0 BluetoothPanel.qml
 BrandMark 1.0 BrandMark.qml
 BrightnessControl 1.0 BrightnessControl.qml

@@ -1,28 +1,25 @@
 import QtQuick
 import QtQuick.Layouts
+import "../StatusPolicy.js" as StatusPolicy
 
 Item {
     id: indicator
     required property string symbol
     required property string label
-    // Negative means no backend/device; bind a real signal value here later.
+    // Strength is normalized; negative or invalid data is unavailable.
     property real strength: -1
     property bool uniform: false
     // Top bars use a full touch target even when the glyph itself stays small.
     property bool touchMode: false
-    // Mobile strip shows a steady medium signal when no radio backend reports
-    // a real value, instead of a crossed-out glyph.
-    property bool showFallback: false
     property bool pressed: false
     property bool hovered: false
     property int touchSlot: 48
-    property int fallbackLevel: 2
     signal clicked
-    readonly property bool reported: strength >= 0
-    readonly property bool fallback: !reported && showFallback
+    readonly property int level: StatusPolicy.signalLevel(strength)
+    readonly property bool reported: level >= 0
     Layout.preferredWidth: touchMode ? touchSlot : uniform ? 28 : 18
     Layout.preferredHeight: 48
-    Accessible.name: label + (reported || fallback ? " connected" : " unavailable")
+    Accessible.name: label + (reported ? " signal " + Math.round(strength * 100) + "%" : " unavailable")
     Accessible.role: Accessible.Button
     Rectangle {
         anchors.centerIn: parent
@@ -42,15 +39,19 @@ Item {
             border.width: 1
             border.color: Qt.alpha(Theme.text, indicator.pressed ? 0.24 : 0.10)
         }
-        Icon {
+        Image {
+            objectName: "signalLevelImage"
             anchors.centerIn: parent
-            symbol: indicator.fallback ? indicator.symbol + "-" + indicator.fallbackLevel : indicator.symbol
-            size: indicator.uniform ? 20 : 18
-            color: indicator.reported || indicator.fallback ? Theme.textSecondary : Theme.muted
-            opacity: indicator.uniform || indicator.reported || indicator.fallback ? 1 : 0.55
+            width: indicator.uniform ? 20 : 18
+            height: width
+            source: "../icons/" + indicator.symbol + "-level-" + Math.max(0, indicator.level) + ".svg"
+            sourceSize.width: width
+            sourceSize.height: height
+            opacity: indicator.reported ? 1 : 0.55
         }
         Rectangle {
-            visible: !indicator.reported && !indicator.fallback
+            objectName: "unavailableSlash"
+            visible: !indicator.reported
             anchors.centerIn: parent
             width: 22
             height: 1.5
