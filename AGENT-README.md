@@ -168,7 +168,7 @@ after the last assigned ID; preserve existing IDs when reorganizing sections.
 
 | Task ID | Status | Owner | Branch / PR | Next action or evidence |
 | --- | --- | --- | --- | --- |
-| T84 | In progress | Codex | fix/issue-73-current-main | Reconcile honest cellular/battery indicators with current main; preserve real-device limits |
+| T84 | Review | Codex | PR #101 | Current-main status indicators pass source checks; real device/service acceptance remains |
 | T81 | In progress | Codex | fix/89-osk-dismiss-button | Add a 48px+ OSK toggle in the mobile status bar; check Phone and Tablet placement |
 | T80 | In progress | Codex | feat/operation-tessa | Integrate #61/#85 and #58, cube/radial/launcher, VM acceptance |
 | T79 | Review | Codex | docs/touch-window-tape | Native Hyprland scrolling prototype #61 |
