@@ -33,6 +33,7 @@ QtObject {
     readonly property color glassStrong: token("glass_strong", Qt.alpha(background, 0.76))
     readonly property color switcherGlass: token("switcher_glass", Qt.alpha(background, 0.70))
     readonly property color barTint: token("bar_tint", background)
+    readonly property color gestureBackground: token("gesture_background", "#000000")
     readonly property color dangerSurface: token("danger_surface", Qt.alpha(danger, 0.26))
     readonly property color startHeaderTop: token("start_header_top", Qt.alpha(selection, 0.55))
     readonly property color startHeaderBottom: token("start_header_bottom", Qt.alpha(selection, 0.12))
@@ -97,7 +98,7 @@ QtObject {
         shellOverrides = ({});
         const overrides = {};
         const shapeKeys = ["radius_card", "radius_tile", "radius_field", "radius_button", "border_width"];
-        const allowed = ["wheel_glow", "glass", "glass_border", "glass_strong", "switcher_glass", "bar_tint", "danger_surface",
+        const allowed = ["wheel_glow", "glass", "glass_border", "glass_strong", "switcher_glass", "bar_tint", "gesture_background", "danger_surface",
             "start_header_top", "start_header_bottom", "start_header_text", "tile_glass", "tile_selected", "tile_pressed",
             "tile_border", "tile_icon_glass", "tile_icon_border", "switcher_card", "switcher_button", "switcher_button_border",
             "tray_glass", "tray_border", "task_idle", "task_border", "task_bevel", "task_pressed_bevel",
