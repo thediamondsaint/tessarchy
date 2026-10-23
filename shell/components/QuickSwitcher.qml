@@ -14,11 +14,13 @@ FocusScope {
     property var titleForWindow: window => (window && window.title) || "Untitled window"
     property color accentColor: Theme.accent
     property bool reducedMotion: false
+    property bool glassMode: false
+    readonly property bool interacting: icons.moving
     // A commit only happens once per open session, so a duplicate accept from
     // the compositor key binding and the QML key release cannot switch twice.
     property bool committed: false
     readonly property int currentIndex: windows.indexOf(selection)
-    readonly property int iconWidth: 80
+    readonly property int iconWidth: glassMode ? 96 : 80
     implicitWidth: Math.max(1, icons.count) * iconWidth
     implicitHeight: 96
     signal windowRequested(var window)
@@ -70,11 +72,14 @@ FocusScope {
     ListView {
         id: icons
         objectName: "quickSwitcherIcons"
-        anchors.fill: parent
+        anchors.centerIn: parent
+        width: control.glassMode ? Math.min(parent.width, count * control.iconWidth) : parent.width
+        height: parent.height
         orientation: ListView.Horizontal
         model: control.windows
         currentIndex: control.currentIndex
         clip: true
+        snapMode: control.glassMode ? ListView.SnapToItem : ListView.NoSnap
         boundsBehavior: Flickable.StopAtBounds
         highlightMoveDuration: 0
         onCurrentIndexChanged: Qt.callLater(() => {
@@ -87,20 +92,39 @@ FocusScope {
             readonly property bool selected: index === control.currentIndex
             width: control.iconWidth
             height: icons.height
+            Rectangle {
+                visible: control.glassMode
+                anchors.centerIn: parent
+                width: 80; height: 80
+                radius: height / 2
+                border.width: Theme.borderWidth(1)
+                border.color: Qt.alpha(app.selected ? control.accentColor : Theme.text, app.selected ? 0.9 : 0.25)
+                gradient: Gradient {
+                    GradientStop { position: 0; color: Qt.alpha(Theme.text, app.selected ? 0.24 : 0.12) }
+                    GradientStop { position: 1; color: Qt.alpha(Theme.surface, 0.30) }
+                }
+            }
             Image {
                 anchors.centerIn: parent
-                width: app.selected ? 64 : 48
+                width: app.selected ? 64 : control.glassMode ? 56 : 48
                 height: width
                 readonly property string fallbackSource: "../artwork/tessarchy-mark.svg"
                 source: control.iconForWindow(app.modelData) || fallbackSource
                 sourceSize.width: 64
                 sourceSize.height: 64
                 fillMode: Image.PreserveAspectFit
-                opacity: app.selected ? 1 : 0.65
+                opacity: control.glassMode || app.selected ? 1 : 0.65
                 Behavior on width {
                     enabled: !control.reducedMotion
                     NumberAnimation { duration: 120; easing.type: Easing.OutCubic }
                 }
+            }
+            Rectangle {
+                visible: control.glassMode && app.selected
+                width: 5; height: 5
+                radius: height / 2
+                anchors { horizontalCenter: parent.horizontalCenter; bottom: parent.bottom; bottomMargin: 2 }
+                color: control.accentColor
             }
             MouseArea {
                 anchors.fill: parent

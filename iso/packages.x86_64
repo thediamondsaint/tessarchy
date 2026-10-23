@@ -11,7 +11,10 @@ e2fsprogs
 edk2-shell
 efibootmgr
 ffmpeg
-firefox
+file-roller
+amberol
+celluloid
+chromium
 fish
 foot
 glib2
@@ -28,8 +31,10 @@ hyprland
 hyprpolkitagent
 hyprsunset
 iio-sensor-proxy
+krita
 libinput
 libnotify
+libreoffice-fresh
 linux
 linux-firmware
 loupe
@@ -43,6 +48,7 @@ mpv
 nautilus
 network-manager-applet
 networkmanager
+openssh
 noto-fonts
 noto-fonts-emoji
 pacman
@@ -61,6 +67,7 @@ qt6-declarative
 qt6-wayland
 quickshell
 rsync
+rnote
 rtkit
 sof-firmware
 squeekboard

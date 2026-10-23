@@ -19,7 +19,6 @@ ColumnLayout {
     readonly property bool audioAvailable: !!(audioSink && audioSink.ready && audioSink.audio)
     signal cellularRequested
     signal screenshotRequested
-    signal settingsRequested
     signal dismissed
     spacing: 14
     Item {
@@ -34,13 +33,6 @@ ColumnLayout {
                 font { pixelSize: 34; weight: Font.Light; letterSpacing: -1 }
             }
             Text { text: Qt.formatDateTime(sheet.date, "dddd, MMMM d"); color: Theme.textMuted; font.pixelSize: 12 }
-        }
-        NavButton {
-            anchors.right: parent.right
-            anchors.verticalCenter: parent.verticalCenter
-            width: 48; height: 48
-            text: "Settings"; symbol: "settings"; showLabel: false
-            onClicked: sheet.settingsRequested()
         }
     }
     GridLayout {

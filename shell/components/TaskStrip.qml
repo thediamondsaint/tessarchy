@@ -8,6 +8,7 @@ RowLayout {
     property var activeWindow: null
     property color accentColor: Theme.accent
     property var iconForWindow: window => ""
+    property string emptyText: "No open windows"
     readonly property bool overflow: windows.length * 150 + Math.max(0, windows.length - 1) * 6 > width
     signal windowRequested(var window)
     spacing: 6
@@ -75,6 +76,16 @@ RowLayout {
                 event.accepted = true;
             }
         }
+    }
+    Text {
+        visible: tasks.count === 0
+        text: strip.emptyText
+        color: Theme.textMuted
+        font.pixelSize: 12
+        Layout.fillWidth: true
+        Layout.alignment: Qt.AlignVCenter
+        horizontalAlignment: Text.AlignHCenter
+        Accessible.name: strip.emptyText
     }
     TouchButton {
         visible: strip.overflow

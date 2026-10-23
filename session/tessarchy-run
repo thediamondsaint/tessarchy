@@ -11,7 +11,7 @@ else
     export GTK_THEME=Adwaita:dark ADW_DEBUG_COLOR_SCHEME=prefer-dark
 fi
 # GTK3 apps' own file dialogs go through the portal, so Phone/Tablet get
-# Tessera's picker (tessarchy-filechooser); portal-aware apps already do.
+# Tessa's picker (tessarchy-filechooser); portal-aware apps already do.
 if [[ -e /usr/lib/gtk-3.0/modules/libtessarchy-filechooser.so ]]; then
     export GTK_MODULES=${GTK_MODULES:+$GTK_MODULES:}tessarchy-filechooser GTK_USE_PORTAL=1
 fi

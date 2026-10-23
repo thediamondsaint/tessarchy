@@ -5,7 +5,7 @@ if status is-interactive
     if test (tty) = /dev/tty1
         if not set -q DISPLAY; and not set -q WAYLAND_DISPLAY
             printf '\nTessarchy live image — no secure locking, no persistence.\n'
-            printf 'Starting Tessera. After exit, run start-tessarchy to start again.\n'
+            printf 'Starting Tessa. After exit, run start-tessarchy to start again.\n'
             start-tessarchy
         end
     end

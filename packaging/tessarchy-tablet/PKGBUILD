@@ -1,6 +1,6 @@
 pkgname=tessarchy-tablet
 pkgver=0.1.0
-pkgrel=1
+pkgrel=3
 pkgdesc='Tessarchy Intel/AMD tablet desktop and hardware support profile'
 arch=('x86_64')
 license=('MIT')
@@ -11,8 +11,9 @@ depends=('tessarchy-session=0.1.0' 'tessarchy-bootsplash=0.1.0' 'linux-firmware'
          'wireplumber' 'rtkit' 'upower' 'power-profiles-daemon' 'iio-sensor-proxy'
          'xdg-desktop-portal-hyprland' 'xdg-desktop-portal-gtk' 'xdg-user-dirs'
          'nautilus' 'gvfs' 'gvfs-mtp' 'udisks2' 'gnome-text-editor' 'papers' 'loupe' 'mpv'
+         'file-roller' 'libreoffice-fresh' 'chromium' 'rnote' 'krita' 'celluloid' 'amberol'
          'gnome-calculator' 'noto-fonts' 'noto-fonts-emoji' 'wireless-regdb')
-optdepends=('libreoffice-fresh: office documents' 'fwupd: supported device firmware updates')
+optdepends=('fwupd: supported device firmware updates')
 source=("tessarchy-$pkgver.tar.gz")
 sha256sums=('SKIP')
 package() {

@@ -33,7 +33,7 @@ proportional scrollbar telemetry and promotion to the default remain future work
 
 ### Reuse and the optional native bridge
 
-The layout, geometry, focus selection and snapping come from Hyprland. Tessera
+The layout, geometry, focus selection and snapping come from Hyprland. Tessa
 reuses TouchButton, GestureHandle, its theme and Qt's existing mouse/touch delivery.
 There is no new tiling engine, compositor fork or window screenshot carousel.
 
@@ -53,7 +53,7 @@ panning. The same buttons and shortcuts work in either case. Lua validates the
 active workspace/output, finite numeric input and content edges; QML coalesces
 movement at 16 ms intervals over Quickshell's existing compositor IPC connection.
 `follow_focus=false` prevents compositor mouse release from snapping back to the
-original app before Tessera settles; explicit click/key focus still follows.
+original app before Tessa settles; explicit click/key focus still follows.
 
 ### Try continuous panning in a Tessarchy guest
 
@@ -82,7 +82,7 @@ nested compositor, not the target VM or physical tablet.
 ![Live windows during a native tape drag](images/window-tape-prototype.png)
 
 Actual capture: nested Hyprland 0.56.2, 900×700, scale 1, two live Foot windows,
-Tessera and the native bridge. A Wayland virtual pointer exercised the drag.
+Tessa and the native bridge. A Wayland virtual pointer exercised the drag.
 
 ## Research findings
 
@@ -103,7 +103,7 @@ Sources: [Niri gestures](https://github.com/niri-wm/niri/blob/main/docs/wiki/Ges
 [Niri overview](https://github.com/niri-wm/niri/blob/main/docs/wiki/Overview.md).
 
 Niri has JSON requests, actions and a state event stream for shell integration.
-That is a viable integration foundation, not a drop-in replacement for Tessera's
+That is a viable integration foundation, not a drop-in replacement for Tessa's
 current Hyprland models and dispatch calls. Verify continuous external panning
 and viewport telemetry before choosing Niri for a custom slider.
 Source: [Niri IPC definitions](https://github.com/niri-wm/niri/blob/main/niri-ipc/src/lib.rs).

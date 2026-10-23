@@ -40,7 +40,7 @@ sudo pacman -Syu
 sudo pacman -U dist/tessera-shell-0.1.0-4-any.pkg.tar.zst \
   dist/tessarchy-session-0.1.0-4-any.pkg.tar.zst \
   dist/tessarchy-bootsplash-0.1.0-2-any.pkg.tar.zst \
-  dist/tessarchy-tablet-0.1.0-1-x86_64.pkg.tar.zst
+  dist/tessarchy-tablet-0.1.0-3-x86_64.pkg.tar.zst
 ```
 
 Pacman resolves the profile's repository dependencies. Nothing in these packages
@@ -66,10 +66,11 @@ The optional four-digit prototype greeter is not installed by this profile.
 
 ## Included everyday applications
 
-Firefox, Files (Nautilus), Text Editor, Papers, Image Viewer (Loupe), mpv,
-Calculator and Foot provide the general desktop experience. Connections opens
+Chromium, Files (Nautilus), Text Editor, Papers, Image Viewer (Loupe), mpv,
+Celluloid, Amberol, Rnote, Krita, Calculator, Archive Manager (File Roller),
+LibreOffice and Foot provide the general desktop experience. Connections opens
 NetworkManager's editor; Bluetooth uses Blueman for pairing. Removable media and
-MTP use GVfs/udisks. LibreOffice and fwupd are optional explicit additions.
+MTP use GVfs/udisks. fwupd remains an optional explicit addition.
 The launcher shows one installed primary application per role, plus Tessarchy's
 Phone, Messages, Settings and Controls. Background helpers and duplicate browsers
 are omitted. The supported alternatives are listed in `shell/AppPolicy.js`.

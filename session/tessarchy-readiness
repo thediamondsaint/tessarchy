@@ -10,6 +10,7 @@ PACKAGES = ('tessarchy-session', 'linux-firmware', 'sof-firmware', 'squeekboard'
             'pipewire', 'pipewire-audio', 'pipewire-alsa', 'pipewire-pulse', 'wireplumber',
             'upower', 'power-profiles-daemon', 'iio-sensor-proxy', 'nautilus', 'gvfs',
             'gnome-text-editor', 'papers', 'loupe', 'mpv', 'gnome-calculator',
+            'file-roller', 'libreoffice-fresh', 'chromium', 'rnote', 'krita', 'celluloid', 'amberol',
             'xdg-desktop-portal-hyprland', 'xdg-desktop-portal-gtk')
 
 

@@ -15,7 +15,7 @@
   Tessarchy live image. Nothing is written to the medium: this system runs
   from RAM and every change is gone at reboot.
 
-  The Tessera session starts automatically on tty1 as the live user "tess"
+  The Tessa session starts automatically on tty1 as the live user "tess"
   (password login disabled). Exit the session to come back to this console
   and run start-tessarchy to launch it again. Root rescue login is available
   here once the session has exited.

@@ -1,0 +1,20 @@
+{
+  "captured_on": "2026-10-21",
+  "source_commit": "feat/operation-tessa ChatGPT integration",
+  "type": "actual VM screenshot",
+  "method": "QEMU QMP screendump from the existing development VM; copied unchanged",
+  "generated": false,
+  "guest": {
+    "layout": "tablet",
+    "dimensions": [1024, 768],
+    "chatgpt_package": "chatgpt-bin 26.1016.61520-1",
+    "authentication": "signed out"
+  },
+  "files": [
+    {
+      "file": "tablet-chatgpt-installed-signed-out.png",
+      "dimensions": [1024, 768],
+      "sha256": "34b69152503049a29c2346b6895a7cd3fb75037c8cc31145753987d9203d0eee"
+    }
+  ]
+}

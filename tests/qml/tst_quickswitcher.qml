@@ -25,6 +25,31 @@ TestCase {
                 createTemporaryObject(windowFactory, this, {title: "Files"}),
                 createTemporaryObject(windowFactory, this, {title: "Browser"})];
     }
+    function test_glass_icons_touch_flick_and_focus() {
+        const windows = model().concat(model());
+        const switcher = createTemporaryObject(factory, this, {windows: windows, glassMode: true, reducedMotion: true});
+        requests.target = switcher;
+        requests.clear();
+        switcher.selectActive();
+        const list = findChild(switcher, "quickSwitcherIcons");
+        tryVerify(() => list.itemAtIndex(1) !== null);
+        const row = list.itemAtIndex(1);
+        const touch = touchEvent(switcher);
+        touch.press(0, row, 48, 48).commit();
+        touch.release(0, row, 48, 48).commit();
+        tryCompare(requests, "count", 1);
+        compare(requests.signalArguments[0][0], windows[1]);
+        compare(switcher.activeFocus, false);
+        switcher.reset();
+        touch.press(0, list, 210, 48).commit();
+        touch.move(0, list, 130, 48).commit();
+        wait(20);
+        touch.move(0, list, 20, 48).commit();
+        touch.release(0, list, 20, 48).commit();
+        tryVerify(() => list.contentX > 0);
+        compare(requests.count, 1);
+        requests.target = null;
+    }
     function test_cycle_forward_backward_and_alt_release() {
         const windows = model();
         const switcher = createTemporaryObject(factory, this, {windows: windows});

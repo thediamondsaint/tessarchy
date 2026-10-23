@@ -16,7 +16,7 @@ Button {
     Layout.preferredWidth: 210
     implicitHeight: 48
     padding: 10
-    focusPolicy: Qt.NoFocus
+    focusPolicy: Qt.TabFocus
     contentItem: RowLayout {
         spacing: 8
         Image {
@@ -40,9 +40,10 @@ Button {
         radius: Theme.radius("button", 8, height)
         color: control.selected ? Theme.taskSelected(control.accentColor)
                                 : control.down ? Theme.taskDown(control.accentColor)
-                                               : Theme.taskIdle
+                                               : control.hovered ? Qt.alpha(control.accentColor, 0.12)
+                                                                 : Theme.taskIdle
         border.width: Theme.borderWidth(1)
-        border.color: control.selected ? Theme.taskSelectedBorder(control.accentColor) : Theme.taskBorder
+        border.color: control.selected ? Theme.taskSelectedBorder(control.accentColor) : control.visualFocus ? control.accentColor : control.hovered ? Qt.alpha(control.accentColor, 0.42) : Theme.taskBorder
         // Inner bevel: light on top for a raised look, dark when the window has
         // focus so the button reads as pressed.
         Rectangle {
@@ -51,8 +52,10 @@ Button {
             radius: Theme.radius("button", 7, height)
             color: "transparent"
             border.width: Theme.borderWidth(1)
-            border.color: control.selected ? Theme.taskPressedBevel : Theme.taskBevel
+            border.color: control.selected ? Theme.taskPressedBevel : control.visualFocus ? Qt.alpha(control.accentColor, 0.32) : Theme.taskBevel
         }
     }
     Accessible.name: text
+    Accessible.role: Accessible.Button
+    Accessible.description: control.selected ? "Active window" : "Switch to window"
 }

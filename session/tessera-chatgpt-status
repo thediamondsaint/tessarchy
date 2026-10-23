@@ -1,0 +1,191 @@
+#!/usr/bin/env python3
+"""Small, read-only bridge between Tessa and the official ChatGPT/Codex apps.
+
+The status command never reads credentials directly.  When the Codex CLI is
+available it asks its local app-server for account, rate-limit, and usage data;
+otherwise the shell reports Chromium as ready for sign-in. The open command
+starts the official Linux desktop app when present, otherwise a dedicated
+Chromium ChatGPT window; the login command delegates to the CLI's normal browser
+flow.
+"""
+
+from __future__ import annotations
+
+import datetime as _dt
+import json
+import os
+import selectors
+import shutil
+import subprocess
+import sys
+import time
+from pathlib import Path
+from typing import Any
+
+
+def command(name: str) -> str | None:
+    return shutil.which(name)
+
+
+def _read_responses(proc: subprocess.Popen[bytes], wanted: set[int], timeout: float) -> dict[int, dict[str, Any]]:
+    """Read JSON-RPC responses without blocking on a buffered text stream."""
+    selector = selectors.DefaultSelector()
+    assert proc.stdout is not None
+    selector.register(proc.stdout, selectors.EVENT_READ)
+    responses: dict[int, dict[str, Any]] = {}
+    deadline = time.monotonic() + timeout
+    try:
+        while wanted - responses.keys() and time.monotonic() < deadline:
+            events = selector.select(max(0.05, deadline - time.monotonic()))
+            if not events:
+                continue
+            line = proc.stdout.readline()
+            if not line:
+                break
+            try:
+                message = json.loads(line.decode("utf-8"))
+            except (UnicodeDecodeError, json.JSONDecodeError):
+                continue
+            if isinstance(message.get("id"), int) and message["id"] in wanted:
+                responses[message["id"]] = message
+    finally:
+        selector.close()
+    return responses
+
+
+def _rpc_usage(codex: str) -> dict[str, Any] | None:
+    try:
+        proc = subprocess.Popen(
+            [codex, "-s", "read-only", "-a", "on-request", "app-server"],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            env=os.environ.copy(),
+        )
+    except (OSError, ValueError):
+        return None
+
+    requests = [
+        {"id": 1, "method": "initialize", "params": {"clientInfo": {"name": "tessa", "version": "0.1"}}},
+        {"method": "initialized", "params": {}},
+        {"id": 2, "method": "account/read", "params": {}},
+        {"id": 3, "method": "account/rateLimits/read", "params": {}},
+        {"id": 4, "method": "account/usage/read", "params": {}},
+    ]
+    try:
+        assert proc.stdin is not None
+        for request in requests:
+            proc.stdin.write((json.dumps(request) + "\n").encode("utf-8"))
+        proc.stdin.flush()
+        responses = _read_responses(proc, {1, 2, 3, 4}, 3.0)
+    except (BrokenPipeError, OSError):
+        responses = {}
+    finally:
+        try:
+            proc.terminate()
+            proc.wait(timeout=0.5)
+        except (OSError, subprocess.TimeoutExpired):
+            try:
+                proc.kill()
+            except OSError:
+                pass
+    if not responses:
+        return None
+
+    account_result = responses.get(2, {}).get("result") or {}
+    limits_result = responses.get(3, {}).get("result") or {}
+    usage_result = responses.get(4, {}).get("result") or {}
+    account_error = responses.get(2, {}).get("error")
+    limits_error = responses.get(3, {}).get("error")
+    usage_error = responses.get(4, {}).get("error")
+    if account_error and limits_error and usage_error:
+        return None
+
+    limits = limits_result.get("rateLimits") or {}
+    windows: list[dict[str, Any]] = []
+    for key in ("primary", "secondary"):
+        window = limits.get(key)
+        if not isinstance(window, dict) or not isinstance(window.get("usedPercent"), (int, float)):
+            continue
+        minutes = window.get("windowDurationMins")
+        if minutes == 10080:
+            label = "7-day"
+        elif isinstance(minutes, (int, float)) and minutes >= 60 and minutes % 60 == 0:
+            label = f"{int(minutes / 60)}-hour"
+        elif isinstance(minutes, (int, float)):
+            label = f"{int(minutes)}-min"
+        else:
+            label = key
+        windows.append({
+            "label": label,
+            "usedPercent": max(0, min(100, float(window["usedPercent"]))),
+            "resetsAt": window.get("resetsAt"),
+            "limitId": limits.get("limitId") or limits_result.get("limitId") or "codex",
+        })
+
+    summary = usage_result.get("summary") if isinstance(usage_result.get("summary"), dict) else {}
+    daily = usage_result.get("dailyUsageBuckets")
+    daily_tokens = sum(int(bucket.get("tokens", 0)) for bucket in daily or [] if isinstance(bucket, dict))
+    plan = account_result.get("planType") or account_result.get("plan") or limits_result.get("planType")
+    return {
+        "connected": True,
+        "plan": str(plan) if plan else "",
+        "windows": windows,
+        "dailyTokens": daily_tokens if daily else None,
+        "lifetimeTokens": summary.get("lifetimeTokens"),
+        "source": "Codex app-server",
+    }
+
+
+def browser() -> str | None:
+    return command("chromium") or command("google-chrome") or command("xdg-open")
+
+
+def status() -> dict[str, Any]:
+    chatgpt = command("chatgpt")
+    browser_app = browser()
+    codex = command("codex")
+    usage = _rpc_usage(codex) if codex else None
+    connected = bool(usage and usage.get("connected"))
+    state = "connected" if connected else "signed-out" if (chatgpt or browser_app) else "unavailable"
+    result: dict[str, Any] = {
+        "schema": 1,
+        "state": state,
+        "installed": bool(chatgpt or browser_app),
+        "command": chatgpt or browser_app or "",
+        "updatedAt": _dt.datetime.now(_dt.timezone.utc).isoformat(timespec="seconds"),
+        "message": "Connected usage" if connected else "Sign in to ChatGPT to show usage" if (chatgpt or browser_app) else "Install Chromium to use ChatGPT",
+        "usage": usage or {"connected": False, "plan": "", "windows": [], "dailyTokens": None, "lifetimeTokens": None, "source": ""},
+    }
+    return result
+
+
+def main(argv: list[str]) -> int:
+    action = argv[1] if len(argv) > 1 else "status"
+    if action == "status":
+        print(json.dumps(status(), separators=(",", ":")))
+        return 0
+    if action == "open":
+        app = command("chatgpt")
+        if app:
+            args = [app]
+        else:
+            browser_app = browser()
+            if not browser_app:
+                return 1
+            args = ([browser_app, "--app=https://chatgpt.com"]
+                    if browser_app in {command("chromium"), command("google-chrome")}
+                    else [browser_app, "https://chatgpt.com"])
+        subprocess.Popen(args, start_new_session=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        return 0
+    if action == "login":
+        codex = command("codex")
+        if not codex:
+            return main([argv[0], "open"])
+        return subprocess.call([codex, "login"])
+    print("usage: tessera-chatgpt-status [status|open|login]", file=sys.stderr)
+    return 64
+
+
+if __name__ == "__main__":
+    raise SystemExit(main(sys.argv))

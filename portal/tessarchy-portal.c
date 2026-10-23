@@ -1,6 +1,6 @@
 /*
  * tessarchy-portal: xdg-desktop-portal backend for the file chooser
- * (org.freedesktop.impl.portal.FileChooser), drawn by the Tessera shell.
+ * (org.freedesktop.impl.portal.FileChooser), drawn by the Tessa shell.
  *
  * Adapted from omalauncher's omalauncher-portal (MIT, Simon Schubert and
  * contributors). That one replaces xdg-desktop-portal because it can't run

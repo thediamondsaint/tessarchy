@@ -2,10 +2,14 @@
 
 **Tessarchy is a touch-first Arch Linux operating system, powered by the Tessa desktop environment.**
 
-Tessarchy combines Arch Linux, Hyprland and Quickshell through Tessa, a desktop environment
-that adapts from phone-sized screens to tablets and desktops. Its Quiet Edge
+Tessarchy combines Arch Linux, Hyprland and Quickshell through Tessa, a desktop
+environment that adapts from phone-sized screens to tablets and desktops. Its Quiet Edge
 design uses shallow glass, mint accents, a glacier wallpaper and floating icon
 navigation.
+
+The experimental [Tessa scrolling interface](docs/tessa-integration.md) adds a
+floating cube, edge wheel, radial actions and searchable launcher. Use Super+T
+to enter or leave its dedicated workspace, and Super+Space to open applications.
 
 [Website](https://thediamondsaint.github.io/tessarchy/) ·
 [Tester ISO](https://github.com/thediamondsaint/tessarchy/releases/tag/v0.1.0-alpha.4) ·
@@ -45,7 +49,7 @@ board](AGENT-README.md#claiming-and-extending-tasks) lists the next contribution
   labels, and reduced motion.
 - Translucent bars, Wi-Fi/cellular indicator slots, and optional PipeWire volume
   controls. Wireless and modem backends remain to be connected.
-- An expandable launcher for Firefox and Foot.
+- An expandable launcher for Chromium and Foot.
 - One system theme, Omarchy-style: a theme is a directory with an Omarchy
   `colors.toml` (and optional `backgrounds/`), so Omarchy themes work unchanged.
   `tessarchy-theme set <name>` (or Settings) restyles the shell, the keyboard,
@@ -199,7 +203,7 @@ release assets. Generated build output stays in `build/`, `dist/` and `vm/`.
 
 | Path | Contents |
 | --- | --- |
-| `shell/` | Tessera QML, policy, helpers, icons and canonical artwork |
+| `shell/` | Tessa QML, policy, helpers, icons and canonical artwork |
 | `session/` | Hyprland Lua, launchers, OSK, screenshots and greeter |
 | `packaging/`, `iso/` | Arch package recipes and live-image overlay |
 | `scripts/`, `tests/` | Development workflows and validation |

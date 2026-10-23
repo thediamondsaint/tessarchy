@@ -18,6 +18,19 @@ import "AppPolicy.js" as Apps
 
 ShellRoot {
     id: root
+    property int applicationRevision: 0
+    readonly property var appEntries: {
+        root.applicationRevision;
+        return Apps.applications(DesktopEntries.applications.values);
+    }
+    Connections {
+        target: DesktopEntries
+        function onApplicationsChanged() { root.applicationRevision++; }
+    }
+    function launchApplication(id) {
+        const entry = DesktopEntries.byId(id);
+        if (entry && !entry.noDisplay && entry.command.length > 0) entry.execute();
+    }
     signal controlsRequested
     IpcHandler {
         target: "controls"
@@ -26,17 +39,60 @@ ShellRoot {
     signal openAppRequested(string page)
     IpcHandler {
         target: "apps"
+        function launcher(): void { root.openAppRequested("apps"); }
+        function chatgpt(): void { root.openAppRequested("chatgpt"); }
         function phone(): void { root.openAppRequested("phone"); }
         function messages(): void { root.openAppRequested("messages"); }
         function cellular(): void { root.openAppRequested("cellular"); }
         function sounds(): void { root.openAppRequested("sounds"); }
     }
+    // Local AI control surface. It deliberately exposes named desktop
+    // operations instead of an arbitrary shell evaluator: ChatGPT/Codex can
+    // drive every Tessa surface, launcher, theme, radio, audio, tape and
+    // keyboard action without receiving an unbounded root command channel.
+    IpcHandler {
+        target: "ai"
+        function open(page: string): void {
+            const pages = ["apps", "windows", "settings", "chatgpt", "phone", "messages", "cellular", "sounds", "notifications"];
+            if (pages.indexOf(String(page)) >= 0) root.openAppRequested(String(page));
+        }
+        function close(): void { root.openAppRequested(""); }
+        function launch(appId: string): void { root.launchApplication(appId); }
+        function theme(name: string): void { root.setTheme(name); }
+        function controls(): void { root.controlsRequested(); }
+        function radio(name: string): void { radioBackend.toggle(name); }
+        function window(direction: string): void {
+            const action = direction;
+            if (["next", "previous", "accept", "cancel"].indexOf(action) >= 0) root.switcherCommand(action);
+        }
+        function tape(action: string): void {
+            const value = action;
+            if (["previous", "next", "settle", "begin", "cancel"].indexOf(value) >= 0)
+                Hyprland.dispatch('TessarchyTape.request("' + value + '")');
+        }
+        function keyboard(action: string): void {
+            const value = action;
+            if (["show", "hide", "toggle"].indexOf(value) >= 0)
+                Quickshell.execDetached(["tessarchy-osk", value]);
+        }
+        function screenshot(): void { Quickshell.execDetached(["tessera-screenshot"]); }
+        function volume(value: real): void {
+            if (!root.audioAvailable || !root.audioSink || !root.audioSink.audio) return;
+            root.audioSink.audio.volume = Math.max(0, Math.min(1, Number(value)));
+        }
+        function mute(): void {
+            if (root.audioAvailable && root.audioSink && root.audioSink.audio)
+                root.audioSink.audio.muted = !root.audioSink.audio.muted;
+        }
+        function cube(action: string): void { root.cubeCommand(action); }
+    }
+    signal cubeCommand(string action)
     signal replayBrand
     function activateWindow(window) {
         if (!window || !window.wayland) return;
         const workspace = window.workspace || (window.lastIpcObject && window.lastIpcObject.workspace);
         const address = String(window.address).replace(/^0x/i, "");
-        if (Hyprland.usingLua && workspace && workspace.name.startsWith("special:tessarchy-minimized-")
+        if (Hyprland.usingLua && workspace && (workspace.name === "tessarchy-tape" || workspace.name.startsWith("special:tessarchy-minimized-"))
                 && /^[0-9a-f]+$/i.test(address)) {
             Quickshell.execDetached(["hyprctl", "eval", "TessarchyWindows.activate(\"address:0x" + address + "\")"]);
         } else window.wayland.activate();
@@ -79,15 +135,13 @@ ShellRoot {
         // "gestures" swipes for Back/Home/Recents on Phone and Tablet;
         // "buttons" keeps them in the dock.
         property string navigation: "gestures"
+        property string wheelStyle: "bottom"
         // The gesture handle pill above the bottom edge.
         property bool showGestureHandle: true
         property bool use24Hour: true
         property real barOpacity: 0.44
         property real wallpaperDim: 0.12
         property bool doNotDisturb: false
-        // "windowed" opens desktop windows floating and sized; "tiled" restores
-        // the dwindle layout. Read by the Hyprland config on load.
-        property string desktopWindows: "windowed"
         property bool nightLight: false
     }
     RadioBackend { id: radioBackend }
@@ -101,7 +155,11 @@ ShellRoot {
     property string themeName: ""
     property string themeBackground: ""
     property var themes: []
+    property string themeError: ""
+    readonly property bool themeBusy: themeSetter.running
     function setTheme(name) {
+        if (themeBusy) return;
+        themeError = "";
         themeSetter.command = ["tessarchy-theme", "set", name];
         themeSetter.running = true;
     }
@@ -136,8 +194,10 @@ ShellRoot {
     }
     Process {
         id: themeSetter
-        onRunningChanged: if (!running)
-            themeColors.reload()
+        onExited: (code, status) => {
+            root.themeError = code === 0 && status === 0 ? "" : "Could not apply theme. Please try again.";
+            themeColors.reload();
+        }
     }
     Process {
         id: themeList
@@ -174,6 +234,29 @@ ShellRoot {
         active: Quickshell.env("TESSARCHY_AUDIO") === "1"
         source: "components/AudioStatus.qml"
     }
+    // ChatGPT stays a normal desktop app; this bridge only reads the official
+    // app-server usage surface and exposes truthful signed-out state to QML.
+    readonly property string chatgptStatusCommand: (Quickshell.env("TESSARCHY_DATA_DIR") || ((Quickshell.env("XDG_DATA_HOME") || (Quickshell.env("HOME") + "/.local/share")) + "/tessarchy")) + "/session/tessera-chatgpt-status"
+    property var chatgptStatus: ({installed: false, state: "checking", message: "Checking ChatGPT", usage: ({connected: false, windows: []})})
+    function refreshChatGPT() { chatgptProbe.running = true; }
+    Process {
+        id: chatgptProbe
+        command: [root.chatgptStatusCommand, "status"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try { root.chatgptStatus = JSON.parse(text); }
+                catch (error) { root.chatgptStatus = {installed: false, state: "unavailable", message: "ChatGPT status unavailable", usage: ({connected: false, windows: []})}; }
+            }
+        }
+        stderr: StdioCollector {}
+    }
+    Timer {
+        interval: 900000
+        repeat: true
+        running: true
+        onTriggered: root.refreshChatGPT()
+    }
+    Component.onCompleted: root.refreshChatGPT()
     readonly property var activePlayer: {
         const players = Mpris.players.values;
         const index = Policy.preferredPlayerIndex(players.map(player => player.isPlaying));
@@ -262,8 +345,9 @@ ShellRoot {
             readonly property var gestureEdge: Policy.gestureEdgeSize(mode, panel.expanded)
             // Bar geometry comes from Policy.barGeometry; do not add literals here.
             readonly property var bar: Policy.barGeometry(mode, dock.rows)
-            readonly property int navHeight: bar.height
-            readonly property int launcherRows: Math.ceil((panel.appEntries.length + 4) / Policy.columns(mode, Policy.panelWidth(mode, modelData.width) - 32))
+            // Touch navigation lives in the T cube and edge gestures. Keep a
+            // reserved taskbar only for the desktop layout.
+            readonly property int navHeight: mode === "desktop" ? bar.height : 0
             readonly property bool showWorkspaces: Policy.showWorkspaces(mode, modelData.width)
             readonly property var workspaceIds: {
                 const ids = [];
@@ -307,8 +391,9 @@ ShellRoot {
             }
             PanelWindow {
                 id: panel
+                visible: (!surface.tapeActive || expanded) && page !== "apps"
                 screen: surface.modelData
-                readonly property var appEntries: Apps.majorApplications(DesktopEntries.applications.values)
+                readonly property var appEntries: root.appEntries
                 property string page: ""
                 // Desktop Start menu, opened by the taskbar's Start button.
                 property bool startMenuOpen: false
@@ -329,8 +414,8 @@ ShellRoot {
                     right: surface.mode === "desktop"
                 }
                 implicitWidth: expanded ? Policy.panelWidth(surface.mode, surface.modelData.width) : surface.dock.width
-                implicitHeight: expanded && surface.isPhone && page === "windows" ? surface.modelData.height - 48 : expanded ? Math.min(page === "windows" ? surface.modelData.height - 60 : page === "apps" ? surface.launcherRows * 124 + 156 : surface.mode === "tablet" ? 740 : 640, surface.modelData.height - 64) : surface.navHeight
-                exclusiveZone: surface.navHeight
+                implicitHeight: expanded && surface.isPhone && page === "windows" ? surface.modelData.height - 48 : expanded ? Math.min(page === "windows" ? surface.modelData.height - 60 : surface.mode === "tablet" ? 740 : 640, surface.modelData.height - 64) : surface.navHeight
+                exclusiveZone: surface.tapeActive ? 0 : surface.navHeight
                 color: "transparent"
                 Rectangle {
                     anchors.top: parent.top
@@ -350,7 +435,7 @@ ShellRoot {
                 }
                 WlrLayershell.namespace: "tessera"
                 WlrLayershell.layer: WlrLayer.Top
-                WlrLayershell.keyboardFocus: ["phone", "messages", "cellular", "settings", "sounds"].indexOf(panel.page) >= 0 ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
+                WlrLayershell.keyboardFocus: panel.page === "apps" ? WlrKeyboardFocus.Exclusive : ["phone", "messages", "cellular", "settings", "sounds", "chatgpt"].indexOf(panel.page) >= 0 ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
 
                 function showPage(name) {
                     if (name === "windows" && page !== "windows") switcher.selectActive();
@@ -438,7 +523,7 @@ ShellRoot {
                             // The launcher page carries no heading; Desktop gets
                             // the Start menu instead.
                             visible: panel.page !== "windows" && panel.page !== "apps"
-                            text: panel.page === "close" ? "Close this window?" : panel.page === "settings" ? "Settings" : panel.page === "phone" ? "Phone" : panel.page === "messages" ? "Messages" : panel.page === "cellular" ? "SIM & cellular" : panel.page === "sounds" ? "Sounds & ringtones" : panel.page === "notifications" ? "Alerts" : "End this session?"
+                            text: panel.page === "close" ? "Close this window?" : panel.page === "settings" ? "Settings" : panel.page === "chatgpt" ? "ChatGPT" : panel.page === "phone" ? "Phone" : panel.page === "messages" ? "Messages" : panel.page === "cellular" ? "SIM & cellular" : panel.page === "sounds" ? "Sounds & ringtones" : panel.page === "notifications" ? "Alerts" : "End this session?"
                             color: root.accentColor
                             font.pixelSize: 22
                             font.bold: true
@@ -484,7 +569,7 @@ ShellRoot {
                         }
                         ScrollView {
                             id: pageScroll
-                            visible: panel.page !== "windows"
+                            visible: panel.page !== "windows" && panel.page !== "apps"
                             Layout.fillWidth: true
                             Layout.fillHeight: true
                             clip: true
@@ -492,55 +577,6 @@ ShellRoot {
                             ColumnLayout {
                                 width: parent.width
                                 spacing: 8
-                                ColumnLayout {
-                                    visible: panel.page === "apps"
-                                    Layout.fillWidth: true
-                                    GridLayout {
-                                        columns: Policy.columns(surface.mode, width)
-                                        columnSpacing: 12
-                                        Layout.fillWidth: true
-                                        Repeater {
-                                            model: panel.appEntries
-                                            delegate: AppTile {
-                                                required property var modelData
-                                                text: modelData.name
-                                                symbol: "browser"
-                                                iconSource: Quickshell.iconPath(modelData.icon, true)
-                                                accentColor: root.accentColor
-                                                onClicked: {
-                                                    panel.page = "";
-                                                    modelData.execute();
-                                                }
-                                            }
-                                        }
-                                        AppTile { text: "Phone"; symbol: "call"; accentColor: root.accentColor; onClicked: panel.showPage("phone") }
-                                        AppTile { text: "Messages"; symbol: "messages"; accentColor: root.accentColor; onClicked: panel.showPage("messages") }
-                                        AppTile {
-                                            text: "Settings"
-                                            symbol: "settings"
-                                            accentColor: root.accentColor
-                                            onClicked: panel.showPage("settings")
-                                        }
-                                        AppTile {
-                                            text: "Controls"
-                                            symbol: "controls"
-                                            accentColor: root.accentColor
-                                            onClicked: statusBar.toggleDrawer()
-                                        }
-                                        AppTile {
-                                            text: "Alerts"
-                                            symbol: "bell"
-                                            accentColor: root.accentColor
-                                            onClicked: panel.showPage("notifications")
-                                        }
-                                    }
-                                    Text {
-                                        text: root.oskAvailable ? "Prototype · The keyboard opens for text fields; Keyboard shows or hides it." : "Prototype · Physical keyboard needed for text input."
-                                        color: Theme.textSecondary
-                                        wrapMode: Text.WordWrap
-                                        Layout.fillWidth: true
-                                    }
-                                }
                                 Loader {
                                     visible: active
                                     active: panel.page === "phone"
@@ -576,6 +612,18 @@ ShellRoot {
                                 }
                                 Loader {
                                     visible: active
+                                    active: panel.page === "chatgpt"
+                                    Layout.fillWidth: true
+                                    sourceComponent: ChatGPTPanel {
+                                        status: root.chatgptStatus
+                                        accentColor: root.accentColor
+                                        onOpenRequested: Quickshell.execDetached([root.chatgptStatusCommand, "open"])
+                                        onLoginRequested: Quickshell.execDetached([root.chatgptStatusCommand, "login"])
+                                        onRefreshRequested: root.refreshChatGPT()
+                                    }
+                                }
+                                Loader {
+                                    visible: active
                                     active: panel.page === "settings"
                                     onActiveChanged: if (active) themeList.running = true
                                     Layout.fillWidth: true
@@ -586,6 +634,8 @@ ShellRoot {
                                         preferences: shellPreferences
                                         themes: root.themes
                                         currentTheme: root.themeName
+                                        themeBusy: root.themeBusy
+                                        themeError: root.themeError
                                         onThemeRequested: name => root.setTheme(name)
                                         activeMode: Policy.title(surface.mode)
                                         displayWidth: surface.modelData.width
@@ -674,67 +724,9 @@ ShellRoot {
                             opacity: pageScroll.ScrollBar.vertical.size < 1 && pageScroll.ScrollBar.vertical.position + pageScroll.ScrollBar.vertical.size < 0.999 ? 1 : 0
                         }
                     }
-                    GridLayout {
-                        layer.enabled: panel.page === "windows"
-                        visible: surface.mode !== "desktop"
-                        Layout.fillWidth: true
-                        Layout.fillHeight: false
-                        Layout.preferredHeight: surface.bar.rowsHeight
-                        columns: surface.dock.columns
-                        columnSpacing: surface.bar.columnGap
-                        rowSpacing: surface.bar.rowGap
-                        NavButton {
-                            text: "Phone"; symbol: "call"
-                            showLabel: shellPreferences.showLabels
-                            accentColor: root.accentColor
-                            selected: panel.page === "phone"
-                            onClicked: panel.showPage("phone")
-                        }
-                        NavButton {
-                            text: "Messages"; symbol: "messages"
-                            showLabel: shellPreferences.showLabels
-                            accentColor: root.accentColor
-                            selected: panel.page === "messages"
-                            onClicked: panel.showPage("messages")
-                        }
-                        NavButton {
-                            // Panel never takes keyboard focus, so the app keeps its text field.
-                            visible: root.oskAvailable && surface.mode !== "desktop"
-                            text: "Keyboard"
-                            symbol: "keyboard"
-                            showLabel: shellPreferences.showLabels
-                            accentColor: root.accentColor
-                            onClicked: Quickshell.execDetached(["tessarchy-osk", "toggle"])
-                        }
-                        NavButton {
-                            // Gesture navigation replaces Back, Home and Recents.
-                            visible: !surface.gestures
-                            text: "Back"
-                            symbol: "back"
-                            showLabel: shellPreferences.showLabels
-                            accentColor: root.accentColor
-                            enabled: panel.expanded || statusBar.drawerOpen
-                            onClicked: panel.navigate("back")
-                        }
-                        NavButton {
-                            visible: !surface.gestures
-                            text: surface.mode === "desktop" ? "Apps" : "Home"
-                            symbol: "home"
-                            showLabel: shellPreferences.showLabels
-                            accentColor: root.accentColor
-                            selected: panel.page === "apps"
-                            onClicked: panel.navigate("home")
-                        }
-                        NavButton {
-                            visible: !surface.gestures
-                            text: surface.mode === "desktop" ? "Windows" : "Recents"
-                            symbol: "recents"
-                            showLabel: shellPreferences.showLabels
-                            accentColor: root.accentColor
-                            selected: panel.page === "windows"
-                            onClicked: panel.navigate("recents")
-                        }
-                    }
+                    // Phone, Messages and Keyboard are in the expanded T cube;
+                    // touch layouts use the cube and edge gestures instead of a
+                    // persistent bottom dock.
                     // Desktop taskbar in the spirit of Windows XP, rendered as
                     // glass: Start and quick-launch on the left, wide bevelled
                     // task buttons, and a sunken tray with the clock on the right.
@@ -780,6 +772,18 @@ ShellRoot {
                             accentColor: root.accentColor
                             selected: panel.page === "settings"
                             onClicked: panel.showPage("settings")
+                        }
+                        NavButton {
+                            Layout.fillWidth: false
+                            Layout.minimumWidth: 32
+                            Layout.preferredWidth: 32
+                            text: "ChatGPT"
+                            symbol: "chatgpt"
+                            showLabel: false
+                            iconSize: 18
+                            accentColor: root.accentColor
+                            selected: panel.page === "chatgpt"
+                            onClicked: panel.showPage("chatgpt")
                         }
                         Rectangle {
                             Layout.preferredWidth: 1
@@ -869,12 +873,39 @@ ShellRoot {
                 }
             }
             PanelWindow {
+                id: appPopup
+                screen: surface.modelData
+                visible: panel.page === "apps"
+                onVisibleChanged: if (visible) Qt.callLater(() => compactLauncher.resetSearchAndFocus())
+                anchors { top: true; bottom: true; left: true; right: true }
+                exclusiveZone: 0
+                color: "transparent"
+                WlrLayershell.namespace: "tessera-launcher"
+                WlrLayershell.layer: WlrLayer.Overlay
+                WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
+                Rectangle { anchors.fill: parent; color: Qt.alpha(Theme.darkerBackground, 0.38) }
+                MouseArea { anchors.fill: parent; onClicked: panel.page = "" }
+                AppLauncher {
+                    id: compactLauncher
+                    anchors.centerIn: parent
+                    width: Math.min(560, parent.width - 24)
+                    height: Math.min(implicitHeight, parent.height - 24)
+                    iconPath: name => Quickshell.iconPath(name, true)
+                    applications: panel.appEntries
+                    onLaunched: appId => { panel.page = ""; root.launchApplication(appId); }
+                    onDismissed: panel.page = ""
+                }
+            }
+            PanelWindow {
                 id: tapePanel
                 screen: surface.modelData
                 visible: surface.tapeActive && !panel.expanded
                 anchors.bottom: true
+                anchors.left: !tapeControl.expanded
+                margins.left: 8
                 implicitWidth: tapeControl.implicitWidth
-                implicitHeight: 48
+                implicitHeight: tapeControl.implicitHeight
+                margins.bottom: 16
                 exclusiveZone: 0
                 color: "transparent"
                 WlrLayershell.namespace: "tessera-tape"
@@ -884,14 +915,46 @@ ShellRoot {
                     id: tapeControl
                     anchors.fill: parent
                     maxControlWidth: Math.max(192, surface.modelData.width - 16)
+                    recentsComponent: QuickSwitcher {
+                        glassMode: true
+                        accentColor: Theme.wheelGlow
+                        windows: root.switcherWindows
+                        iconForWindow: window => {
+                            const entry = window.wayland ? DesktopEntries.heuristicLookup(window.wayland.appId) : null;
+                            return entry && entry.icon ? Quickshell.iconPath(entry.icon, true) : "";
+                        }
+                        reducedMotion: shellPreferences.reducedMotion
+                        Component.onCompleted: selectActive()
+                        onWindowRequested: window => { tapeControl.cancel(); root.activateWindow(window); }
+                        onDismissed: tapeControl.cancel()
+                    }
+                    reducedMotion: shellPreferences.reducedMotion
+                    onExpandedChanged: if (expanded && root.oskAvailable) Quickshell.execDetached(["tessarchy-osk", "hide"])
+                    onPhoneRequested: { tapeControl.cancel(); panel.showPage("phone"); }
+                    onMessagesRequested: { tapeControl.cancel(); panel.showPage("messages"); }
+                    onKeyboardRequested: { tapeControl.cancel(); Quickshell.execDetached(["tessarchy-osk", "toggle"]); }
+                    onActionRequested: action => {
+                        if (action === "leave") Hyprland.dispatch("TessarchyTape.close_request()");
+                        else if (action === "controls") statusBar.toggleDrawer();
+                        else if (action === "keyboard") Quickshell.execDetached(["tessarchy-osk", "toggle"]);
+                        else if (action === "chatgpt") panel.showPage("chatgpt");
+                        else panel.showPage(action);
+                    }
                     canPan: surface.tapeWorkspace !== null && surface.tapeWorkspace.toplevels.values.filter(w => w.lastIpcObject && !w.lastIpcObject.floating).length > 1
                     onLauncherRequested: panel.showPage("apps")
-                    onStarted: surface.tapeCommand("begin")
-                    onCanceled: surface.tapeCommand("cancel")
-                    onMoved: delta => surface.tapeCommand(delta)
                     onStepped: direction => surface.tapeCommand(direction)
-                    onSettled: surface.tapeCommand("settle")
                     onLeaveRequested: Hyprland.dispatch('TessarchyTape.close_request()')
+                }
+                Connections {
+                    target: root
+                    function onCubeCommand(action) {
+                        if (action === "open") tapeControl.expanded = true;
+                        else if (action === "close") tapeControl.cancel();
+                        else if (action === "radial") {
+                            tapeControl.expanded = true;
+                            tapeControl.radialOpen = true;
+                        }
+                    }
                 }
                 Connections {
                     target: surface.modelData
@@ -904,6 +967,48 @@ ShellRoot {
                     function onFocusedMonitorChanged() { tapeControl.cancel(); }
                 }
             }
+            PanelWindow {
+                id: wheelPanel
+                screen: surface.modelData
+                readonly property string placement: ["left", "right"].indexOf(shellPreferences.wheelStyle) >= 0 ? shellPreferences.wheelStyle : "bottom"
+                // Desktop keeps the native scrolling workspace, but uses the
+                // Hyprland Super+[ / Super+] bindings instead of an overlay
+                // slider. Touch layouts retain the edge wheel.
+                visible: surface.mode !== "desktop" && surface.tapeActive && !panel.expanded && !tapeControl.expanded
+                anchors.bottom: placement === "bottom"
+                anchors.left: placement === "left"
+                anchors.right: placement === "right"
+                margins.bottom: placement === "bottom" ? 12 : 0
+                implicitWidth: placement === "bottom" ? Math.min(280, surface.modelData.width - 144) : 64
+                implicitHeight: placement === "bottom" ? 64 : Math.min(440, surface.modelData.height - 160)
+                exclusiveZone: 0
+                color: "transparent"
+                WlrLayershell.namespace: "tessera-wheel"
+                WlrLayershell.layer: WlrLayer.Overlay
+                WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
+                EdgeWheel {
+                    id: edgeWheel
+                    anchors.fill: parent
+                    placement: wheelPanel.placement
+                    movementScale: Math.max(1, surface.modelData.width / 400)
+                    reducedMotion: shellPreferences.reducedMotion
+                    canPan: tapeControl.canPan
+                    onStarted: surface.tapeCommand("begin")
+                    onCanceled: surface.tapeCommand("cancel")
+                    onMoved: delta => surface.tapeCommand(delta)
+                    onSettled: surface.tapeCommand("settle")
+                }
+                Connections {
+                    target: surface.modelData
+                    function onWidthChanged() { edgeWheel.cancel(); }
+                    function onHeightChanged() { edgeWheel.cancel(); }
+                }
+                Connections {
+                    target: Hyprland
+                    function onFocusedWorkspaceChanged() { edgeWheel.cancel(); }
+                    function onFocusedMonitorChanged() { edgeWheel.cancel(); }
+                }
+            }
             // Gesture navigation: thin edge strips catch swipes that start at
             // the screen edge. Touches inside a strip do not reach the app below,
             // so the strips stay a few pixels wide. The bottom strip covers the
@@ -911,7 +1016,7 @@ ShellRoot {
             PanelWindow {
                 id: bottomGesture
                 screen: surface.modelData
-                visible: surface.gestures
+                visible: surface.gestures && (!surface.tapeActive || panel.expanded)
                 anchors {
                     bottom: true
                     left: true
@@ -947,7 +1052,7 @@ ShellRoot {
                     id: sideGesture
                     required property string modelData
                     screen: surface.modelData
-                    visible: surface.gestures
+                    visible: surface.gestures && (!surface.tapeActive || panel.expanded)
                     anchors {
                         top: true
                         bottom: true
@@ -1111,15 +1216,19 @@ ShellRoot {
                     left: true
                     right: true
                 }
-                implicitHeight: drawerOpen ? Math.min(surface.modelData.height - surface.navHeight - 12, quickSheet.implicitHeight + 76) : 48
-                exclusiveZone: 48
+                margins.top: surface.mode === "desktop" ? 0 : 8
+                margins.left: surface.mode === "desktop" ? 0 : 12
+                margins.right: surface.mode === "desktop" ? 0 : 12
+                implicitHeight: drawerOpen ? Math.min(surface.modelData.height - surface.navHeight - 12, quickSheet.implicitHeight + 88) : surface.mode === "desktop" ? 48 : 64
+                exclusiveZone: surface.mode === "desktop" ? 48 : 0
                 color: "transparent"
                 Rectangle {
                     anchors.fill: parent
-                    radius: Theme.radius("card", statusBar.drawerOpen ? 28 : 0, height)
+                    radius: Theme.radius("card", statusBar.drawerOpen ? 28 : (surface.mode === "desktop" ? 0 : 26), height)
                     visible: surface.mode !== "desktop" || statusBar.drawerOpen
                     color: statusBar.drawerOpen ? Theme.glassStrong : Theme.bar(shellPreferences.barOpacity)
-                    Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: Qt.alpha(root.accentColor, 0.1) }
+                    border.width: surface.mode === "desktop" ? 0 : Theme.borderWidth(1)
+                    border.color: Qt.alpha(root.accentColor, 0.18)
                 }
                 WlrLayershell.namespace: "tessera-status"
                 WlrLayershell.layer: WlrLayer.Top
@@ -1127,7 +1236,7 @@ ShellRoot {
                 Item {
                     id: statusHeader
                     width: parent.width
-                    height: 48
+                    height: surface.mode === "desktop" ? 48 : 64
                     DragHandler {
                         target: null
                         xAxis.enabled: false
@@ -1146,52 +1255,112 @@ ShellRoot {
                             }
                         }
                     }
-                RowLayout {
+                Flickable {
+                    id: topBarFlick
                     anchors.fill: parent
-                    anchors.leftMargin: surface.mode === "desktop" ? 0 : 18
+                    anchors.leftMargin: surface.mode === "desktop" ? 0 : 8
                     anchors.rightMargin: surface.mode === "desktop" ? 0 : 8
-                    spacing: surface.mode === "phone" ? 4 : surface.modelData.width < 360 ? 4 : 8
+                    clip: true
+                    contentWidth: topBarContent.implicitWidth
+                    contentHeight: height
+                    boundsBehavior: Flickable.StopAtBounds
+                    flickableDirection: Flickable.HorizontalFlick
+                    interactive: surface.mode !== "desktop" && contentWidth > width
+                    RowLayout {
+                    id: topBarContent
+                    width: Math.max(implicitWidth, topBarFlick.width)
+                    height: topBarFlick.height
+                    spacing: surface.mode === "phone" ? 4 : 8
                     TouchButton {
                         id: mobileClock
                         visible: surface.mode !== "desktop"
                         text: Qt.formatDateTime(clock.date, shellPreferences.use24Hour ? "h:mm" : "h:mm AP").replace(/ [AP]M$/, "")
                         Accessible.name: "Clock " + Qt.formatDateTime(clock.date, shellPreferences.use24Hour ? "h:mm" : "h:mm AP") + ", quick controls"
+                        reducedMotion: shellPreferences.reducedMotion
                         Layout.minimumHeight: 48
-                        Layout.preferredWidth: 66
-                        implicitHeight: 48
+                        Layout.preferredHeight: 56
+                        Layout.preferredWidth: 64
+                        implicitHeight: 56
                         padding: 0
-                        background: Item {}
+                        background: Rectangle {
+                            radius: Theme.radius("button", 20, height)
+                            color: mobileClock.down ? Theme.pressed(root.accentColor) : Theme.glass
+                            border.width: Theme.borderWidth(1)
+                            border.color: mobileClock.down ? root.accentColor : Theme.glassBorder
+                            gradient: Gradient {
+                                GradientStop { position: 0; color: mobileClock.down ? Qt.alpha(root.accentColor, 0.28) : Qt.alpha(Theme.text, 0.12) }
+                                GradientStop { position: 0.52; color: Theme.glass }
+                                GradientStop { position: 1; color: Qt.alpha(Theme.darkerBackground, 0.18) }
+                            }
+                            Rectangle {
+                                anchors.fill: parent
+                                anchors.margins: 2
+                                radius: Math.max(0, parent.radius - 2)
+                                color: "transparent"
+                                border.width: 1
+                                border.color: Qt.alpha(Theme.text, mobileClock.down ? 0.24 : 0.10)
+                            }
+                        }
                         contentItem: Text {
+                            anchors.fill: parent
                             text: mobileClock.text
                             color: Theme.text
+                            horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
                             font { pixelSize: 16; weight: Font.DemiBold; letterSpacing: 0.2 }
                         }
                         onClicked: statusBar.toggleDrawer()
                     }
-                    TouchButton {
-                        Layout.fillWidth: true
-                        Layout.minimumWidth: 64
-                        Layout.minimumHeight: 48
-                        implicitHeight: 48
-                        text: "Quick controls"
+                    GlassIconButton {
+                        id: quickControls
+                        visible: surface.mode !== "desktop"
+                        symbol: statusBar.drawerOpen ? "close" : "controls"
+                        Layout.preferredWidth: 56
+                        Layout.preferredHeight: 56
                         Accessible.name: statusBar.drawerOpen ? "Collapse quick controls" : "Open quick controls, or swipe down"
-                        padding: 0
-                        background: Item {}
-                        contentItem: Item { }
+                        reducedMotion: shellPreferences.reducedMotion
+                        selected: statusBar.drawerOpen
                         onClicked: statusBar.toggleDrawer()
                     }
                     WeatherChip {
                         visible: weatherBackend.available && surface.mode !== "desktop"
                         conditions: weatherBackend.state
+                        iconOnly: true
                         Layout.alignment: Qt.AlignVCenter
-                        Layout.leftMargin: 4
+                        onClicked: statusBar.toggleDrawer()
+                    }
+                    GlassIconButton {
+                        visible: surface.mode !== "desktop"
+                        symbol: "chatgpt"
+                        Layout.preferredWidth: 56
+                        Layout.preferredHeight: 56
+                        selected: panel.page === "chatgpt"
+                        Accessible.name: "ChatGPT"
+                        onClicked: panel.showPage("chatgpt")
+                    }
+                    Item {
+                        visible: surface.mode !== "desktop"
+                        Layout.fillWidth: true
+                        Layout.minimumWidth: surface.mode === "phone" ? 8 : 72
+                        Layout.preferredWidth: 96
+                        Layout.preferredHeight: 56
+                        TopBarPet {
+                            anchors.centerIn: parent
+                            reducedMotion: shellPreferences.reducedMotion
+                            accentColor: root.accentColor
+                            engaged: statusBar.drawerOpen || panel.page.length > 0
+                            attention: root.notificationCount + (statusBar.drawerOpen ? 1 : 0) + (panel.page.length > 0 ? 1 : 0)
+                            onClicked: panel.showPage("chatgpt")
+                        }
                     }
                     // Built-in indicators move to the taskbar tray in Desktop
                     // mode; the mobile strip keeps them along the top edge.
                     StatusIndicators {
                         visible: surface.mode !== "desktop"
-                        compact: surface.mode === "phone"
+                        compact: false
+                        touchMode: true
+                        touchSlot: 56
+                        reducedMotion: shellPreferences.reducedMotion
                         accentColor: root.accentColor
                         notificationCount: root.notificationCount
                         cellularStrength: root.cellularStrength
@@ -1205,12 +1374,14 @@ ShellRoot {
                         settingsSelected: panel.page === "settings"
                         showBatteryText: surface.modelData.width >= 380
                         showVolume: surface.modelData.width >= 700
-                        showSettings: surface.modelData.width >= 560
+                        // Touch users reach Settings from the themed quick
+                        // controls sheet; reserve the tray gear for desktop.
+                        showSettings: surface.mode === "desktop" && surface.modelData.width >= 560
                         onNotificationsRequested: panel.showPage("notifications")
                         onPanelRequested: statusBar.toggleDrawer()
                         onMuteToggled: root.audioSink.audio.muted = !root.audioSink.audio.muted
-                        onSettingsRequested: { statusBar.drawerOpen = false; panel.showPage("settings"); }
                     }
+                }
                 }
                 }
                 ScrollView {
@@ -1239,7 +1410,6 @@ ShellRoot {
                         mediaPlayer: root.activePlayer
                         onCellularRequested: { statusBar.drawerOpen = false; panel.page = "cellular"; }
                         onDismissed: statusBar.drawerOpen = false
-                        onSettingsRequested: { statusBar.drawerOpen = false; panel.showPage("settings"); }
                     }
                 }
                 TouchButton {
@@ -1270,9 +1440,8 @@ ShellRoot {
                 id: startMenu
                 screen: surface.modelData
                 visible: surface.isPrimaryScreen && surface.mode === "desktop" && panel.startMenuOpen
-                readonly property int gridColumns: 4
-                readonly property int rows: Math.ceil(panel.appEntries.length / gridColumns)
-                readonly property int gridHeight: Math.min(rows * 92, 300)
+                readonly property int gridHeight: Math.min(Math.max(startApplications.implicitHeight, 56),
+                    Math.max(56, Math.min(360, surface.modelData.height - surface.navHeight - 126)))
                 anchors {
                     bottom: true
                     left: true
@@ -1291,9 +1460,8 @@ ShellRoot {
                 onVisibleChanged: {
                     if (visible) Qt.callLater(() => {
                         if (!startMenu.visible) return;
-                        const first = startApplications.itemAt(0);
-                        if (first) first.forceActiveFocus();
-                        else startContent.forceActiveFocus();
+                        startContent.forceActiveFocus();
+                        startApplications.focusApp(startApplications.focusedAppId);
                     });
                 }
                 HyprlandFocusGrab {
@@ -1343,29 +1511,27 @@ ShellRoot {
                             }
                         }
                         ScrollView {
+                            id: startScroll
                             Layout.fillWidth: true
                             Layout.preferredHeight: startMenu.gridHeight
                             clip: true
                             contentWidth: availableWidth
-                            GridLayout {
-                                width: parent.width
-                                columns: startMenu.gridColumns
-                                columnSpacing: 8
-                                rowSpacing: 8
-                                Repeater {
-                                    id: startApplications
-                                    model: panel.appEntries
-                                    delegate: StartMenuTile {
-                                        required property var modelData
-                                        text: modelData.name
-                                        symbol: "browser"
-                                        iconSource: Quickshell.iconPath(modelData.icon, true)
-                                        accentColor: root.accentColor
-                                        onClicked: {
-                                            panel.startMenuOpen = false;
-                                            modelData.execute();
-                                        }
-                                    }
+                            StartAppGrid {
+                                id: startApplications
+                                width: startScroll.availableWidth
+                                applications: panel.appEntries
+                                accentColor: root.accentColor
+                                iconPath: name => Quickshell.iconPath(name, true)
+                                onLaunchRequested: appId => {
+                                    panel.startMenuOpen = false;
+                                    root.launchApplication(appId);
+                                }
+                                onTileFocused: tile => {
+                                    const view = startScroll.contentItem;
+                                    const top = tile.mapToItem(startApplications, 0, 0).y;
+                                    if (top < view.contentY) view.contentY = top;
+                                    else if (top + tile.height > view.contentY + view.height)
+                                        view.contentY = top + tile.height - view.height;
                                 }
                             }
                         }
@@ -1438,52 +1604,39 @@ ShellRoot {
                 }
                 Rectangle {
                     anchors.fill: parent
-                    color: Qt.alpha(Theme.darkerBackground, shellPreferences.wallpaperDim)
+                    // Tint the wallpaper with the active palette so theme
+                    // changes are visible on the home surface as well as
+                    // inside the glass cards.
+                    color: Qt.alpha(Theme.background, shellPreferences.wallpaperDim)
                 }
-                Column {
-                    visible: !panel.expanded
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    y: Math.max(64, parent.height * (surface.isPhone ? 0.14 : 0.18))
-                    spacing: 12
-                    BrandMark {
-                        id: homeBrand
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        width: 96
-                        height: 96
-                        reducedMotion: shellPreferences.reducedMotion
-                    }
-                    Connections {
-                        target: root
-                        function onReplayBrand() {
-                            homeBrand.replay();
+                DesktopWidgets {
+                        id: homeWidgets
+                        visible: !panel.expanded
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.top: parent.top
+                        // The floating top bar owns the identity row. Keep
+                        // widgets below it instead of stacking a second clock
+                        // and logo over the wallpaper.
+                        anchors.topMargin: surface.mode === "desktop" ? 24 : 92
+                        anchors.bottom: parent.bottom
+                        anchors.bottomMargin: surface.navHeight + 24
+                        mode: surface.mode
+                        now: clock.date
+                        weather: weatherBackend.state
+                        player: root.activePlayer
+                        batteryPresent: UPower.displayDevice.isPresent
+                        batteryPercent: UPower.displayDevice.percentage
+                        accentColor: root.accentColor
+                        onRefreshWeather: weatherBackend.refresh()
+                        onMediaAction: action => {
+                            const player = root.activePlayer;
+                            if (!player || !player.canControl) return;
+                            if (action === "previous" && player.canGoPrevious) player.previous();
+                            else if (action === "next" && player.canGoNext) player.next();
+                            else if (action === "toggle" && player.canTogglePlaying) player.togglePlaying();
                         }
                     }
-                    Text {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        text: Qt.formatDateTime(clock.date, shellPreferences.use24Hour ? "hh:mm" : "h:mm AP")
-                        color: Theme.text
-                        font {
-                            pixelSize: surface.isPhone ? 58 : 72
-                            weight: Font.Light
-                        }
-                    }
-                    Text {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        text: Qt.formatDateTime(clock.date, "dddd, MMMM d")
-                        color: Theme.accent
-                        font.pixelSize: 18
-                    }
-                    Text {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        text: "TESSARCHY"
-                        color: root.accentColor
-                        font {
-                            pixelSize: 12
-                            bold: true
-                            letterSpacing: 5
-                        }
-                    }
-                }
             }
         }
     }

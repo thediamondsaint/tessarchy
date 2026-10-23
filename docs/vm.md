@@ -25,7 +25,7 @@ sudo pacman -S --needed pipewire pipewire-audio pipewire-pulse wireplumber
 systemctl --user start pipewire pipewire-pulse wireplumber
 ```
 
-Restart Tessera after starting PipeWire so its optional audio integration loads.
+Restart Tessa after starting PipeWire so its optional audio integration loads.
 Open quick controls using the central top handle or a downward swipe. Volume,
 mute and output selection are in the drawer; the speaker shortcut on wider
 screens only toggles mute. App shortcuts precede Back, Home and Recents in the
@@ -84,7 +84,7 @@ stock Arch ISO with `fetch-arch-iso.sh`, then pass the printed path to `vm.sh ru
 The downloader needs curl, gpgv and the Arch keyring. Verification errors stop it;
 refresh your keyring explicitly if needed rather than bypassing signature checks.
 
-The default 2GiB RAM suits a small host; Firefox plus an ISO build will need more.
+The default 2GiB RAM suits a small host; Chromium plus an ISO build will need more.
 For a larger machine use `VM_RAM=4096 VM_CPUS=4 ./scripts/vm.sh run <ISO>`.
 `VM_ACCEL=tcg` forces software emulation. `VM_UEFI=1` opts into OVMF firmware and
 a persistent guest variables file. `vm.sh plan <ISO>` prints the command without
@@ -123,7 +123,7 @@ sudo mkdir -p /mnt/tessarchy
 sudo mount -t 9p -o trans=virtio,version=9p2000.L,ro tessarchy /mnt/tessarchy
 cp -r /mnt/tessarchy/tessarchy ~/tessarchy
 cd ~/tessarchy
-sudo pacman -S --needed hyprland quickshell firefox foot mesa qt6-declarative qt6-wayland ttf-dejavu
+sudo pacman -S --needed hyprland quickshell chromium foot mesa qt6-declarative qt6-wayland ttf-dejavu
 ./scripts/check.sh
 ./scripts/install-dev.sh
 ~/.local/bin/start-tessarchy
@@ -162,7 +162,7 @@ the x86_64 guest:
 
 ```bash
 pacman-key --init && pacman-key --populate archlinuxarm
-pacman -Syu --needed hyprland quickshell firefox foot mesa qt6-declarative qt6-wayland ttf-dejavu python python-gobject ffmpeg sudo
+pacman -Syu --needed hyprland quickshell chromium foot mesa qt6-declarative qt6-wayland ttf-dejavu python python-gobject ffmpeg sudo
 ```
 
 Then mount the source share and run `./scripts/setup-guest.sh` as `alarm`, as for
@@ -174,7 +174,7 @@ accepts `gtk`, `sdl`, `none` or `vnc=ADDRESS:DISPLAY`.
 
 Tap Session → End session (confirmation). The prototype returns to the local
 TTY. Keyboard recovery: Super+Return launches Foot, Super+F toggles maximize,
-Super+Shift+F toggles exclusive fullscreen, Super+Shift+R restarts Tessera if it
+Super+Shift+F toggles exclusive fullscreen, Super+Shift+R restarts Tessa if it
 has exited, and Super+Shift+E exits Hyprland immediately (unsaved work at risk).
 Ctrl+Alt+F2 switches to another guest TTY when delivered by the host/QEMU.
 Use QEMU's Send Key menu if the host captures a chord. Closing the QEMU window
@@ -226,8 +226,12 @@ Use the guest password (initially `arch`). You can paste dependency installation
 9p mount and setup commands into this SSH terminal using Ctrl+Shift+V. Start
 `~/.local/bin/start-tessarchy` in the VM's local console, not over SSH. This
 explicit opt-in forwarding binds only to host loopback; no forwarding exists
-when VM_SSH_PORT is unset. If SSH is refused after the guest has finished
-booting, type `sudo systemctl start sshd` in the guest console and retry.
+when VM_SSH_PORT is unset. Validate the guest service with
+`sudo tessarchy-ssh check`, then use `sudo tessarchy-ssh enable` when remote
+access is needed. The helper creates missing host keys, validates the effective
+configuration, and enables `sshd` without allowing root login. If SSH is
+refused after the guest has finished booting, run those two commands in the
+guest console and retry.
 
 The option follows the [official QEMU user-network forwarding syntax](https://www.qemu.org/docs/master/system/invocation.html).
 
@@ -245,7 +249,7 @@ full mount/modprobe output and `uname -r` rather than installing random packages
 ## Agent-connected phone layout, 2026-10-16
 
 The existing Basic guest was started with `VM_SSH_PORT=2222`, updated over SSH,
-and left running with Tessera. Guest source and installed defaults were backed
+and left running with Tessa. Guest source and installed defaults were backed
 up in `~/tessarchy-backups/`. A guest-only preference selects a supported QEMU
 mode rotated into a 432×768 logical phone layout:
 
@@ -289,7 +293,7 @@ The shell includes a wallpaper, SVG Tessarchy mark, translucent navigation and
 status bars, and wireless/cellular indicator slots. Slashed, dim indicators mean
 no backend/device is available. Tap the speaker for Quick Controls. Audio uses
 Quickshell's PipeWire integration when the launch-time PipeWire socket exists;
-otherwise controls are disabled. Start audio separately and restart Tessera to
+otherwise controls are disabled. Start audio separately and restart Tessa to
 activate it later. Wireless/modem backend integration is still pending.
 
 ## Adaptive shell and Settings

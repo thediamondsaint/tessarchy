@@ -67,7 +67,7 @@ First-boot PIN enrollment for disposable/live media remains future work.
 6. Enable greetd for the next boot. Starting it immediately conflicts with tty1
    getty and can end the current session; get explicit confirmation before that
    session exit/reboot. Preserve user applications until then.
-7. Verify a wrong PIN does not start Tessera, the chosen PIN starts the session,
+7. Verify a wrong PIN does not start Tessa, the chosen PIN starts the session,
    and session exit returns to the phone greeter. Inspect logs without recording
    secrets. Verify the recovery path before declaring boot-time login complete.
 
@@ -90,13 +90,13 @@ through hidden stdin, and greetd enabled in place of tty1 getty. The original
 systemd configuration is backed up under /root/tessarchy-login-before/systemd.
 No host configuration or package was changed and the stock PAM stack is intact.
 
-A wrong PIN was rejected by real PAM and did not start Tessera. The chosen PIN
+A wrong PIN was rejected by real PAM and did not start Tessa. The chosen PIN
 started the user session. Confirmed session exit returned to the phone greeter.
 After both launch paths switched to start-hyprland, the greeter and authenticated
 desktop had no launcher warnings; the desktop's configerrors result was empty.
 The final native 400x800 display and real greeter/rejection/home captures were
 inspected. These are development-VM checks, not a new ISO boot test or locking
-claim. The private development Tessera copy remains the user session's selected
+claim. The private development Tessa copy remains the user session's selected
 source; the greeter itself runs the installed system package.
 
 ## Public alpha demo

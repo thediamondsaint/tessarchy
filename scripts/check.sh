@@ -4,13 +4,13 @@ root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 cd "$root"
 scratch=$(mktemp -d)
 trap 'rm -rf -- "$scratch"' EXIT
-for script in scripts/*.sh session/tessarchy-session-services session/start-tessarchy session/tessera-shell session/tessarchy-osk session/tessarchy-theme session/tessarchy-run session/tessera-screenshot session/tessera-brightness session/tessera-nightlight session/tessera-rotate session/tessera-update-notify session/tessarchy-greeter session/tessarchy-install-ui packaging/*/PKGBUILD; do bash -n "$script"; done
+for script in scripts/*.sh session/tessarchy-session-services session/start-tessarchy session/tessera-shell session/tessarchy-osk session/tessarchy-theme session/tessarchy-run session/tessera-screenshot session/tessera-brightness session/tessera-nightlight session/tessera-rotate session/tessera-update-notify session/tessarchy-greeter session/tessarchy-install-ui session/tessa-ai session/tessarchy-ssh packaging/*/PKGBUILD; do bash -n "$script"; done
 # Arch ships only python; Debian/Ubuntu split out python3. Accept either.
 py=$(command -v python || command -v python3 || true)
 [[ -n "$py" ]] || { echo "FAIL: neither python nor python3 is installed" >&2; exit 1; }
 "$py" -m py_compile session/tessarchy-install session/tessarchy-update session/tessarchy-readiness
 "$py" -m unittest discover -s tests -v
-if command -v node >/dev/null; then node --test tests/website.test.cjs; else echo "SKIP: Node.js website checks unavailable"; fi
+if command -v node >/dev/null; then node --test tests/website.test.cjs tests/app-policy.test.cjs; else echo "SKIP: Node.js website checks unavailable"; fi
 # Discover the installed Qt tools and import root on Arch and Debian.
 qml_root=""
 for dir in /usr/lib/qt6/qml /usr/lib/*/qt6/qml; do

@@ -35,11 +35,13 @@ RadioTile 1.0 RadioTile.qml
 RecentsBackdrop 1.0 RecentsBackdrop.qml
 RotationControl 1.0 RotationControl.qml
 SettingsPage 1.0 SettingsPage.qml
+SettingsCard 1.0 SettingsCard.qml
 SoundSettings 1.0 SoundSettings.qml
 StartButton 1.0 StartButton.qml
 StartMenuTile 1.0 StartMenuTile.qml
 StatusIcon 1.0 StatusIcon.qml
 StatusIndicators 1.0 StatusIndicators.qml
+TopBarPet 1.0 TopBarPet.qml
 TaskButton 1.0 TaskButton.qml
 TaskStrip 1.0 TaskStrip.qml
 singleton Theme 1.0 Theme.qml
@@ -49,3 +51,13 @@ TrayButton 1.0 TrayButton.qml
 WeatherBackend 1.0 WeatherBackend.qml
 WeatherChip 1.0 WeatherChip.qml
 WindowTapeControl 1.0 WindowTapeControl.qml
+AppLauncher 1.0 AppLauncher.qml
+ChatGPTPanel 1.0 ChatGPTPanel.qml
+DesktopWidgetCard 1.0 DesktopWidgetCard.qml
+DesktopWidgets 1.0 DesktopWidgets.qml
+RadialActions 1.0 RadialActions.qml
+StartAppGrid 1.0 StartAppGrid.qml
+EdgeWheel 1.0 EdgeWheel.qml
+LauncherRow 1.0 LauncherRow.qml
+
+GlassIconButton 1.0 GlassIconButton.qml

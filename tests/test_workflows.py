@@ -4,7 +4,9 @@ import re
 from pathlib import Path
 import re
 import subprocess
+import sys
 import tempfile
+import time
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -54,7 +56,7 @@ class Workflows(unittest.TestCase):
             offenders = [number for number, line in enumerate(path.read_text().splitlines(), 1)
                          if pattern.search(line)]
             self.assertEqual(offenders, [], f'{path.name}: colour literals')
-        # Every semantic token is loadable from shell.toml and pinned by Tessera.
+        # Every semantic token is loadable from shell.toml and pinned by Tessa.
         theme = (ROOT / 'shell/components/Theme.qml').read_text()
         tokens = re.findall(r'property color \w+: token\("([a-z_]+)"', theme)
         self.assertGreater(len(tokens), 50)
@@ -91,37 +93,76 @@ class Workflows(unittest.TestCase):
         policy = (ROOT / 'shell/LayoutPolicy.js').read_text()
         self.assertIn('function barGeometry(mode, rows)', policy)
         self.assertRegex(shell, r'property var bar: Policy\.barGeometry\(mode, dock\.rows\)')
-        self.assertRegex(shell, r'property int navHeight: bar\.height\n')
+        self.assertRegex(shell, r'property int navHeight: mode === "desktop" \? bar\.height : 0\n')
         panel = shell[shell.index('id: panel\n'):shell.index('id: statusBar\n')]
         # The frame and its content margins: no literal except the open-page flush 0.
         margins = re.findall(r'^ {20}anchors\.\w*[mM]argins?:.*$', panel, re.M)
         self.assertGreaterEqual(len(margins), 5, margins)
         for line in margins:
             self.assertNotRegex(line.replace('panel.expanded ? 0 :', ''), r'\d', line)
-        dock = panel[panel.index('columns: surface.dock.columns') - 200:]
-        dock = dock[:dock.index('NavButton {')]
-        for key in ('Layout.preferredHeight', 'columnSpacing', 'rowSpacing'):
-            line = re.search(key + r':.*', dock).group(0)
-            self.assertNotRegex(line, r'\d', line)
+        self.assertNotIn('columns: surface.dock.columns', panel)
+        self.assertIn('Phone, Messages and Keyboard are in the expanded T cube', shell)
         taskbar = panel[panel.index('visible: surface.mode === "desktop"\n'):]
         self.assertIn('Layout.preferredHeight: surface.bar.row\n', taskbar[:200])
 
-    def test_navigation_gestures_reuse_dock_actions_and_keep_a_button_fallback(self):
+    def test_navigation_gestures_move_touch_actions_into_the_t_cube(self):
         shell = (ROOT / 'shell/shell.qml').read_text()
         settings = (ROOT / 'shell/components/SettingsPage.qml').read_text()
         self.assertIn('property string navigation: "gestures"', shell)
         self.assertIn('property bool showGestureHandle: true', shell)
         self.assertIn('Policy.gestureNavigation(mode, shellPreferences.navigation)', shell)
         self.assertIn('Policy.dockLayout(mode, modelData.width, root.oskAvailable, gestures)', shell)
-        # Buttons and gestures call the same panel action; no copied logic.
-        for action in ('back', 'home', 'recents'):
-            self.assertIn(f'onClicked: panel.navigate("{action}")', shell)
+        self.assertIn('signal phoneRequested()', (ROOT / 'shell/components/WindowTapeControl.qml').read_text())
+        self.assertIn('signal messagesRequested()', (ROOT / 'shell/components/WindowTapeControl.qml').read_text())
+        self.assertIn('signal keyboardRequested()', (ROOT / 'shell/components/WindowTapeControl.qml').read_text())
+        self.assertIn('onPhoneRequested: { tapeControl.cancel(); panel.showPage("phone"); }', shell)
+        self.assertIn('onMessagesRequested: { tapeControl.cancel(); panel.showPage("messages"); }', shell)
+        self.assertIn('onKeyboardRequested: { tapeControl.cancel(); Quickshell.execDetached(["tessarchy-osk", "toggle"]); }', shell)
         self.assertEqual(shell.count('onGesture: action => panel.navigate(action)'), 2)
-        self.assertEqual(shell.count('visible: !surface.gestures'), 3)
+        self.assertNotIn('visible: !surface.gestures', shell)
         self.assertIn('shown: shellPreferences.showGestureHandle', shell)
         self.assertIn('visible: surface.gestures', shell)
         self.assertIn('value: "buttons"', settings)
         self.assertIn('page.preferences.navigation = modelData.value', settings)
+
+    def test_touch_top_bar_uses_floating_scrollable_glass_and_targets(self):
+        shell = (ROOT / 'shell/shell.qml').read_text()
+        indicators = (ROOT / 'shell/components/StatusIndicators.qml').read_text()
+        status_icon = (ROOT / 'shell/components/StatusIcon.qml').read_text()
+        self.assertIn('implicitHeight: drawerOpen ? Math.min(surface.modelData.height - surface.navHeight - 12, quickSheet.implicitHeight + 88) : surface.mode === "desktop" ? 48 : 64', shell)
+        self.assertIn('interactive: surface.mode !== "desktop" && contentWidth > width', shell)
+        self.assertIn('boundsBehavior: Flickable.StopAtBounds', shell)
+        self.assertIn('touchMode: true', shell)
+        self.assertIn('touchSlot: 56', shell)
+        self.assertIn('property bool touchMode: false', indicators)
+        self.assertIn('property bool touchMode: false', status_icon)
+        self.assertIn('Layout.preferredWidth: touchMode ? touchSlot', status_icon)
+        self.assertIn('showSettings: surface.mode === "desktop" && surface.modelData.width >= 560', shell)
+        self.assertIn('visible: surface.mode !== "desktop" && surface.tapeActive && !panel.expanded && !tapeControl.expanded', shell)
+        self.assertNotIn('id: homeHeader', shell)
+        self.assertIn('anchors.topMargin: surface.mode === "desktop" ? 24 : 92', shell)
+
+        settings = (ROOT / 'shell/components/SettingsPage.qml').read_text()
+        self.assertIn('Accessible.role: Accessible.RadioButton', settings)
+        self.assertIn('Accessible.checked: selected', settings)
+        self.assertIn('title: "THEMES"', settings)
+        self.assertIn('TopBarPet {', shell)
+        self.assertIn('iconOnly: true', shell)
+
+    def test_ai_control_surface_and_ssh_support_are_explicit_and_local(self):
+        shell = (ROOT / 'shell/shell.qml').read_text()
+        self.assertIn('target: "ai"', shell)
+        for operation in ('open(', 'launch(', 'theme(', 'radio(', 'tape(', 'screenshot()', 'volume('):
+            self.assertIn('function ' + operation, shell)
+        ai = (ROOT / 'session/tessa-ai').read_text()
+        self.assertIn('exec tessera-shell ipc call ai', ai)
+        self.assertNotIn('eval', ai)
+        ssh = (ROOT / 'session/tessarchy-ssh').read_text()
+        self.assertIn('sshd -t', ssh)
+        self.assertIn('systemctl enable --now sshd.service', ssh)
+        self.assertIn('openssh', (ROOT / 'iso/packages.x86_64').read_text().split())
+        self.assertIn('openssh', (ROOT / 'packaging/tessarchy-session/PKGBUILD').read_text())
+        self.assertIn('PermitRootLogin no', (ROOT / 'session/sshd_config.d/tessarchy.conf').read_text())
 
     def test_components_qmldir_lists_every_component(self):
         # An explicit qmldir hides any component it omits ("X is not a type").
@@ -399,6 +440,29 @@ class Workflows(unittest.TestCase):
         self.theme('set', 'tessera')
         self.assertEqual((state / 'theme/wallpaper').read_text().strip(), '')
 
+    def test_bundled_omarchy_palettes_render_every_output(self):
+        import tomllib
+        themes = [p for p in (ROOT / 'themes').glob('*/colors.toml')
+                  if not p.parent.name.startswith('tessera')]
+        self.assertEqual(len(themes), 23)
+        listed = {line.split('\t')[0] for line in self.theme('list').stdout.splitlines()}
+        state = self.home / 'state/tessarchy'
+        for path in themes:
+            with self.subTest(theme=path.parent.name):
+                raw = tomllib.loads(path.read_text())
+                self.assertIn(path.parent.name, listed)
+                result = self.theme('set', path.parent.name)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                normalized = tomllib.loads((state / 'theme/colors.toml').read_text())
+                self.assertEqual(normalized['background'], raw['background'].lower())
+                self.assertEqual(normalized['accent'], raw['accent'].lower())
+                self.assertNotIn('[tessera]', (state / 'theme/colors.toml').read_text())
+                self.assertIn('background=' + raw['background'][1:].lower(),
+                              (state / 'theme/foot.ini').read_text())
+                self.assertIn(raw['accent'].lower(), (state / 'osk/gtk-3.0/gtk.css').read_text())
+        self.assertEqual(self.theme('set', 'tessera').returncode, 0)
+        self.assertIn('[tessera]', (state / 'theme/colors.toml').read_text())
+
     def test_theme_surface_defaults_overrides_and_invalid_values(self):
         state = self.home / 'state/tessarchy/theme'
         borders = 'window_border = 0, window_border_active = "rgb(a9e8d5)", window_border_inactive = "rgb(34465e)"'
@@ -560,17 +624,42 @@ print(g.border_size, col.active_border, col.inactive_border, group.border_active
     def test_run_launches_apps_in_theme_mode(self):
         stubs = self.home / 'bin'
         stubs.mkdir()
-        for name in ('foot', 'firefox'):
+        for name in ('foot', 'chromium'):
             (stubs / name).write_text('#!/bin/bash\necho "$GTK_THEME|$*"\n')
             (stubs / name).chmod(0o755)
         env = dict(self.env, PATH=f'{stubs}:{os.environ["PATH"]}', XDG_STATE_HOME=str(self.home / 'state'))
         run = lambda *a: subprocess.run([str(ROOT / 'session/tessarchy-run'), *a], env=env,
                                         capture_output=True, text=True).stdout.strip()
-        self.assertEqual(run('firefox', 'about:blank'), 'Adwaita:dark|about:blank')
+        self.assertEqual(run('chromium', 'about:blank'), 'Adwaita:dark|about:blank')
         self.theme('set', 'tessera-light')
         config = self.home / 'state/tessarchy/theme/foot.ini'
         self.assertEqual(run('foot', '-e', 'ls'), f'Adwaita|--config={config} -e ls')
-        self.assertEqual(run('firefox'), 'Adwaita|')
+        self.assertEqual(run('chromium'), 'Adwaita|')
+
+    def test_chatgpt_status_uses_chromium_app_mode_when_native_client_is_absent(self):
+        stubs = self.home / 'bin'
+        stubs.mkdir()
+        chromium = stubs / 'chromium'
+        chromium.write_text('#!/bin/sh\nprintf "%s\\n" "$*" > "$CHATGPT_ARGS"\n')
+        chromium.chmod(0o755)
+        codex = stubs / 'codex'
+        codex.write_text('#!/bin/sh\nexit 1\n')
+        codex.chmod(0o755)
+        env = dict(self.env, PATH=str(stubs),
+                   CHATGPT_ARGS=str(self.home / 'chatgpt-args'))
+        command = [sys.executable, str(ROOT / 'session/tessera-chatgpt-status')]
+        status = subprocess.run(command + ['status'],
+                                env=env, capture_output=True, text=True, check=True)
+        payload = __import__('json').loads(status.stdout)
+        self.assertEqual(payload['state'], 'signed-out')
+        self.assertTrue(payload['installed'])
+        self.assertEqual(payload['command'], str(chromium))
+        subprocess.run(command + ['open'], env=env, check=True)
+        for _ in range(20):
+            if (self.home / 'chatgpt-args').exists():
+                break
+            time.sleep(0.01)
+        self.assertEqual((self.home / 'chatgpt-args').read_text().strip(), '--app=https://chatgpt.com')
 
     def test_portal_asks_shell_and_falls_back_to_gtk_in_desktop(self):
         import shutil
@@ -1066,6 +1155,7 @@ assert(#commands == 4, "unexpected extra autostart commands")
         self.assertFalse(list((source / 'build').glob('source-share.*')))
 
     def test_new_windows_follow_saved_mode_without_touching_dialogs(self):
+        self.skipTest('legacy mobile/window policy removed from the vanilla Hyprland baseline')
         import shutil
         if not shutil.which('lua'):
             self.skipTest('Lua interpreter unavailable')
@@ -1141,6 +1231,7 @@ check("desktop", 1280, 800, 1, 0, false, 0, 0, {name="tessarchy-tape"})
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
     def test_mobile_policy_keeps_active_app_maximized_and_fits_dialogs(self):
+        self.skipTest('legacy mobile/window policy removed from the vanilla Hyprland baseline')
         import shutil
         if not shutil.which('lua'):
             self.skipTest('Lua interpreter unavailable')
@@ -1227,6 +1318,7 @@ assert(#fire("window.open", dialog) == 0, "desktop dialogs are left alone")
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
     def test_windowed_desktop_floats_new_windows_and_honors_settings_toggle(self):
+        self.skipTest('legacy desktop window policy removed from the vanilla Hyprland baseline')
         import shutil
         if not shutil.which('lua'):
             self.skipTest('Lua interpreter unavailable')
@@ -1282,6 +1374,41 @@ local phone = { floating = false, fullscreen = 0, monitor = monitor(720, 1440) }
 a = fire("window.open", phone)
 assert(#a == 4 and a[1].kind == "tag" and a[2].kind == "float")
 assert(a[3].kind == "resize" and a[3].x == 720 and a[3].y == 1440)
+'''
+        result = subprocess.run(['lua', '-', str(ROOT / 'session/hyprland.lua')],
+                                input=script, text=True, capture_output=True, env=self.env)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_hyprland_baseline_keeps_tessa_bridges_without_window_policy(self):
+        import shutil
+        if not shutil.which('lua'):
+            self.skipTest('Lua interpreter unavailable')
+        script = r'''local callbacks, binds, seen = {}, {}, {}
+local noop = function() return {} end
+hl = {
+    monitor = function() end,
+    config = function(value) seen.config = value end,
+    layer_rule = function() end,
+    workspace_rule = function(value) seen.workspace = value end,
+    bind = function(keys, dispatcher, flags) binds[keys] = {dispatcher = dispatcher, flags = flags} end,
+    on = function(name, callback) callbacks[name] = callback end,
+    exec_cmd = noop,
+    dsp = {exec_cmd = function(command) return {exec = command} end,
+           focus = noop, layout = noop, no_op = noop,
+           window = {fullscreen = noop, close = noop}},
+}
+dofile(arg[1])
+assert(seen.config.scrolling.column_width == 1.0, "native scrolling config missing")
+assert(seen.workspace.layout == "scrolling", "tape workspace must use scrolling")
+assert(callbacks["window.open"] == nil and callbacks["window.active"] == nil,
+       "vanilla baseline must not mutate application windows")
+assert(callbacks["monitor.layout_changed"] == nil and callbacks["layer.opened"] == nil,
+       "vanilla baseline must not refit windows around shell layers")
+for _, key in ipairs({"SUPER + T", "SUPER + SPACE", "SUPER + bracketleft", "SUPER + bracketright"}) do
+    assert(binds[key], "missing Tessa bridge bind: " .. key)
+end
+assert(binds["SUPER + 1"] == nil and binds["SUPER + left"] == nil,
+       "vanilla baseline must not replace normal workspace/focus bindings")
 '''
         result = subprocess.run(['lua', '-', str(ROOT / 'session/hyprland.lua')],
                                 input=script, text=True, capture_output=True, env=self.env)

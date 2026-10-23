@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Guest-only virtual multitouch touchscreen for driving Tessera in a VM.
+"""Guest-only virtual multitouch touchscreen for driving Tessa in a VM.
 
 Creates a uinput device with INPUT_PROP_DIRECT and MT slots, so Hyprland and
 apps receive real touch events rather than the QEMU tablet's absolute pointer.

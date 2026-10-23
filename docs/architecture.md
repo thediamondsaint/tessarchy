@@ -1,6 +1,6 @@
 # Architecture and API evidence
 
-Tessarchy is an Arch session, not Android/AOSP. Tessera runs as a normal user
+Tessarchy is an Arch session, not Android/AOSP. Tessa runs as a normal user
 under Hyprland, using Quickshell's layer-shell panels and window integration.
 No privileged daemon or compositor fork is involved.
 
@@ -96,7 +96,7 @@ forgetting and passkey agents are out of scope.
 
 ## Notification delivery
 
-Tessera registers Quickshell's `NotificationServer`, which claims
+Tessa registers Quickshell's `NotificationServer`, which claims
 `org.freedesktop.Notifications` on the session bus, so ordinary D-Bus
 notifications reach the shell without any extra daemon. Every delivered
 notification is marked tracked, which is the history model the alert center
@@ -146,7 +146,7 @@ session-lock implementation is tracked independently in the agent backlog.
 
 ## On-screen keyboard
 
-The session starts `tessarchy-osk start` after Tessera. When squeekboard is
+The session starts `tessarchy-osk start` after Tessa. When squeekboard is
 installed it runs as an ordinary client and reserves its own `osk` layer above
 the navigation bar, so maximized apps shrink rather than being covered.
 squeekboard shows itself for focused text fields only when the GNOME a11y key
@@ -155,7 +155,7 @@ the wrapper starts it with a keyfile GSettings backend under
 `$XDG_STATE_HOME/tessarchy/osk` (default `~/.local/state/tessarchy/osk`), seeded
 once with the key enabled. Users may edit that file; it is never overwritten.
 The Keyboard navigation button calls `tessarchy-osk toggle`, which uses
-squeekboard's `sm.puri.OSK0` D-Bus `Visible`/`SetVisible` on the session bus. Tessera
+squeekboard's `sm.puri.OSK0` D-Bus `Visible`/`SetVisible` on the session bus. Tessa
 panels never take keyboard focus, so the app keeps its text field. The button
 appears only when `tessera-shell` finds squeekboard and the wrapper, and is not
 added to Desktop mode. Desktop mode also disarms the key through
@@ -253,5 +253,5 @@ installed `themes/`, then `/usr/share/omarchy/themes`, and stages the choice in
 - `mode` (dark/light, or derived from background luminance) sets `GTK_THEME` /
   `ADW_DEBUG_COLOR_SCHEME` for apps started through `tessarchy-run`. GTK apps get
   only Adwaita dark/light, not the palette.
-- `wallpaper` names the theme's first background, which replaces the Tessera
+- `wallpaper` names the theme's first background, which replaces the Tessa
   artwork on the home screen.
