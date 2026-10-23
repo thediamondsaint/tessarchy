@@ -12,6 +12,8 @@ import Quickshell.Services.UPower
 import Quickshell.Services.Mpris
 import Quickshell.Services.SystemTray
 import Quickshell.Services.Notifications
+import Quickshell.Networking
+import "WifiPolicy.js" as Wifi
 import "components"
 import "LayoutPolicy.js" as Policy
 import "AppPolicy.js" as Apps
@@ -216,8 +218,9 @@ ShellRoot {
             })
         }
     }
-    // Bind these when wireless/modem integrations land. Never invent a signal.
-    property real wifiStrength: -1
+    readonly property var networkDevices: Networking.devices ? Networking.devices.values : []
+    readonly property var wifiDevice: networkDevices.find(device => device.type === DeviceType.Wifi) || null
+    property real wifiStrength: Wifi.signalStrength(wifiDevice)
     readonly property real cellularStrength: communications.state.cellular.signal === undefined ? -1 : communications.state.cellular.signal / 100
     // squeekboard via tessarchy-osk; it also appears by itself for text fields.
     readonly property bool oskAvailable: Quickshell.env("TESSARCHY_OSK") === "1"
