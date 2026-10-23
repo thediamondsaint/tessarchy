@@ -14,6 +14,25 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class Workflows(unittest.TestCase):
+    def test_osk_gesture_reservation_keeps_input_and_background_at_physical_edge(self):
+        shell = (ROOT / 'shell/shell.qml').read_text()
+        policy = (ROOT / 'shell/LayoutPolicy.js').read_text()
+        theme = (ROOT / 'shell/components/Theme.qml').read_text()
+        reservation = shell.split('WlrLayershell.namespace: "tessera-gesture-reservation"')[0].split('PanelWindow {')[-1]
+        gesture = shell.split('id: bottomGesture', 1)[1].split('id: bottomSwipe', 1)[0]
+        self.assertIn('visible: surface.gestureStripHeight > 0', reservation)
+        self.assertIn('anchors { bottom: true; left: true; right: true }', reservation)
+        self.assertIn('exclusiveZone: surface.gestureStripHeight', reservation)
+        self.assertIn('color: Theme.gestureBackground', reservation)
+        self.assertIn('WlrLayershell.layer: WlrLayer.Bottom', shell)
+        self.assertIn('implicitHeight: surface.gestureStripHeight', gesture)
+        self.assertIn('exclusionMode: ExclusionMode.Ignore', gesture)
+        self.assertIn('WlrLayershell.layer: WlrLayer.Overlay', gesture)
+        self.assertIn('anchors {', gesture)
+        self.assertIn('bottom: true', gesture)
+        self.assertIn('function gestureStripHeight(mode, gestures, reveal, edge)', policy)
+        self.assertIn('gestureBackground: token("gesture_background", "#000000")', theme)
+
     def test_shell_shape_literals_live_in_theme_tokens(self):
         # Tiny decorative marks and circular avatars retain fixed geometry.
         legacy = {'StatusIcon.qml': 1, 'ContactAvatar.qml': 1, 'shell.qml': 2}
@@ -105,6 +124,16 @@ class Workflows(unittest.TestCase):
         self.assertIn('Phone, Messages and Keyboard are in the expanded T cube', shell)
         taskbar = panel[panel.index('visible: surface.mode === "desktop"\n'):]
         self.assertIn('Layout.preferredHeight: surface.bar.row\n', taskbar[:200])
+
+    def test_desktop_status_surface_does_not_reserve_an_empty_top_strip(self):
+        shell = (ROOT / 'shell/shell.qml').read_text()
+        status = shell[shell.index('id: statusBar\n'):]
+        panel = shell[shell.index('id: panel\n'):shell.index('id: statusBar\n')]
+        self.assertIn('visible: surface.mode !== "desktop" || drawerOpen', status)
+        self.assertIn('exclusiveZone: surface.mode === "desktop" ? 0 : 48', status)
+        self.assertIn('onPanelRequested: statusBar.toggleDrawer()', panel)
+        self.assertIn('visible: surface.mode === "desktop"', panel)
+        self.assertIn('Layout.preferredHeight: surface.bar.row', panel)
 
     def test_navigation_gestures_move_touch_actions_into_the_t_cube(self):
         shell = (ROOT / 'shell/shell.qml').read_text()
@@ -1058,6 +1087,10 @@ assert(#commands == 4, "unexpected extra autostart commands")
     def test_build_iso_requires_explicit_archiso_install(self):
         self.run_script('build-iso.sh', expected=1)
 
+    def test_iso_build_container_has_git_for_package_provenance(self):
+        workflow = (ROOT / '.github/workflows/build-iso.yml').read_text()
+        self.assertIn('archiso ffmpeg base-devel git gtk3 glib2', workflow)
+
     def test_export_vm_source_keeps_existing_snapshot_idempotent(self):
         repo = self.home / 'source'
         self.copy_repo(repo, ('shell', 'session', 'scripts', 'packaging', 'iso',
@@ -1380,7 +1413,7 @@ assert(a[3].kind == "resize" and a[3].x == 720 and a[3].y == 1440)
                                 input=script, text=True, capture_output=True, env=self.env)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
-    def test_hyprland_baseline_keeps_tessa_bridges_without_window_policy(self):
+    def test_hyprland_baseline_scopes_window_policy_to_osk_dialogs(self):
         import shutil
         if not shutil.which('lua'):
             self.skipTest('Lua interpreter unavailable')
@@ -1401,10 +1434,11 @@ hl = {
 dofile(arg[1])
 assert(seen.config.scrolling.column_width == 1.0, "native scrolling config missing")
 assert(seen.workspace.layout == "scrolling", "tape workspace must use scrolling")
-assert(callbacks["window.open"] == nil and callbacks["window.active"] == nil,
-       "vanilla baseline must not mutate application windows")
-assert(callbacks["monitor.layout_changed"] == nil and callbacks["layer.opened"] == nil,
-       "vanilla baseline must not refit windows around shell layers")
+assert(callbacks["window.open"] ~= nil and callbacks["window.active"] == nil,
+       "only newly opened windows may be checked for an active OSK")
+assert(callbacks["monitor.layout_changed"] ~= nil and callbacks["layer.opened"] ~= nil
+       and callbacks["layer.closed"] ~= nil and callbacks["config.reloaded"] ~= nil,
+       "OSK dialog placement must follow output and keyboard visibility changes")
 for _, key in ipairs({"SUPER + T", "SUPER + SPACE", "SUPER + bracketleft", "SUPER + bracketright"}) do
     assert(binds[key], "missing Tessa bridge bind: " .. key)
 end

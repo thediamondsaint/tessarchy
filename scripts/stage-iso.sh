@@ -51,6 +51,7 @@ file_permissions+=(
   ["/usr/bin/tessarchy-ssh"]="0:0:755"
   ["/usr/bin/tessarchy-theme"]="0:0:755"
   ["/usr/bin/tessarchy-run"]="0:0:755"
+  ["/usr/bin/tessarchy-launch"]="0:0:755"
 )
 PROFILE
 # Replace releng's Arch-branded boot menus with Tessarchy's. Anything NOT
@@ -85,7 +86,8 @@ python3 "$root/scripts/runtime-source-manifest.py" --root "$root" \
     --commit "$source_commit" --output "$manifest_dir/tessera-shell.json"
 cp -- "$manifest_dir/tessera-shell.json" "$manifest_dir/tessarchy-session.json"
 install -m755 "$root/session/tessarchy-install" "$root/session/tessarchy-install-ui" "$airoot/usr/bin/"
-install -m755 "$root/session/start-tessarchy" "$root/session/tessera-shell" "$root/session/tessera-chatgpt-status" "$root/session/tessarchy-osk" "$root/session/tessarchy-theme" "$root/session/tessarchy-run" "$root/session/tessera-screenshot" "$root/session/tessera-brightness" "$root/session/tessera-nightlight" "$root/session/tessera-rotate" "$root/session/tessarchy-session-services" "$root/session/tessa-ai" "$root/session/tessarchy-ssh" "$root/session/tessarchy-readiness" "$airoot/usr/bin/"
+install -m755 "$root/session/start-tessarchy" "$root/session/tessera-shell" "$root/session/tessera-chatgpt-status" "$root/session/tessarchy-osk" "$root/session/tessarchy-theme" "$root/session/tessarchy-run" "$root/session/tessarchy-launch" "$root/session/tessera-screenshot" "$root/session/tessera-brightness" "$root/session/tessera-nightlight" "$root/session/tessera-rotate" "$root/session/tessarchy-session-services" "$root/session/tessa-ai" "$root/session/tessarchy-ssh" "$root/session/tessarchy-readiness" "$airoot/usr/bin/"
+install -Dm644 "$root/session/tessarchy-apps.target" "$airoot/usr/lib/systemd/user/tessarchy-apps.target"
 install -m755 "$root/session/tessarchy-update" "$root/session/tessera-update-notify" "$airoot/usr/bin/"
 install -m755 "$root/session/tessarchy-runtime" "$airoot/usr/bin/"
 install -m644 "$root/session/tessarchy.desktop" "$airoot/usr/share/wayland-sessions/"

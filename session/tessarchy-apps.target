@@ -1,0 +1,4 @@
+[Unit]
+Description=Tessarchy graphical session applications
+# A distinct stop boundary: shell.service can restart without stopping apps.
+PartOf=graphical-session.target
