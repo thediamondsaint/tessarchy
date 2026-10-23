@@ -15,7 +15,8 @@ else
     [[ -f "$share/session/hyprland.lua" ]] || { echo "Session defaults not installed" >&2; exit 1; }
     runtime=${TESSARCHY_RUNTIME_HOME:-${XDG_DATA_HOME:-$HOME/.local/share}/tessarchy/runtime}
     generation=$(tessarchy-runtime prepare --source "$share" --runtime "$runtime")
-    export TESSARCHY_RUNTIME_HOME="$(realpath -e -- "$runtime")"
+    TESSARCHY_RUNTIME_HOME=$(realpath -e -- "$runtime")
+    export TESSARCHY_RUNTIME_HOME
     runtime=$TESSARCHY_RUNTIME_HOME
     share="$runtime/generations/$generation"
     config="$runtime/bootstrap/session/hyprland.lua"
