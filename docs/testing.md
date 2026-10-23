@@ -2715,3 +2715,22 @@ state. No credentials were entered, so authenticated usage, physical sign-in,
 and native ChatGPT window rendering remain unverified.
 
 [Actual VM capture and provenance](../assets/screenshots/tessa-chatgpt/README.md).
+
+## OSK-resistant dialog lift on current main — 2026-10-23
+
+Ported only #80's floating-dialog/OSK policy into the vanilla compositor
+baseline. It reads the selected or inferred Phone/Tablet layout, checks mapped
+`osk`/`squeekboard` layers, requests a fit once, observes compositor goal
+geometry for a client minimum-size correction, and lifts only the affected
+floating dialog when needed. It restores policy-owned placement after the OSK
+hides and respects later manual movement. Desktop, tiled windows, and tagged
+Phone app windows remain outside the policy.
+
+`python3 scripts/probe-osk-window-lift.py` passed: baseline controls 2/2,
+baseline red controls 15 expected failures/20, changed policy 20/20, workflow
+subset 70 passed with three legacy skips, and `luac -p` passed. The native portal
+build workflow test is explicitly excluded from that targeted workflow subset.
+This is software-only evidence. Prior PR #91 records ASUS touch acceptance for
+the same policy, but the current-main port has not been installed or runtime
+checked in a guest. See [the scope and test procedure](osk-window-lift.md) and
+[current source hashes and probe results](evidence/issue80-lua-policy.json).

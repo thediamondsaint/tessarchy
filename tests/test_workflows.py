@@ -1379,7 +1379,7 @@ assert(a[3].kind == "resize" and a[3].x == 720 and a[3].y == 1440)
                                 input=script, text=True, capture_output=True, env=self.env)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
-    def test_hyprland_baseline_keeps_tessa_bridges_without_window_policy(self):
+    def test_hyprland_baseline_scopes_window_policy_to_osk_dialogs(self):
         import shutil
         if not shutil.which('lua'):
             self.skipTest('Lua interpreter unavailable')
@@ -1400,10 +1400,11 @@ hl = {
 dofile(arg[1])
 assert(seen.config.scrolling.column_width == 1.0, "native scrolling config missing")
 assert(seen.workspace.layout == "scrolling", "tape workspace must use scrolling")
-assert(callbacks["window.open"] == nil and callbacks["window.active"] == nil,
-       "vanilla baseline must not mutate application windows")
-assert(callbacks["monitor.layout_changed"] == nil and callbacks["layer.opened"] == nil,
-       "vanilla baseline must not refit windows around shell layers")
+assert(callbacks["window.open"] ~= nil and callbacks["window.active"] == nil,
+       "only newly opened windows may be checked for an active OSK")
+assert(callbacks["monitor.layout_changed"] ~= nil and callbacks["layer.opened"] ~= nil
+       and callbacks["layer.closed"] ~= nil and callbacks["config.reloaded"] ~= nil,
+       "OSK dialog placement must follow output and keyboard visibility changes")
 for _, key in ipairs({"SUPER + T", "SUPER + SPACE", "SUPER + bracketleft", "SUPER + bracketright"}) do
     assert(binds[key], "missing Tessa bridge bind: " .. key)
 end
