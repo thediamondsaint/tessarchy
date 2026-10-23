@@ -31,7 +31,10 @@ def source_identity():
     current = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip()
     if recorded != current:
         raise SystemExit('error: packages were built from ' + recorded + ' but the checkout is at ' + current + ' — rebuild with scripts/package.sh')
-    subprocess.check_call(['git', 'diff-index', '--quiet', 'HEAD', '--'], cwd=ROOT)
+    changes = subprocess.check_output(['git', 'status', '--porcelain',
+                                       '--untracked-files=no'], cwd=ROOT, text=True)
+    if changes:
+        raise SystemExit('error: refuse to bundle a dirty source tree:\n' + changes)
     return recorded
 
 
