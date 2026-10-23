@@ -57,6 +57,19 @@ function showRelease(release) {
   if (!release || typeof release.html_url !== 'string' || !release.html_url.startsWith('https://github.com/thediamondsaint/tessarchy/releases/')) return;
   const link = document.querySelector('#release-link'); link.href = release.html_url;
   link.textContent = 'Download ' + (release.name || release.tag_name) + ' ↓';
+  const assets = Array.isArray(release.assets) ? release.assets : [];
+  const vm = assets.find(asset => typeof asset?.name === 'string'
+    && /^Arch-Linux-x86_64-basic-\d{8}\.\d+\.qcow2$/.test(asset.name));
+  if (!vm) return;
+  const base = vm.name;
+  for (const [selector, name] of [
+    ['#vm-image-link', base], ['#vm-checksum-link', base + '.SHA256'], ['#vm-signature-link', base + '.sig']
+  ]) {
+    const asset = assets.find(item => item?.name === name);
+    if (typeof asset?.browser_download_url === 'string'
+      && asset.browser_download_url.startsWith('https://github.com/thediamondsaint/tessarchy/releases/download/'))
+      document.querySelector(selector).href = asset.browser_download_url;
+  }
 }
 function showCommit(commit) {
   if (!commit || typeof commit.commit?.message !== 'string' || typeof commit.html_url !== 'string' || !commit.html_url.startsWith('https://github.com/thediamondsaint/tessarchy/commit/')) return;
