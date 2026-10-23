@@ -1,8 +1,8 @@
 # Tessarchy
 
-**Touch-first Arch Linux, built around the Tessera shell.**
+**Tessarchy is a touch-first Arch Linux operating system, powered by the Tessa desktop environment.**
 
-Tessarchy combines Arch Linux, Hyprland and Quickshell into a mobile interface
+Tessarchy combines Arch Linux, Hyprland and Quickshell through Tessa, a desktop environment
 that adapts from phone-sized screens to tablets and desktops. Its Quiet Edge
 design uses shallow glass, mint accents, a glacier wallpaper and floating icon
 navigation.
@@ -53,7 +53,7 @@ board](AGENT-README.md#claiming-and-extending-tasks) lists the next contribution
 - Optional squeekboard on-screen keyboard: it appears for focused text fields, and
   a Keyboard navigation button shows or hides it in Phone/Tablet modes.
 - Touch file dialogs (optional `tessarchy-portal` package): on Phone/Tablet, apps'
-  Open/Save dialogs are drawn by Tessera full-screen instead of GTK's dialog,
+  Open/Save dialogs are drawn by Tessa full-screen instead of GTK's dialog,
   which can't shrink below ~726 px. Portal-aware apps get it directly; GTK3 apps
   launched through `tessarchy-run` are routed there by a GTK module. Desktop
   keeps GTK's own dialog.
@@ -70,7 +70,7 @@ carries everything from Alpha 3 (curated app picker, general desktop
 applications, firmware, audio, wireless tools, on-screen keyboard and the
 supplied power-on animation) plus the desktop tray-icon fix, on-screen keys at
 the 48px height floor, five-minute idle blanking, the notification center and
-display rotation. BIOS and non-Secure-Boot UEFI QEMU/KVM boots reached Tessera
+display rotation. BIOS and non-Secure-Boot UEFI QEMU/KVM boots reached Tessa
 with networking absent. The release includes checksums, package lists and
 inspected boot captures.
 
