@@ -291,9 +291,6 @@ class Apply(UpdateCase):
     def setUp(self):
         super().setUp()
         self.flag = self.root / 'restart-required'
-        patcher = mock.patch.object(self.update, 'RESTART_FLAG', self.flag)
-        patcher.start()
-        self.addCleanup(patcher.stop)
 
     def test_default_apply_upgrades_the_whole_system(self):
         # Tessarchy packages depend on the base system, so updating only them
@@ -306,7 +303,7 @@ class Apply(UpdateCase):
         with mock.patch('os.geteuid', return_value=0):
             self.run_cli('--apply', '--repo', url, '--pacman', self.pacman, expect=0)
         self.assertEqual(self.invocations('-Syu'), ['-Syu --needed --noconfirm'])
-        self.assertTrue(self.flag.is_file())
+        self.assertFalse(self.flag.exists())
         self.assertEqual(self.state_json()['pending'], [])
 
     def test_packages_only_passes_the_pending_names(self):

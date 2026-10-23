@@ -16,6 +16,9 @@ elif [[ -n $source_changes ]]; then
     exit 1
 fi
 source_commit=$(git -C "$root" rev-parse HEAD)
+runtime_manifest="$root/dist/runtime-source.json"
+python3 "$root/scripts/runtime-source-manifest.py" --root "$root" \
+    --commit "$source_commit" --output "$runtime_manifest"
 # The source archive is what every PKGBUILD unpacks, so it carries the whole
 # product: the shell, the session, the docs and the medium's own configuration
 # (packaging/tessarchy-update installs files out of iso/airootfs).
@@ -31,6 +34,9 @@ for package in "${packages[@]}"; do
     rm -rf "$work"
     mkdir -p "$work"
     cp "$root/packaging/$package/PKGBUILD" "$source_archive" "$work/"
+    if [[ $package == tessera-shell || $package == tessarchy-session ]]; then
+        cp "$runtime_manifest" "$work/runtime-source.json"
+    fi
     (cd "$work"; PKGDEST="$root/dist" makepkg --force --cleanbuild --nodeps)
 done
 echo "packages built from tessarchy-$version.tar.gz at $source_commit: ${#packages[@]}"

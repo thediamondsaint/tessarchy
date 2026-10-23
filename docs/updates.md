@@ -12,6 +12,7 @@ tessarchy-update --check          # ask the repository (no privileges needed)
 sudo tessarchy-update --apply     # install (full system upgrade)
 sudo tessarchy-update --apply --packages-only   # faster, Tessarchy packages only
 sudo tessarchy-update --offline /path/to/folder # .pkg.tar.zst from a USB stick
+tessarchy-runtime activate       # apply new shell and compositor code in place
 ```
 
 Exit codes make it scriptable: `0` up to date, `10` an update is available,
@@ -29,9 +30,31 @@ Exit codes make it scriptable: `0` up to date, `10` an update is available,
    ownership and the dependencies. `--apply` defaults to a full upgrade
    (`pacman -Syu`) because the Tessarchy packages depend on the base system, and
    updating only them on an old base is a partial upgrade.
-4. **A re-login finishes it.** The shell loads its QML at session start, so
-   log out and back in (or reboot) after an update. The updater leaves
-   `/var/lib/tessarchy/restart-required` behind as a marker.
+4. **The running shell stays on its retained generation.** Pacman updates its
+   package-owned candidates while the current Quickshell and Hyprland sessions
+   use complete user-owned copies. After `--apply` or `--offline` finishes, run
+   `tessarchy-runtime activate` from that same user session. It verifies the
+   paired shell/session manifests, stages an immutable generation, reloads the
+   compositor and Quickshell in process, checks both acknowledgments, and
+   restores the previous generation if either reload fails. Open applications
+   and the shell/compositor process identities remain in place.
+
+### First adoption
+
+The first package transaction that installs generation-aware launchers must
+start after a voluntary logout. The old session still watches package-owned
+paths and cannot be retargeted after it has started. Log back in once after the
+transaction; the launcher creates a protected generation and stable regular
+bootstrap paths. Later package transactions can run with the shell and
+compositor active, followed by `tessarchy-runtime activate`.
+
+The generation copies include the full packaged `shell/`, `session/`, and
+`themes/` trees. Their manifests must agree and match every installed payload
+file. Retained generations are not pruned, so loaded QML, compositor helpers,
+themes and wallpaper references remain available. A locally edited package
+payload or retained generation is preserved and causes activation to stop.
+Development installs selected through `TESSARCHY_DATA_DIR` continue to use
+their selected source directly.
 
 Two timers do the checking for you and never install anything on their own:
 
@@ -95,8 +118,9 @@ TESSARCHY_UPDATE_REPO=http://192.168.1.10:8000/pkgs/x86_64 tessarchy-update
   site. Signing the database with a project key is the next step; until then a
   changed `Server` deserves the same suspicion as a changed mirror.
 - **No rollback.** pacman keeps the previous packages in its cache
-  (`/var/cache/pacman/pkg`), so `pacman -U` on those files is the manual way
-  back.
+  (`/var/cache/pacman/pkg`) and the runtime keeps previous complete generations;
+  activation automatically restores the previous generation if a live reload
+  fails. Rolling back package files remains a separate pacman operation.
 - **No shell button yet.** `tessarchy-update --check --json` and
   `/var/lib/tessarchy/update-state.json` are already there for the shell to
   read; the UI is not wired up.

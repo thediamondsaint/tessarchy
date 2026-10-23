@@ -1,6 +1,6 @@
 pkgname=tessarchy-session
 pkgver=0.1.0
-pkgrel=5
+pkgrel=6
 pkgdesc='Tessarchy prototype Hyprland session'
 arch=('any')
 license=('MIT' 'GPL-3.0-or-later')
@@ -8,16 +8,13 @@ depends=('tessera-shell=0.1.0' 'hyprland>=0.56' 'hypridle' 'dbus' 'chromium' 'fo
 optdepends=('squeekboard: on-screen keyboard for touch text input'
             'brightnessctl: screen backlight control' 'hyprsunset: night light'
             'tessarchy-portal: touch file dialogs on Phone/Tablet')
-source=("tessarchy-$pkgver.tar.gz")
-sha256sums=('SKIP')
+source=("tessarchy-$pkgver.tar.gz" 'runtime-source.json')
+sha256sums=('SKIP' 'SKIP')
 package() {
-    mkdir -p "$pkgdir/usr/share/tessarchy/session"
-    cp -R "$srcdir/session/osk" "$pkgdir/usr/share/tessarchy/session/"
+    mkdir -p "$pkgdir/usr/share/tessarchy"
+    cp -R "$srcdir/session" "$pkgdir/usr/share/tessarchy/"
+    install -Dm644 "$srcdir/runtime-source.json" "$pkgdir/usr/share/tessarchy/package-manifests/tessarchy-session.json"
     install -Dm644 "$srcdir/LICENSE" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
-    install -Dm644 "$srcdir/session/hyprland.lua" "$pkgdir/usr/share/tessarchy/session/hyprland.lua"
-    install -Dm644 "$srcdir/session/window-tape.lua" "$pkgdir/usr/share/tessarchy/session/window-tape.lua"
-    install -Dm644 "$srcdir/session/window-controls.lua" "$pkgdir/usr/share/tessarchy/session/window-controls.lua"
-    install -Dm644 "$srcdir/session/hypridle.conf" "$pkgdir/usr/share/tessarchy/session/hypridle.conf"
     install -Dm755 "$srcdir/session/start-tessarchy" "$pkgdir/usr/bin/start-tessarchy"
     install -Dm755 "$srcdir/session/tessera-screenshot" "$pkgdir/usr/bin/tessera-screenshot"
     install -Dm755 "$srcdir/session/tessarchy-session-services" "$pkgdir/usr/bin/tessarchy-session-services"
@@ -28,7 +25,7 @@ package() {
     install -Dm755 "$srcdir/session/tessarchy-theme" "$pkgdir/usr/bin/tessarchy-theme"
     install -Dm755 "$srcdir/session/tessarchy-run" "$pkgdir/usr/bin/tessarchy-run"
     install -Dm755 "$srcdir/session/tessera-chatgpt-status" "$pkgdir/usr/bin/tessera-chatgpt-status"
-    install -Dm755 "$srcdir/session/tessera-chatgpt-status" "$pkgdir/usr/share/tessarchy/session/tessera-chatgpt-status"
+    install -Dm755 "$srcdir/session/tessarchy-runtime" "$pkgdir/usr/bin/tessarchy-runtime"
     install -Dm644 "$srcdir/session/tessarchy-chatgpt.desktop" "$pkgdir/usr/share/applications/tessarchy-chatgpt.desktop"
     install -Dm755 "$srcdir/session/tessa-ai" "$pkgdir/usr/bin/tessa-ai"
     install -Dm755 "$srcdir/session/tessarchy-ssh" "$pkgdir/usr/bin/tessarchy-ssh"

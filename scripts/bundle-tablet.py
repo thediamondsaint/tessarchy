@@ -10,8 +10,8 @@ import tarfile
 import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
-PACKAGES = ('tessera-shell-0.1.0-4-any.pkg.tar.zst',
-            'tessarchy-session-0.1.0-5-any.pkg.tar.zst',
+PACKAGES = ('tessera-shell-0.1.0-5-any.pkg.tar.zst',
+            'tessarchy-session-0.1.0-6-any.pkg.tar.zst',
             'tessarchy-bootsplash-0.1.0-2-any.pkg.tar.zst',
             'tessarchy-tablet-0.1.0-3-x86_64.pkg.tar.zst')
 

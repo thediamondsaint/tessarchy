@@ -1584,11 +1584,17 @@ esac
             shutil.copytree(ROOT / directory, repo / directory)
         shutil.copy2(ROOT / 'scripts/stage-iso.sh', repo / 'scripts')
         shutil.copy2(ROOT / 'scripts/export-boot-assets.py', repo / 'scripts')
+        shutil.copy2(ROOT / 'scripts/runtime-source-manifest.py', repo / 'scripts')
         # Staging refuses to build a medium that cannot update itself, so the
         # fixture needs the packages a repository build would have produced.
         packages = repo / 'dist/repo/x86_64'
         packages.mkdir(parents=True)
         (packages / 'tessera-shell-0.1.0-2-any.pkg.tar.zst').write_bytes(b'fake package')
+        subprocess.run(['git', 'init', '-q', str(repo)], check=True)
+        subprocess.run(['git', '-C', str(repo), 'add', '.'], check=True)
+        subprocess.run(['git', '-C', str(repo), '-c', 'user.name=Tessarchy Tests',
+                        '-c', 'user.email=tests@example.invalid', 'commit', '-qm', 'fixture'],
+                       check=True)
         base = self.home / 'releng'
         (base / 'airootfs/etc/systemd/system/multi-user.target.wants').mkdir(parents=True)
         (base / 'profiledef.sh').write_text('file_permissions=(["/etc/shadow"]="0:0:400")\n')
@@ -1640,6 +1646,14 @@ esac
         user_timer = profile / 'airootfs/home/tess/.config/systemd/user/timers.target.wants'
         self.assertTrue((user_timer / 'tessarchy-update-notify.timer').is_symlink())
         self.assertTrue((profile / 'airootfs/usr/bin/tessarchy-update').is_file())
+        staged_runtime = profile / 'airootfs/usr/bin/tessarchy-runtime'
+        self.assertTrue(staged_runtime.is_file())
+        self.assertTrue(staged_runtime.stat().st_mode & 0o111)
+        for runtime_file in ('runtime-shell.qml', 'runtime-hyprland.lua'):
+            self.assertTrue((profile / 'airootfs/usr/share/tessarchy/session' / runtime_file).is_file())
+        manifests = profile / 'airootfs/usr/share/tessarchy/package-manifests'
+        self.assertEqual((manifests / 'tessera-shell.json').read_bytes(),
+                         (manifests / 'tessarchy-session.json').read_bytes())
         if (ROOT / 'etc/pacman.conf').is_file():
             staged_pacman = (profile / 'airootfs/etc/pacman.conf').read_text()
             self.assertIn('Include = /etc/pacman.d/tessarchy.conf', staged_pacman)
@@ -1719,6 +1733,12 @@ esac
             shutil.copytree(ROOT / directory, repo / directory)
         shutil.copy2(ROOT / 'scripts/stage-iso.sh', repo / 'scripts')
         shutil.copy2(ROOT / 'scripts/export-boot-assets.py', repo / 'scripts')
+        shutil.copy2(ROOT / 'scripts/runtime-source-manifest.py', repo / 'scripts')
+        subprocess.run(['git', 'init', '-q', str(repo)], check=True)
+        subprocess.run(['git', '-C', str(repo), 'add', '.'], check=True)
+        subprocess.run(['git', '-C', str(repo), '-c', 'user.name=Tessarchy Tests',
+                        '-c', 'user.email=tests@example.invalid', 'commit', '-qm', 'fixture'],
+                       check=True)
         base = self.home / 'releng'
         (base / 'airootfs/etc/systemd/system/multi-user.target.wants').mkdir(parents=True)
         (base / 'profiledef.sh').write_text('file_permissions=()\n')

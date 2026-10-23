@@ -62,6 +62,12 @@ start)
         export GTK_THEME=Adwaita:dark
     fi
     share=${TESSARCHY_DATA_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}/tessarchy}
+    if [[ -n ${TESSARCHY_RUNTIME_HOME:-} ]]; then
+        active=$(cat -- "$TESSARCHY_RUNTIME_HOME/active-generation" 2>/dev/null || true)
+        if [[ $active =~ ^[a-f0-9]{64}$ && -d $TESSARCHY_RUNTIME_HOME/generations/$active/session/osk ]]; then
+            share=$TESSARCHY_RUNTIME_HOME/generations/$active
+        fi
+    fi
     if [[ ! -d $share/session/osk ]]; then share=/usr/share/tessarchy; fi
     if [[ -d $share/session/osk ]]; then
         export XDG_DATA_HOME=$share/session/osk

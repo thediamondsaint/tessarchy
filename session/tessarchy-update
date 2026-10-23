@@ -53,7 +53,6 @@ REPO_CONF = Path("/etc/pacman.d/tessarchy.conf")
 PACMAN_CONF = Path("/etc/pacman.conf")
 VERSION_FILE = Path("/etc/tessarchy/version")
 STATE_FILE = Path("/var/lib/tessarchy/update-state.json")
-RESTART_FLAG = Path("/var/lib/tessarchy/restart-required")
 
 DEFAULT_REPO = "https://thediamondsaint.github.io/tessarchy/pkgs"
 PACMAN = "pacman"
@@ -331,20 +330,6 @@ def pacman_commands(args, pending_names: list) -> list:
     return [[args.pacman, "-Syu", "--needed", "--noconfirm"]]
 
 
-def request_restart(reason: str) -> None:
-    """Leave a marker so the shell and the user know a re-login is needed.
-
-    Best effort: on a machine where /var/lib is not writable the update itself
-    still succeeded, and the printed instructions are the fallback.
-    """
-    try:
-        RESTART_FLAG.parent.mkdir(parents=True, exist_ok=True)
-        RESTART_FLAG.write_text(reason)
-    except OSError as error:
-        print(f"tessarchy-update: cannot record the re-login marker: {error}",
-              file=sys.stderr)
-
-
 def command_apply(args) -> int:
     if hasattr(os, "geteuid") and os.geteuid() != 0:
         print("tessarchy-update: --apply installs packages; run it with sudo",
@@ -391,15 +376,11 @@ def command_apply(args) -> int:
     if not args.dry_run:
         write_state(ok=True, error=None, installed=now_installed,
                     repo_version=available.get("version"), pending=[r[0] for r in remaining])
-        if not remaining:
-            request_restart(
-                "Tessarchy was updated. Log out and back in (or reboot) so the "
-                "new shell and session config are loaded.\n"
-            )
     if remaining:
         print("still behind: " + ", ".join(name for name, _, _ in remaining))
         return EXIT_UPDATE_AVAILABLE
-    print("updated. Log out and back in, or reboot, to load the new shell.")
+    print("updated. Run 'tessarchy-runtime activate' as the session user to stage "
+          "and reload the new generation without closing applications.")
     return EXIT_UP_TO_DATE
 
 
@@ -427,6 +408,8 @@ def command_offline(args) -> int:
         write_state(ok=True, error=None, installed=installed_versions(args.pacman),
                     offline=str(source))
         print("installed from " + str(source))
+        print("In a running Tessarchy session, run 'tessarchy-runtime activate' "
+              "as the session user to apply the new generation.")
     return result.returncode
 
 
@@ -441,7 +424,7 @@ def command_status(args) -> int:
             "last_check": state.get("updated_at"),
             "last_error": state.get("error"),
             "pending": state.get("pending", []),
-            "restart_required": RESTART_FLAG.exists(),
+            "restart_required": False,
         }, indent=2, sort_keys=True))
         return EXIT_UPDATE_AVAILABLE if state.get("pending") else EXIT_UP_TO_DATE
     print(f"system version:   {system_version()}")
@@ -460,8 +443,6 @@ def command_status(args) -> int:
         print("pending:          none")
     else:
         print("pending:          unknown (run tessarchy-update --check)")
-    if RESTART_FLAG.exists():
-        print("\na previous update is waiting for a logout/reboot.")
     if args.online:
         return command_check(args)
     return EXIT_UPDATE_AVAILABLE if state.get("pending") else EXIT_UP_TO_DATE
