@@ -168,6 +168,7 @@ after the last assigned ID; preserve existing IDs when reorganizing sections.
 
 | Task ID | Status | Owner | Branch / PR | Next action or evidence |
 | --- | --- | --- | --- | --- |
+| T83 | Review | Codex | PR #100 | Current-main source checks pass; prior PR #67 QEMU touch evidence covers the fix; include in next VM retest |
 | T84 | Review | Codex | PR #101 | Current-main status indicators pass source checks; real device/service acceptance remains |
 | T82 | Review | Codex | PR #99 | Current-main #72 integration; source checks and packages pass; rerun app-survival VM acceptance |
 | T81 | In progress | Codex | fix/89-osk-dismiss-button | Add a 48px+ OSK toggle in the mobile status bar; check Phone and Tablet placement |

@@ -1,5 +1,49 @@
 # Validation and manual acceptance
 
+## Integrated Desktop Wi-Fi taskbar touch retest, 2026-10-21
+
+The prior `0e4a7e1` blocker was resolved by `150a75d`'s Desktop
+`onPanelRequested: statusBar.toggleDrawer()` wiring. On the real running QEMU
+guest at 1920×1200, scale 1.5, a virtual touchscreen tap on the bottom Wi-Fi
+glyph at logical (1117,763) opened a 1280×724 non-reserving quick sheet;
+Desktop reservation remained `[0,0,0,64]`. Tapping it again closed the sheet
+without restoring the blank top layer. Tablet/Phone one-pass smoke checks
+retained the 48-pixel top status layer and `[0,48,0,0]` reservation. The guest's
+missing network backend only validates the `Unavailable` fallback, not real
+Wi-Fi. Exact measurements, screenshots, and verified byte-identical VM restore:
+[desktop-top-gap.md](desktop-top-gap.md#targeted-integrated-wi-fi-taskbar-retest-2026-10-21).
+
+## Integrated Desktop top-gap VM acceptance, 2026-10-21
+
+Integrated `0e4a7e1` (#62/#63/#64/#67/#68) tested in the QEMU guest at
+1920×1200 scale 1.5 (1280×800 logical). Desktop reserved `[0,0,0,64]` and
+tiled Foot began at y=0; taskbar Settings and Start responded to virtual touch.
+IPC quick sheet mapped as a non-reserving 1280×724 overlay. Tablet/Phone with
+apps retained 48 logical top status pixels and hid/revealed their bottom docks
+on touch swipe. The taskbar Wi-Fi glyph did *not* open quick controls because
+its `StatusIndicators` omits `onPanelRequested`; direct tray acceptance remains
+open. VM NetworkManager was inactive, so only native QML loading/no-device
+fallback was observed, not functional Wi-Fi. No QML load errors; empty
+`hyprctl -j configerrors`. Integrated `check.sh`: 223 Python tests (one
+skipped), 88 QML tests, two config parses. Complete measurements, screenshots,
+and byte-identical VM restoration: [desktop-top-gap.md](desktop-top-gap.md).
+
+## Desktop unused top strip, issue #65
+
+Executed in the running QEMU guest at 1280×800, scale 1. The older installed
+shell's top status surface visibly contained controls; upstream main instead
+placed Desktop controls in the bottom taskbar but still reserved an empty
+48-pixel top strip. On upstream main, `reserved=[0,48,0,64]` and Foot began
+at y=48. After mapping the Desktop status surface only when its sheet is open
+and setting its Desktop exclusive zone to zero, `reserved=[0,0,0,64]` and Foot
+began at y=0; its bottom boundary remained y=736. Opening the quick sheet via
+`controls.toggle` mapped the overlay without shifting clients. Tablet/Phone
+retained visible status surfaces and 48-pixel top reservations. All tested
+modes had empty config errors. `./scripts/check.sh`: 215 Python tests (one
+skipped), 4 site tests, 76 QML tests and both Hyprland configs parsed. Full
+measurements, six tracked VM screenshots, source comparison, and hardware
+limits are in [desktop-top-gap.md](desktop-top-gap.md).
+
 ## Theme picker layout fix, 2026-10-19
 
 Branch `feat/theme-extras` on `49728ce`. Executed by an agent in the running
@@ -2715,6 +2759,21 @@ state. No credentials were entered, so authenticated usage, physical sign-in,
 and native ChatGPT window rendering remain unverified.
 
 [Actual VM capture and provenance](../assets/screenshots/tessa-chatgpt/README.md).
+## Desktop top-gap fix — current-main reconciliation (2026-10-23)
+
+Reconciled the #65 fix from PR #67 with current `main`. Desktop no longer maps
+the collapsed top status layer or reserves its 48-pixel zone; Phone and Tablet
+keep their top bar. The Desktop taskbar status indicators open the existing
+quick-controls sheet. Current-main source checks passed: 236 Python tests (three
+expected legacy skips), 110 Qt Quick results, four website tests, and available
+syntax/config checks. Fish and ShellCheck were unavailable. The focused
+top-gap regression test passed separately.
+
+PR #67 records the real QEMU touch acceptance for these same geometry changes,
+including tapping the Desktop taskbar Wi-Fi indicator and confirming the sheet
+opens without moving tiled windows. This current-main reconciliation has not
+been separately retested in the VM; the earlier capture remains identified with
+its original source checkpoint in [the PR evidence](https://github.com/thediamondsaint/tessarchy/pull/67).
 
 ## Honest status indicators (#73), 2026-10-22
 

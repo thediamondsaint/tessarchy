@@ -857,6 +857,7 @@ ShellRoot {
                                     notificationsSelected: panel.page === "notifications"
                                     settingsSelected: panel.page === "settings"
                                     onNotificationsRequested: panel.showPage("notifications")
+                                    onPanelRequested: statusBar.toggleDrawer()
                                     onMuteToggled: root.audioSink.audio.muted = !root.audioSink.audio.muted
                                     onSettingsRequested: panel.showPage("settings")
                                 }
@@ -1210,6 +1211,8 @@ ShellRoot {
             }
             PanelWindow {
                 id: statusBar
+                // Desktop controls live in the taskbar; only map the top sheet while open.
+                visible: surface.mode !== "desktop" || drawerOpen
                 Timer {
                     id: screenshotTimer
                     interval: shellPreferences.reducedMotion ? 100 : 300
@@ -1241,7 +1244,7 @@ ShellRoot {
                 margins.left: surface.mode === "desktop" ? 0 : 12
                 margins.right: surface.mode === "desktop" ? 0 : 12
                 implicitHeight: drawerOpen ? Math.min(surface.modelData.height - surface.navHeight - 12, quickSheet.implicitHeight + 88) : surface.mode === "desktop" ? 48 : 64
-                exclusiveZone: surface.mode === "desktop" ? 48 : 0
+                exclusiveZone: surface.mode === "desktop" ? 0 : 48
                 color: "transparent"
                 Rectangle {
                     anchors.fill: parent
