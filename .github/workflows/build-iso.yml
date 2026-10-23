@@ -21,6 +21,7 @@ on:
       - 'scripts/stage-iso.sh'
       - 'scripts/package.sh'
       - 'scripts/build-packages.sh'
+      - 'scripts/prepare-release-iso.sh'
       - 'scripts/boot-test-iso.py'
 
 permissions:
@@ -59,10 +60,6 @@ jobs:
               mkarchiso -v -w build/iso-work -o dist build/iso-profile 2>&1 | tee dist/build.log
               cp build/iso-work/iso/arch/pkglist.x86_64.txt dist/packages.txt
               iso_bytes=$(stat -c %s dist/tessarchy-*.iso)
-              if ((iso_bytes >= 2147483648)); then
-                echo "ISO is ${iso_bytes} bytes; GitHub Releases requires each asset below 2 GiB." >&2
-                exit 1
-              fi
               printf "Commit: %s\nBuilt: %s\n" "$TESSARCHY_COMMIT" "$(date -u --iso-8601=seconds)" > dist/build-info.txt
               printf "ISO bytes: %s\n" "$iso_bytes" >> dist/build-info.txt
               pacman -Q archiso >> dist/build-info.txt
@@ -95,6 +92,8 @@ jobs:
       - name: Verify the built image
         working-directory: dist
         run: sha256sum -c SHA256SUMS
+      - name: Split ISO for GitHub Releases
+        run: ./scripts/prepare-release-iso.sh dist/tessarchy-*.iso
       - name: Prepare disposable boot checks
         run: |
           sudo apt-get update -qq
@@ -136,7 +135,7 @@ jobs:
           gh release create "$RELEASE_TAG" --draft --prerelease --target "$GITHUB_SHA" \
             --title "Tessarchy $RELEASE_TAG — tester ISO" \
             --notes "Tester ISO draft. Review the attached BIOS/UEFI boot captures before publishing. Carries tessarchy-install, which copies the live system to an internal disk (see docs/live-install.md), and the Tessarchy packages themselves, so an installed machine updates in place with tessarchy-update (see docs/updates.md) instead of another ISO; no persistence on the medium; physical keyboard required." \
-            dist/tessarchy-*.iso dist/SHA256SUMS dist/build-info.txt dist/packages.txt \
+            dist/tessarchy-*.iso.part??? dist/SHA256SUMS dist/DOWNLOAD-ISO.md dist/build-info.txt dist/packages.txt \
             dist/build.log dist/boot-bios.png dist/boot-uefi.png dist/launcher-bios.png dist/launcher-uefi.png dist/boot-evidence.tar.gz dist/BOOT-TESTING.md \
             dist/repo/x86_64/repo-info.json
       - uses: actions/upload-artifact@v4

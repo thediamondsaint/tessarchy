@@ -47,7 +47,7 @@ async function page(releases = [], commits = [], bundled = {}) {
 test('release discovery reaches an ISO beyond five newer non-ISO releases and ignores drafts', async () => {
   const branding = Array.from({length: 6}, (_, i) => ({assets: [{name: 'logo-' + i + '.zip'}]}));
   const draft = {draft: true, html_url: root + 'releases/tag/draft', assets: [{name: 'draft.iso'}]};
-  const iso = {html_url: root + 'releases/tag/tester', name: 'Tester', assets: [{name: 'tessarchy.iso'}]};
+  const iso = {html_url: root + 'releases/tag/tester', name: 'Tester', assets: [{name: 'tessarchy.iso.part001'}]};
   const result = await page([draft, ...branding, iso]);
   assert.equal(result.nodes.get('#release-link').href, iso.html_url);
   assert.ok(result.requests.some(url => url.includes('releases?per_page=100')));

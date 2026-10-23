@@ -44,4 +44,4 @@ later merged contributions are in development source.
 
 The website deploys from approved `main`/`build/live-iso` pushes and manual
 workflow dispatch. It reads current public release/commit metadata. Branding
-assets use their own release; tester download selection requires an ISO asset.
+assets use their own release; tester download selection accepts either a single ISO asset or the numbered parts of an ISO too large for GitHub's per-asset limit.
