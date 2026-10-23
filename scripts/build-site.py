@@ -29,7 +29,8 @@ def main():
             parser.error(f"Missing screenshot: {path}")
     releases = json.loads(args.releases.read_text()) if args.releases else []
     release = next((item for item in releases if not item.get("draft") and any(
-        asset.get("name", "").endswith(".iso") for asset in item.get("assets", []))), None)
+        asset.get("name", "").endswith(".iso") or ".iso.part" in asset.get("name", "")
+        for asset in item.get("assets", []))), None)
     commit = "source-snapshot"
     if shutil.which("git"):
         result = subprocess.run(["git", "rev-parse", "HEAD"], cwd=ROOT,

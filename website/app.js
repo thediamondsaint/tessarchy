@@ -82,6 +82,7 @@ async function readJson(url) {
   ]);
   if (results[0].status === 'fulfilled' && Array.isArray(results[0].value))
     showRelease(results[0].value.find(release => release && !release.draft && Array.isArray(release.assets)
-      && release.assets.some(asset => typeof asset?.name === 'string' && asset.name.endsWith('.iso'))));
+      && release.assets.some(asset => typeof asset?.name === 'string'
+        && (asset.name.endsWith('.iso') || asset.name.includes('.iso.part')))));
   if (results[1].status === 'fulfilled' && Array.isArray(results[1].value)) showCommit(results[1].value[0]);
 })();

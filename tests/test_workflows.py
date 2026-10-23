@@ -253,7 +253,7 @@ class Workflows(unittest.TestCase):
         import json
         import sys
         metadata = self.home / 'releases.json'
-        iso_release = {'tag_name': 'tester', 'assets': [{'name': 'tessarchy.iso'}]}
+        iso_release = {'tag_name': 'tester', 'assets': [{'name': 'tessarchy.iso.part001'}]}
         metadata.write_text(json.dumps([
             {'tag_name': 'branding', 'assets': [{'name': 'logo.zip'}]},
             {'tag_name': 'draft', 'draft': True, 'assets': [{'name': 'draft.iso'}]},
@@ -1090,6 +1090,29 @@ assert(#commands == 4, "unexpected extra autostart commands")
     def test_iso_build_container_has_git_for_package_provenance(self):
         workflow = (ROOT / '.github/workflows/build-iso.yml').read_text()
         self.assertIn('archiso ffmpeg base-devel git gtk3 glib2', workflow)
+        self.assertIn('prepare-release-iso.sh', workflow)
+        self.assertIn('sha256sum -c SHA256SUMS', workflow)
+        self.assertIn('DOWNLOAD-ISO.md', workflow)
+
+    def test_release_iso_split_reassembles_and_checksums(self):
+        import hashlib
+        image = self.home / 'tessarchy-test.iso'
+        payload = bytes(range(256)) * 12000
+        image.write_bytes(payload)
+        result = subprocess.run([str(ROOT / 'scripts/prepare-release-iso.sh'), str(image)],
+                                env=dict(os.environ, TESSARCHY_ISO_PART_SIZE='512K'),
+                                capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        parts = sorted(self.home.glob('tessarchy-test.iso.part???'))
+        self.assertEqual(len(parts), 6)
+        self.assertEqual(b''.join(part.read_bytes() for part in parts), payload)
+        check = subprocess.run(['sha256sum', '-c', 'SHA256SUMS'], cwd=self.home,
+                               capture_output=True, text=True)
+        self.assertEqual(check.returncode, 0, check.stderr)
+        sums = (self.home / 'SHA256SUMS').read_text()
+        self.assertIn(f"{hashlib.sha256(payload).hexdigest()}  tessarchy-test.iso", sums)
+        self.assertIn('cat tessarchy-test.iso.part??? > tessarchy-test.iso',
+                      (self.home / 'DOWNLOAD-ISO.md').read_text())
 
     def test_export_vm_source_keeps_existing_snapshot_idempotent(self):
         repo = self.home / 'source'
@@ -1691,6 +1714,12 @@ esac
                          (manifests / 'tessarchy-session.json').read_bytes())
         self.assertEqual(json.loads((manifests / 'tessera-shell.json').read_text())['commit'],
                          'a' * 40)
+        profile_definition = (profile / 'profiledef.sh').read_text()
+        self.assertIn("airootfs_image_tool_options=('-comp' 'xz'", profile_definition)
+        self.assertIn('["/usr/share/tessarchy/session/start-tessarchy"]="0:0:755"',
+                      profile_definition)
+        self.assertIn('["/usr/share/tessarchy/session/tessarchy-launch"]="0:0:755"',
+                      profile_definition)
         if (ROOT / 'etc/pacman.conf').is_file():
             staged_pacman = (profile / 'airootfs/etc/pacman.conf').read_text()
             self.assertIn('Include = /etc/pacman.d/tessarchy.conf', staged_pacman)
