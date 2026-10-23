@@ -248,6 +248,15 @@ ShellRoot {
             required property var modelData
             readonly property string mode: Policy.effectiveMode(shellPreferences.layoutMode, modelData.width, modelData.height)
             readonly property bool isPhone: mode === "phone"
+            readonly property var tapeMonitor: Hyprland.monitorFor(modelData)
+            readonly property var tapeWorkspace: tapeMonitor ? tapeMonitor.activeWorkspace : null
+            readonly property bool tapeActive: Hyprland.usingLua && tapeWorkspace !== null && tapeWorkspace.name === "tessarchy-tape"
+            function tapeCommand(action) {
+                if (!tapeActive || Hyprland.focusedMonitor !== tapeMonitor) return;
+                if (typeof action !== "number" && ["previous", "next", "settle", "begin", "cancel"].indexOf(action) < 0) return;
+                const encoded = typeof action === "number" ? String(Math.round(action)) : '"' + action + '"';
+                Hyprland.dispatch("TessarchyTape.request(" + encoded + ", " + tapeMonitor.id + ", " + tapeWorkspace.id + ")");
+            }
             readonly property bool gestures: Policy.gestureNavigation(mode, shellPreferences.navigation)
             readonly property var dock: Policy.dockLayout(mode, modelData.width, root.oskAvailable, gestures)
             readonly property var gestureEdge: Policy.gestureEdgeSize(mode, panel.expanded)
@@ -585,6 +594,10 @@ ShellRoot {
                                         onEndSessionRequested: panel.page = "session"
                                         onControlsRequested: statusBar.toggleDrawer()
                                         onReplayRequested: root.replayBrand()
+                                        onTapeRequested: {
+                                            panel.page = "";
+                                            Hyprland.dispatch('TessarchyTape.open_request()');
+                                        }
                                     }
                                 }
                                 Loader {
@@ -853,6 +866,40 @@ ShellRoot {
                             }
                         }
                     }
+                }
+            }
+            PanelWindow {
+                id: tapePanel
+                screen: surface.modelData
+                visible: surface.tapeActive && !panel.expanded
+                anchors.bottom: true
+                implicitWidth: tapeControl.implicitWidth
+                implicitHeight: 48
+                exclusiveZone: 0
+                color: "transparent"
+                WlrLayershell.namespace: "tessera-tape"
+                WlrLayershell.layer: WlrLayer.Overlay
+                WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
+                WindowTapeControl {
+                    id: tapeControl
+                    anchors.fill: parent
+                    canPan: surface.tapeWorkspace !== null && surface.tapeWorkspace.toplevels.values.filter(w => w.lastIpcObject && !w.lastIpcObject.floating).length > 1
+                    onStarted: surface.tapeCommand("begin")
+                    onCanceled: surface.tapeCommand("cancel")
+                    onMoved: delta => surface.tapeCommand(delta)
+                    onStepped: direction => surface.tapeCommand(direction)
+                    onSettled: surface.tapeCommand("settle")
+                    onLeaveRequested: Hyprland.dispatch('TessarchyTape.close_request()')
+                }
+                Connections {
+                    target: surface.modelData
+                    function onWidthChanged() { tapeControl.cancel(); }
+                    function onHeightChanged() { tapeControl.cancel(); }
+                }
+                Connections {
+                    target: Hyprland
+                    function onFocusedWorkspaceChanged() { tapeControl.cancel(); }
+                    function onFocusedMonitorChanged() { tapeControl.cancel(); }
                 }
             }
             // Gesture navigation: thin edge strips catch swipes that start at

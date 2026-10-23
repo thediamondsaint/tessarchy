@@ -19,6 +19,7 @@ ColumnLayout {
     signal themeRequested(string name)
     signal endSessionRequested
     signal controlsRequested
+    signal tapeRequested
     signal replayRequested
     spacing: 20
 
@@ -418,6 +419,18 @@ ColumnLayout {
     }
     Text {
         text: "Muted notifications still collect in the alert center until dismissed. Nothing persists across sessions."
+        color: Theme.textMuted
+        font.pixelSize: 12
+        Layout.fillWidth: true
+        wrapMode: Text.WordWrap
+    }
+    TouchButton {
+        text: "Try Window Tape"
+        Layout.fillWidth: true
+        onClicked: page.tapeRequested()
+    }
+    Text {
+        text: "Preview: new apps open side by side in a separate scrolling workspace. Drag the tape handle to browse. Super+T returns here; use workspace controls to leave."
         color: Theme.textMuted
         font.pixelSize: 12
         Layout.fillWidth: true

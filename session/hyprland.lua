@@ -3,6 +3,13 @@
 local session = debug.getinfo(1, "S").source:sub(2):match("^(.*)/[^/]+$")
 local data = os.getenv("TESSARCHY_DATA_DIR") or session:match("^(.*)/session$")
 TessarchyWindows = dofile(session .. "/window-controls.lua")
+TessarchyTape = dofile(session .. "/window-tape.lua")
+local tapeBridge = data .. "/plugins/tessarchy-tape.so"
+local tapeFile = io.open(tapeBridge, "r")
+if tapeFile then
+    tapeFile:close()
+    hl.plugin.load(tapeBridge)
+end
 hl.monitor({ output = "", mode = "preferred", position = "auto", scale = 1 })
 -- Theme surface values; window borders stay off unless a theme sets a width.
 local surface = { window_rounding = 18, blur_enabled = true, blur_size = 4, blur_passes = 2, window_border = 0 }
@@ -40,12 +47,14 @@ hl.config({
     general = general,
     group = group,
     decoration = { rounding = surface.window_rounding, blur = { enabled = surface.blur_enabled, size = surface.blur_size, passes = surface.blur_passes }, shadow = { enabled = false } },
+    scrolling = { column_width = 1.0, wrap_focus = false, wrap_swapcol = false, follow_focus = false },
     animations = { enabled = false },
     input = { kb_layout = "us", follow_mouse = 0 },
     misc = { disable_hyprland_logo = true, disable_splash_rendering = true,
              force_default_wallpaper = 0,
              key_press_enables_dpms = true, mouse_move_enables_dpms = true },
 })
+hl.workspace_rule({ workspace = "name:tessarchy-tape", layout = "scrolling" })
 -- Frost only Tessera glass surfaces; leave applications unchanged.
 hl.layer_rule({ match = { namespace = "tessera(-status|-start)?" }, blur = surface.blur_enabled, ignore_alpha = 0.01 })
 -- Read the same saved mode as Tessera when a new ordinary app opens.
@@ -115,6 +124,7 @@ local function phone_window(window)
 end
 local function maximize_if_mobile(window)
     if not window or window.fullscreen ~= 0 or not window.monitor then return end
+    if TessarchyTape.contains(window) then return end
     if window.floating and not phone_window(window) then return end
     if shell_mode(window.monitor) == "phone" then
         local monitor = window.monitor
@@ -154,6 +164,7 @@ hl.on("window.open", function(window)
     -- Windowed desktop: ordinary windows open floating at a conventional size
     -- and are centred, instead of joining the tile layout.
     if window and not window.floating and window.fullscreen == 0 and window.monitor
+       and not TessarchyTape.contains(window)
        and shell_mode(window.monitor) == "desktop" and desktop_windowed() then
         if hl.dsp.window.float then
             hl.dispatch(hl.dsp.window.float({ window = window, action = "set" }))
@@ -219,6 +230,9 @@ hl.bind("ALT + SHIFT + Tab", hl.dsp.exec_cmd("tessera-shell ipc call switcher pr
 hl.bind("code:64", hl.dsp.exec_cmd("tessera-shell ipc call switcher accept"), { release = true, ignore_mods = true, locked = true })
 hl.bind("code:108", hl.dsp.exec_cmd("tessera-shell ipc call switcher accept"), { release = true, ignore_mods = true, locked = true })
 hl.bind("Print", hl.dsp.exec_cmd("tessera-screenshot"))
+hl.bind("SUPER + T", function() TessarchyTape.open() end)
+hl.bind("SUPER + bracketleft", function() TessarchyTape.command("previous") end)
+hl.bind("SUPER + bracketright", function() TessarchyTape.command("next") end)
 hl.bind("SUPER + Return", hl.dsp.exec_cmd("tessarchy-run foot"))
 hl.bind("SUPER + F", hl.dsp.window.fullscreen({ mode = "maximized", action = "toggle" }))
 hl.bind("SUPER + SHIFT + F", hl.dsp.window.fullscreen({ mode = "fullscreen", action = "toggle" }))
