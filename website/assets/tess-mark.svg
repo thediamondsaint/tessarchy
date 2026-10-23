@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Tess portrait mark">
-  <circle cx="32" cy="32" r="31" fill="#123c36"/>
-  <path d="M13 31c0-14 8-23 19-23s19 9 19 23c0 10-3 19-8 24l-4-9H24l-5 9c-4-6-6-14-6-24Z" fill="#d9ad6e"/>
-  <path d="M19 27c0-9 5-15 13-15 8 0 13 6 13 15v10c0 9-6 15-13 15s-13-6-13-15V27Z" fill="#f2d6b6"/>
-  <path d="M16 29c2-11 8-18 17-18 6 0 12 4 15 12-5-1-9-4-12-8-4 6-11 10-20 11Z" fill="#e3b66e"/>
-  <path d="M25 33h.1m13 0h.1" stroke="#24433a" stroke-width="3" stroke-linecap="round"/>
-  <path d="M27 42c3 3 7 3 10 0" fill="none" stroke="#a35d4b" stroke-width="2" stroke-linecap="round"/>
-</svg>
