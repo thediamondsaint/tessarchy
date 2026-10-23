@@ -7,12 +7,11 @@ version=${TESSARCHY_VERSION:-0.1.0}
 source_archive="$root/dist/tessarchy-$version.tar.gz"
 # Package identity: only a clean, recorded checkout may be packaged, so a later
 # bundle can never label one revision's files as another revision's package.
-if ! git -C "$root" diff-index --quiet HEAD --; then
-    echo "debug: package tree is $root" >&2
-    git -C "$root" status --porcelain=v2 --untracked-files=all >&2 || true
-    git -C "$root" diff-index --name-status HEAD -- >&2 || true
-    git -C "$root" diff-files --name-status >&2 || true
-    git -C "$root" diff --cached --name-status >&2 || true
+if ! source_changes=$(git -C "$root" status --porcelain --untracked-files=no); then
+    echo "error: could not inspect source tree status" >&2
+    exit 1
+elif [[ -n $source_changes ]]; then
+    printf '%s\n' "$source_changes" >&2
     echo "error: refuse to package a dirty source tree (commit your changes first)" >&2
     exit 1
 fi
