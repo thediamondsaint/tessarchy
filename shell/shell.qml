@@ -1326,6 +1326,15 @@ ShellRoot {
                         selected: statusBar.drawerOpen
                         onClicked: statusBar.toggleDrawer()
                     }
+                    GlassIconButton {
+                        visible: surface.mode !== "desktop" && root.oskAvailable
+                        symbol: "keyboard"
+                        Layout.preferredWidth: 56
+                        Layout.preferredHeight: 56
+                        Accessible.name: "Toggle on-screen keyboard"
+                        reducedMotion: shellPreferences.reducedMotion
+                        onClicked: Quickshell.execDetached(["tessarchy-osk", "toggle"])
+                    }
                     WeatherChip {
                         visible: weatherBackend.available && surface.mode !== "desktop"
                         conditions: weatherBackend.state
