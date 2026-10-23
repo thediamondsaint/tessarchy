@@ -19,6 +19,6 @@ Item {
     }
     Rectangle {
         anchors.fill: parent
-        color: "#60070d16"
+        color: Qt.alpha(Theme.darkerBackground, 0.38)
     }
 }

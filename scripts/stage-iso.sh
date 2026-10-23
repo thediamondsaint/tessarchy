@@ -40,11 +40,16 @@ file_permissions+=(
   ["/usr/bin/tessera-shell"]="0:0:755"
   ["/usr/bin/tessarchy-osk"]="0:0:755"
   ["/usr/bin/tessera-screenshot"]="0:0:755"
+  ["/usr/bin/tessera-chatgpt-status"]="0:0:755"
   ["/usr/bin/tessarchy-session-services"]="0:0:755"
   ["/usr/bin/tessarchy-readiness"]="0:0:755"
   ["/usr/bin/tessera-brightness"]="0:0:755"
   ["/usr/bin/tessera-nightlight"]="0:0:755"
   ["/usr/bin/tessera-rotate"]="0:0:755"
+  ["/usr/bin/tessa-ai"]="0:0:755"
+  ["/usr/bin/tessarchy-ssh"]="0:0:755"
+  ["/usr/bin/tessarchy-theme"]="0:0:755"
+  ["/usr/bin/tessarchy-run"]="0:0:755"
 )
 PROFILE
 # Replace releng's Arch-branded boot menus with Tessarchy's. Anything NOT
@@ -67,16 +72,21 @@ find "$profile/efiboot/loader/entries" -name '*.conf' -delete
 cp -a -- "$root/iso/boot/." "$profile/"
 airoot=$profile/airootfs
 mkdir -p "$airoot/usr/share/tessarchy/session" "$airoot/usr/bin" "$airoot/usr/share/wayland-sessions"
-cp -R -- "$root/shell" "$airoot/usr/share/tessarchy/"
+cp -R -- "$root/shell" "$root/themes" "$airoot/usr/share/tessarchy/"
 find "$airoot/usr/share/tessarchy/shell" -type f \( -name '*.pyc' -o -name '*.pyo' \) -delete
 find "$airoot/usr/share/tessarchy/shell" -depth -type d -name __pycache__ -empty -delete
 cp -R -- "$root/docs" "$airoot/usr/share/tessarchy/"
-cp -- "$root/session/hyprland.lua" "$root/session/window-controls.lua" "$root/session/hypridle.conf" "$airoot/usr/share/tessarchy/session/"
+cp -- "$root/session/hyprland.lua" "$root/session/window-controls.lua" "$root/session/window-tape.lua" "$root/session/hypridle.conf" "$root/session/tessera-chatgpt-status" "$airoot/usr/share/tessarchy/session/"
+cp -R -- "$root/session/osk" "$airoot/usr/share/tessarchy/session/"
 install -m755 "$root/session/tessarchy-install" "$root/session/tessarchy-install-ui" "$airoot/usr/bin/"
-install -m755 "$root/session/start-tessarchy" "$root/session/tessera-shell" "$root/session/tessarchy-osk" "$root/session/tessera-screenshot" "$root/session/tessera-brightness" "$root/session/tessera-nightlight" "$root/session/tessera-rotate" "$root/session/tessarchy-session-services" "$root/session/tessarchy-readiness" "$airoot/usr/bin/"
+install -m755 "$root/session/start-tessarchy" "$root/session/tessera-shell" "$root/session/tessera-chatgpt-status" "$root/session/tessarchy-osk" "$root/session/tessarchy-theme" "$root/session/tessarchy-run" "$root/session/tessera-screenshot" "$root/session/tessera-brightness" "$root/session/tessera-nightlight" "$root/session/tessera-rotate" "$root/session/tessarchy-session-services" "$root/session/tessa-ai" "$root/session/tessarchy-ssh" "$root/session/tessarchy-readiness" "$airoot/usr/bin/"
 install -m755 "$root/session/tessarchy-update" "$root/session/tessera-update-notify" "$airoot/usr/bin/"
 install -m644 "$root/session/tessarchy.desktop" "$airoot/usr/share/wayland-sessions/"
+install -Dm644 "$root/session/tessarchy-chatgpt.desktop" "$airoot/usr/share/applications/tessarchy-chatgpt.desktop"
+# File dialogs (compiled here: needs gcc, make, pkgconf and gtk3 headers).
+make -s -C "$root/portal" O="$root/build/portal" DESTDIR="$airoot" PREFIX=/usr install
 cp -a "$root/iso/airootfs/." "$airoot/"
+install -Dm644 "$root/session/sshd_config.d/tessarchy.conf" "$airoot/etc/ssh/sshd_config.d/20-tessarchy.conf"
 # A mirror, a lab or a CI job can point the medium — and every machine installed
 # from it — at another repository, without editing a tracked file:
 #   TESSARCHY_REPO_URL=http://mirror.test/pkgs ./scripts/stage-iso.sh
@@ -166,6 +176,6 @@ ln -sf ../tessarchy-update-notify.timer \
     "$airoot/home/tess/.config/systemd/user/timers.target.wants/tessarchy-update-notify.timer"
 # Keep iso_version in the profile and /etc/tessarchy/version identical.
 sed -i "s|^iso_version=.*|iso_version=\"$release_version\"|" "$profile/profiledef.sh"
-printf '%b' '\n  \033[1;36mTESSARCHY\033[0m live image — nothing is saved, and the Tessera session starts on tty1 as "tess".\n  Copy it onto a disk with \033[1;36mtessarchy-install\033[0m. Root rescue login stays on this console.\n\n' > "$airoot/etc/issue"
+printf '%b' '\n  \033[1;36mTESSARCHY\033[0m live image — nothing is saved, and the Tessa session starts on tty1 as "tess".\n  Copy it onto a disk with \033[1;36mtessarchy-install\033[0m. Root rescue login stays on this console.\n\n' > "$airoot/etc/issue"
 echo "Profile staged: $profile"
 echo "Review it, then run ./scripts/build-iso.sh"

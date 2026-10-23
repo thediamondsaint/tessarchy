@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   check:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
@@ -19,9 +19,9 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y --no-install-recommends \
             python3 lua5.4 fish shellcheck ffmpeg libqt6svg6 \
-            qt6-declarative-dev-tools \
+            qt6-declarative-dev-tools libgtk-3-dev libglib2.0-dev pkg-config \
             qml6-module-qtquick qml6-module-qtquick-templates \
-            qml6-module-qtquick-controls qml6-module-qtquick-layouts \
+            qml6-module-qt-labs-folderlistmodel qml6-module-qtquick-effects qml6-module-qtquick-controls qml6-module-qtquick-layouts \
             qml6-module-qtqml qml6-module-qtqml-models \
             qml6-module-qtqml-workerscript qml6-module-qtquick-window \
             qml6-module-qtquick-effects qml6-module-qttest desktop-file-utils
@@ -36,7 +36,7 @@ jobs:
       - name: Install target toolchain in the disposable CI container
         run: |
           pacman -Syu --noconfirm --needed git python lua fish shellcheck ffmpeg \
-            qt6-declarative quickshell hyprland desktop-file-utils ttf-dejavu
+            gtk3 glib2 qt6-declarative quickshell hyprland desktop-file-utils ttf-dejavu
           useradd --create-home checker
       - uses: actions/checkout@v4
       - name: Give the build user ownership of the checkout

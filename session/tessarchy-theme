@@ -1,0 +1,273 @@
+#!/usr/bin/env bash
+# Tessarchy system theme. A theme is a directory holding an Omarchy-format
+# colors.toml (optionally backgrounds/), so Omarchy themes work unchanged.
+# `set` stages one under $XDG_STATE_HOME/tessarchy/theme and renders what the
+# shell, the on-screen keyboard, foot and GTK apps read from it. Theme files
+# are only read as data; a theme's hyprland.lua or chromium.theme is ignored.
+set -euo pipefail
+usage() { echo "Usage: $0 list | current | set <name> | apply" >&2; exit 2; }
+[[ $# -ge 1 ]] || usage
+state=${XDG_STATE_HOME:-$HOME/.local/state}/tessarchy
+current=$state/theme
+share=${TESSARCHY_DATA_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}/tessarchy}
+[[ -d $share/themes ]] || share=/usr/share/tessarchy
+search=("${XDG_CONFIG_HOME:-$HOME/.config}/tessarchy/themes" "$share/themes" /usr/share/omarchy/themes)
+fallback_theme=tessera
+
+find_theme() {
+    [[ $1 =~ ^[A-Za-z0-9][A-Za-z0-9._-]*$ ]] || return 1
+    local dir
+    for dir in "${search[@]}"; do
+        if [[ -f $dir/$1/colors.toml ]]; then echo "$dir/$1"; return 0; fi
+    done
+    return 1
+}
+
+declare -A c
+load_palette() {
+    local key value
+    c=()
+    while IFS='=' read -r key value; do
+        c[$key]=${value,,}
+    done < <(sed -nE "s/^[[:space:]]*([A-Za-z0-9_]+)[[:space:]]*=[[:space:]]*[\"']?#([0-9A-Fa-f]{6}).*/\1=\2/p" "$1/colors.toml")
+    [[ -n ${c[background]:-} && -n ${c[foreground]:-} ]] || {
+        echo "$1/colors.toml needs background and foreground colors" >&2; return 1; }
+    mode=$(sed -nE 's/^[[:space:]]*mode[[:space:]]*=[[:space:]]*"(light|dark)".*/\1/p' "$1/colors.toml" | head -n1)
+    if [[ -z $mode ]]; then
+        local hex=${c[background]}
+        local luma=$(( (16#${hex:0:2} * 299 + 16#${hex:2:2} * 587 + 16#${hex:4:2} * 114) / 1000 ))
+        if (( luma < 128 )); then mode=dark; else mode=light; fi
+    fi
+}
+# First key present in the palette, as RRGGBB.
+get() {
+    local key
+    for key; do
+        if [[ -n ${c[$key]:-} ]]; then echo "${c[$key]}"; return; fi
+    done
+}
+
+write_atomic() {
+    local tmp
+    tmp=$(mktemp -- "$1.XXXXXX")
+    cat > "$tmp"
+    mv -f -- "$tmp" "$1"
+}
+
+# Read only the allowlisted surface table; never execute theme-provided text.
+# Window borders stay off (width 0) unless the theme asks for them.
+render_surface() {
+    local file=$1 key value section='' rounding=18 enabled=true size=4 passes=2 border=0
+    local active inactive
+    active=$(get accent blue foreground)
+    inactive=$(get selection lighter_background muted background)
+    if [[ -f $file ]]; then
+        while IFS= read -r line || [[ -n $line ]]; do
+            if [[ $line =~ ^[[:space:]]*\[([A-Za-z0-9_]+)\][[:space:]]*$ ]]; then
+                section=${BASH_REMATCH[1]}
+                continue
+            fi
+            [[ $section == surface ]] || continue
+            if [[ $line =~ ^[[:space:]]*(window_border_active|window_border_inactive)[[:space:]]*=[[:space:]]*\"#([0-9A-Fa-f]{6})\"[[:space:]]*(#.*)?$ ]]; then
+                value=${BASH_REMATCH[2],,}
+                if [[ ${BASH_REMATCH[1]} == window_border_active ]]; then active=$value; else inactive=$value; fi
+                continue
+            fi
+            [[ $line =~ ^[[:space:]]*([a-z_]+)[[:space:]]*=[[:space:]]*([^[:space:]#]+)[[:space:]]*(#.*)?$ ]] || continue
+            key=${BASH_REMATCH[1]} value=${BASH_REMATCH[2]}
+            case $key in
+                window_rounding) { [[ $value =~ ^(0|[1-9][0-9]?)$ ]] && (( value <= 32 )) && rounding=$value; } || true ;;
+                blur_enabled) { [[ $value == true || $value == false ]] && enabled=$value; } || true ;;
+                blur_size) { [[ $value =~ ^[1-9][0-9]?$ ]] && (( value <= 16 )) && size=$value; } || true ;;
+                blur_passes) { [[ $value =~ ^[1-9]$ ]] && (( value <= 4 )) && passes=$value; } || true ;;
+                # Whole pixels; larger widths clamp to 4.
+                window_border) { [[ $value =~ ^(0|[1-9][0-9]?)$ ]] && border=$(( value > 4 ? 4 : value )); } || true ;;
+            esac
+        done < "$file"
+    fi
+    printf 'return { window_rounding = %s, blur_enabled = %s, blur_size = %s, blur_passes = %s, window_border = %s, window_border_active = "rgb(%s)", window_border_inactive = "rgb(%s)" }\n' \
+        "$rounding" "$enabled" "$size" "$passes" "$border" "$active" "$inactive" | write_atomic "$current/surface.lua"
+}
+
+# Icon theme named by the theme's icons.theme (Omarchy format): one name, used
+# only when it is a plain directory name installed in an XDG icons directory.
+icon_theme() {
+    local file=$1/icons.theme name dir
+    [[ -f $file ]] || return 1
+    IFS= read -r name < "$file" || [[ -n $name ]] || return 1
+    [[ $name =~ ^[[:space:]]*([A-Za-z0-9][A-Za-z0-9._-]{0,63})[[:space:]]*$ ]] || return 1
+    name=${BASH_REMATCH[1]}
+    local dirs=("${XDG_DATA_HOME:-$HOME/.local/share}/icons" "$HOME/.icons")
+    local data
+    IFS=: read -ra data <<< "${XDG_DATA_DIRS:-/usr/local/share:/usr/share}"
+    for dir in "${data[@]}"; do
+        if [[ -n $dir ]]; then dirs+=("$dir/icons"); fi
+    done
+    for dir in "${dirs[@]}"; do
+        if [[ -f $dir/$name/index.theme ]]; then echo "$name"; return 0; fi
+    done
+    return 1
+}
+
+# GTK 3/4 on Wayland read the icon theme from GSettings; without a valid,
+# installed icons.theme the current icon theme is left as it is.
+apply_icons() {
+    local name
+    name=$(icon_theme "$1") || { rm -f -- "$current/icons"; return 0; }
+    printf '%s\n' "$name" | write_atomic "$current/icons"
+    [[ -n ${DBUS_SESSION_BUS_ADDRESS:-} ]] && command -v gsettings >/dev/null || return 0
+    gsettings set org.gnome.desktop.interface icon-theme "$name" || true
+}
+
+render() {
+    local name=$1 dir=$2
+    load_palette "$dir"
+    local bg fg accent sel muted dbg ddbg lbg fg2 fg3 fgb
+    bg=$(get background); fg=$(get foreground)
+    accent=$(get accent blue foreground)
+    sel=$(get selection lighter_background muted)
+    muted=$(get muted dark_foreground foreground)
+    dbg=$(get dark_background background)
+    ddbg=$(get darker_background dark_background background)
+    lbg=$(get lighter_background selection background)
+    fg2=$(get light_foreground foreground)
+    fg3=$(get dark_foreground muted foreground)
+    fgb=$(get bright_foreground foreground)
+    local ansi=() key
+    for key in red green yellow blue magenta cyan; do ansi+=("$(get "$key" foreground)"); done
+    local bright=()
+    for key in red green yellow blue magenta cyan; do bright+=("$(get "bright_$key" "$key" foreground)"); done
+
+    mkdir -p -- "$current" "$state/osk/gtk-3.0"
+    render_surface "$dir/shell.toml"
+    apply_icons "$dir"
+    printf '%s\n' "$mode" | write_atomic "$current/mode"
+
+    # foot: the user's own config first, then the palette on top of it.
+    local user_foot=${XDG_CONFIG_HOME:-$HOME/.config}/foot/foot.ini
+    [[ -f $user_foot ]] || user_foot=/etc/xdg/foot/foot.ini
+    {
+        [[ -f $user_foot ]] && printf 'include=%s\n' "$user_foot"
+        printf 'initial-color-theme=dark\n\n[colors-dark]\n'
+        printf 'foreground=%s\nbackground=%s\n' "$fg" "$bg"
+        printf 'selection-foreground=%s\nselection-background=%s\n' "$fg" "$sel"
+        printf 'cursor=%s %s\n' "$bg" "$fgb"
+        printf 'regular0=%s\n' "$ddbg"
+        local i
+        for i in 0 1 2 3 4 5; do printf 'regular%d=%s\n' $((i + 1)) "${ansi[$i]}"; done
+        printf 'regular7=%s\nbright0=%s\n' "$fg2" "$muted"
+        for i in 0 1 2 3 4 5; do printf 'bright%d=%s\n' $((i + 1)) "${bright[$i]}"; done
+        printf 'bright7=%s\n' "$fgb"
+    } | write_atomic "$current/foot.ini"
+
+    # squeekboard loads its own CSS at APPLICATION priority; the user gtk.css in
+    # its private config home (see tessarchy-osk) is USER priority and wins.
+    write_atomic "$state/osk/gtk-3.0/gtk.css" <<EOF
+/* Generated by tessarchy-theme from $name; edits are replaced. */
+sq_view { background-color: #$ddbg; color: #$fg; }
+sq_view sq_button { color: #$fg; background: #$lbg; border-bottom: none; }
+sq_button:active { background: #$sel; }
+sq_button.altline, sq_button.special, sq_button.special-2, sq_button.special-3,
+sq_button.wide, sq_button.change-view, sq_button.change-view-2,
+sq_button.change-view-3, sq_button.subtle-highlight, sq_button.subtle-highlight-2,
+sq_button.emoji-group, sq_button.character-group { background: #$dbg; color: #$fg2; }
+sq_button.altline:active, sq_button.special:active, sq_button.special-2:active,
+sq_button.special-3:active, sq_button.wide:active, sq_button.change-view:active,
+sq_button.change-view-2:active, sq_button.change-view-3:active,
+sq_button.subtle-highlight:active, sq_button.subtle-highlight-2:active,
+sq_button.emoji-group:active, sq_button.character-group:active { background: #$sel; }
+sq_button.placeholder, sq_button.placeholder-2 { background: #$ddbg; }
+sq_button.latched { background: #$fg; color: #$bg; }
+sq_button.locked { background: #$accent; color: #$bg; }
+#Return { background: #$accent; color: #$bg; }
+#Return:active { background: mix(#$accent, #$bg, 0.3); color: #$bg; }
+EOF
+
+    local background=""
+    if [[ -d $dir/backgrounds ]]; then
+        background=$(find -L "$dir/backgrounds" -maxdepth 1 -type f \( -iname '*.png' \
+            -o -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.webp' \) -print 2>/dev/null | sort | head -n1)
+    fi
+    # Path to the wallpaper, empty when the theme has none.
+    printf '%s\n' "$background" | write_atomic "$current/wallpaper"
+
+    printf '%s\n' "$name" | write_atomic "$current/name"
+    # Normalised palette, written last: the shell watches this file.
+    {
+        printf '# Generated by tessarchy-theme from %s\nmode = "%s"\n' "$dir" "$mode"
+        printf 'background = "#%s"\nforeground = "#%s"\n' "$bg" "$fg"
+        printf 'selection = "#%s"\nmuted = "#%s"\ndark_background = "#%s"\n' "$sel" "$muted" "$dbg"
+        printf 'darker_background = "#%s"\nlighter_background = "#%s"\naccent = "#%s"\n' "$ddbg" "$lbg" "$accent"
+        printf 'light_foreground = "#%s"\ndark_foreground = "#%s"\nbright_foreground = "#%s"\n' "$fg2" "$fg3" "$fgb"
+        printf 'red = "#%s"\n' "${ansi[0]}"
+        # Optional Tessa-only semantic layer; palette-only Omarchy themes
+        # still receive glass derived from their colours in Theme.qml.
+        if [[ -f $dir/shell.toml ]]; then
+            printf '\n'
+            cat -- "$dir/shell.toml"
+        fi
+    } | write_atomic "$current/colors.toml"
+}
+
+# Inside a running session, carry the new palette to what is already open.
+refresh_running() {
+    [[ -n ${WAYLAND_DISPLAY:-} ]] || return 0
+    if [[ -n ${HYPRLAND_INSTANCE_SIGNATURE:-} ]] && command -v hyprctl >/dev/null; then
+        hyprctl reload >/dev/null || true
+    fi
+    if pgrep -u "$UID" -x squeekboard >/dev/null && command -v tessarchy-osk >/dev/null; then
+        tessarchy-osk restart || true
+    fi
+    # Retint only terminals started with the themed config (tessarchy-run foot).
+    local osc pid child tty i
+    osc=$(printf '\033]10;#%s\033\134\033]11;#%s\033\134\033]12;#%s\033\134' "$(get foreground)" "$(get background)" "$(get bright_foreground foreground)")
+    local slots=(darker_background red green yellow blue magenta cyan light_foreground
+                 muted bright_red bright_green bright_yellow bright_blue bright_magenta bright_cyan bright_foreground)
+    for i in "${!slots[@]}"; do
+        osc+=$(printf '\033]4;%d;#%s\033\134' "$i" "$(get "${slots[$i]}" "${slots[$i]#bright_}" foreground)")
+    done
+    for pid in $(pgrep -u "$UID" -x foot || true); do
+        tr '\0' ' ' < "/proc/$pid/cmdline" 2>/dev/null | grep -qF -- "$current/foot.ini" || continue
+        for child in $(pgrep -P "$pid" || true); do
+            tty=$(readlink "/proc/$child/fd/1" 2>/dev/null || true)
+            if [[ $tty == /dev/pts/* && -w $tty ]]; then printf '%s' "$osc" > "$tty" || true; fi
+        done
+    done
+}
+
+case "$1" in
+list)
+    [[ $# == 1 ]] || usage
+    declare -A seen
+    for dir in "${search[@]}"; do
+        for theme in "$dir"/*/colors.toml; do
+            [[ -f $theme ]] || continue
+            theme=${theme%/colors.toml}; name=${theme##*/}
+            [[ -z ${seen[$name]:-} ]] || continue
+            seen[$name]=1
+            load_palette "$theme" 2>/dev/null || continue
+            preview=""
+            if [[ -f $theme/preview.png ]]; then preview=$theme/preview.png; fi
+            printf '%s\t%s\t#%s\t#%s\t#%s\t%s\n' "$name" "$mode" "$(get background)" "$(get foreground)" "$(get accent blue foreground)" "$preview"
+        done
+    done
+    ;;
+current)
+    [[ $# == 1 ]] || usage
+    cat -- "$current/name" 2>/dev/null || echo "$fallback_theme"
+    ;;
+set)
+    [[ $# == 2 ]] || usage
+    dir=$(find_theme "$2") || { echo "Unknown theme: $2" >&2; exit 1; }
+    render "$2" "$dir"
+    refresh_running
+    ;;
+apply)
+    [[ $# == 1 ]] || usage
+    name=$(cat -- "$current/name" 2>/dev/null || echo "$fallback_theme")
+    dir=$(find_theme "$name") || { name=$fallback_theme; dir=$(find_theme "$name"); } || {
+        echo "No theme found (looked for $name in ${search[*]})" >&2; exit 1; }
+    render "$name" "$dir"
+    ;;
+*) usage ;;
+esac

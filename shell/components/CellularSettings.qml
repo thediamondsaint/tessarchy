@@ -6,12 +6,12 @@ import Quickshell
 ColumnLayout {
     id: page
     required property var backend
-    property color accentColor: "#a9e8d5"
+    property color accentColor: Theme.accent
     property var pending: null
     readonly property var cellular: backend.state.cellular
     spacing: 12
     Text { text: page.cellular.label; color: page.accentColor; font.pixelSize: 20; Layout.fillWidth: true; wrapMode: Text.WordWrap }
-    Text { text: "SIMs, cellular service and eSIM profiles"; color: "#9eb6c3"; Layout.fillWidth: true; wrapMode: Text.WordWrap }
+    Text { text: "SIMs, cellular service and eSIM profiles"; color: Theme.hintText; Layout.fillWidth: true; wrapMode: Text.WordWrap }
     GlassCombo {
         visible: page.cellular.modems.length > 1
         model: page.cellular.modems; textRole: "name"
@@ -32,9 +32,9 @@ ColumnLayout {
             Layout.fillWidth: true
             Text {
                 text: simCard.modelData.name + " · " + simCard.modelData.type + (simCard.modelData.active ? " · Active" : "") + (simCard.modelData.suffix ? " · •••• " + simCard.modelData.suffix : "")
-                color: "#eaf5f3"; font.pixelSize: 16; Layout.fillWidth: true; wrapMode: Text.WordWrap
+                color: Theme.itemText; font.pixelSize: 16; Layout.fillWidth: true; wrapMode: Text.WordWrap
             }
-            Text { visible: !simCard.modelData.present; text: "Empty SIM slot"; color: "#9eb6c3" }
+            Text { visible: !simCard.modelData.present; text: "Empty SIM slot"; color: Theme.hintText }
             TouchButton {
                 visible: simCard.modelData.present && !simCard.modelData.active
                 text: "Use SIM " + simCard.modelData.slot + "…"
@@ -52,9 +52,9 @@ ColumnLayout {
             onClicked: { page.backend.request("unlock-sim", {pin: pin.text}); pin.text = ""; }
         }
     }
-    Text { visible: page.cellular.locked > 2; text: "SIM requires carrier recovery. Use your carrier's PUK or supported recovery tools."; color: "#efb6bd"; Layout.fillWidth: true; wrapMode: Text.WordWrap }
+    Text { visible: page.cellular.locked > 2; text: "SIM requires carrier recovery. Use your carrier's PUK or supported recovery tools."; color: Theme.errorText; Layout.fillWidth: true; wrapMode: Text.WordWrap }
     Text { text: "eSIM"; color: page.accentColor; font { pixelSize: 11; bold: true; letterSpacing: 2 } }
-    Text { text: page.backend.esim.label; color: "#9eb6c3"; Layout.fillWidth: true; wrapMode: Text.WordWrap }
+    Text { text: page.backend.esim.label; color: Theme.hintText; Layout.fillWidth: true; wrapMode: Text.WordWrap }
     TouchButton { text: "Detect eSIM profiles"; Layout.fillWidth: true; enabled: !page.backend.busy; focusPolicy: Qt.StrongFocus; onClicked: page.backend.request("esim-list") }
     Repeater {
         model: page.backend.esim.profiles
@@ -71,12 +71,12 @@ ColumnLayout {
         enabled: !!page.backend.state.esimManagerAvailable
         onClicked: Quickshell.execDetached(["lpa-gtk"])
     }
-    Text { text: "Profile detection uses lpac and your configured eUICC reader. Add profiles with eSIM Manager (lpa-gtk)."; color: "#9eb6c3"; font.pixelSize: 12; Layout.fillWidth: true; wrapMode: Text.WordWrap }
+    Text { text: "Profile detection uses lpac and your configured eUICC reader. Add profiles with eSIM Manager (lpa-gtk)."; color: Theme.hintText; font.pixelSize: 12; Layout.fillWidth: true; wrapMode: Text.WordWrap }
     ColumnLayout {
         visible: page.pending !== null
         Layout.fillWidth: true
-        Text { text: page.pending ? page.pending.title : ""; color: "#eaf5f3"; Layout.fillWidth: true; wrapMode: Text.WordWrap }
-        Text { text: "This may interrupt cellular service."; color: "#9eb6c3"; Layout.fillWidth: true; wrapMode: Text.WordWrap }
+        Text { text: page.pending ? page.pending.title : ""; color: Theme.itemText; Layout.fillWidth: true; wrapMode: Text.WordWrap }
+        Text { text: "This may interrupt cellular service."; color: Theme.hintText; Layout.fillWidth: true; wrapMode: Text.WordWrap }
         RowLayout {
             TouchButton { text: "Cancel"; Layout.fillWidth: true; focusPolicy: Qt.StrongFocus; onClicked: page.pending = null }
             TouchButton {
@@ -85,5 +85,5 @@ ColumnLayout {
             }
         }
     }
-    Text { text: page.backend.state.error || page.backend.state.notice || ""; visible: text.length > 0; color: page.backend.state.error ? "#efb6bd" : page.accentColor; Layout.fillWidth: true; wrapMode: Text.WordWrap }
+    Text { text: page.backend.state.error || page.backend.state.notice || ""; visible: text.length > 0; color: page.backend.state.error ? Theme.errorText : page.accentColor; Layout.fillWidth: true; wrapMode: Text.WordWrap }
 }

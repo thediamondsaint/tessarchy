@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
-"""Guest-only virtual multitouch touchscreen for driving Tessera in a VM.
+"""Guest-only virtual multitouch touchscreen for driving Tessa in a VM.
 
 Creates a uinput device with INPUT_PROP_DIRECT and MT slots, so Hyprland and
 apps receive real touch events rather than the QEMU tablet's absolute pointer.
 It is not a hardware touchscreen test. W and H are the output's pixel size.
 
 Usage (inside the guest): sudo ./scripts/guest-touch.py W H < commands
-Commands, one per line: "tap X Y", "swipe X1 Y1 X2 Y2 MS", "sleep SECONDS".
+Commands, one per line: "tap X Y", "swipe X1 Y1 X2 Y2 MS [HOLD_MS]" (HOLD_MS
+keeps the finger still at the end before lifting), "sleep SECONDS".
 """
 import fcntl, os, struct, subprocess, sys, time
 
@@ -70,10 +71,11 @@ for line in sys.stdin:
         down(int(p[1]), int(p[2])); time.sleep(0.06); up(); time.sleep(0.15)
     elif p[0] == "swipe":
         x1, y1, x2, y2, ms = map(int, p[1:6]); n = max(2, ms // 16)
+        hold = int(p[6]) if len(p) > 6 else 0
         down(x1, y1)
         for i in range(1, n + 1):
             time.sleep(ms / n / 1000); move(x1 + (x2 - x1) * i // n, y1 + (y2 - y1) * i // n)
-        up(); time.sleep(0.15)
+        time.sleep(hold / 1000); up(); time.sleep(0.15)
     elif p[0] == "sleep":
         time.sleep(float(p[1]))
     else:

@@ -1,7 +1,7 @@
 pkgname=tessera-shell
 pkgver=0.1.0
-pkgrel=3
-pkgdesc='Tessera touch-first Quickshell prototype'
+pkgrel=4
+pkgdesc='Tessa touch-first Quickshell prototype'
 arch=('any')
 license=('MIT')
 depends=('quickshell>=0.3.1' 'qt6-declarative' 'qt6-wayland' 'python' 'python-gobject' 'ffmpeg' 'util-linux')
@@ -14,5 +14,7 @@ package() {
     install -Dm644 "$srcdir/LICENSE" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
     install -dm755 "$pkgdir/usr/share/tessarchy"
     cp -r "$srcdir/shell" "$pkgdir/usr/share/tessarchy/"
+    install -Dm755 "$srcdir/session/tessera-chatgpt-status" "$pkgdir/usr/share/tessarchy/session/tessera-chatgpt-status"
     install -Dm755 "$srcdir/session/tessera-shell" "$pkgdir/usr/bin/tessera-shell"
+    install -Dm755 "$srcdir/session/tessera-chatgpt-status" "$pkgdir/usr/bin/tessera-chatgpt-status"
 }

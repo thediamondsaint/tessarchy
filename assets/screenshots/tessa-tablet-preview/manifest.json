@@ -1,0 +1,64 @@
+{
+  "kind": "actual-vm-tablet-preview",
+  "source_revision": "a8e6a45",
+  "logical_output": [
+    1024,
+    768
+  ],
+  "mode": "Automatic Tablet",
+  "environment": "Existing QEMU/KVM development guest; Hyprland 0.56.2; Quickshell 0.3.2",
+  "capture": "Unedited grim screenshots. GIF from 88 direct QMP screenshots with captured frame durations; no generated imagery or synthetic motion.",
+  "verified": "All three wheel placements: short virtual-touch drag switched Files to Calculator, reverse drag returned to Files. Native windows remain 1024px wide.",
+  "files": [
+    {
+      "file": "left.png",
+      "dimensions": [
+        1024,
+        768
+      ],
+      "frames": 1,
+      "sha256": "98ef23db680a5fcf465c0aa3d65a5c30ef14eadd3e0421cbae5db758475646b4",
+      "captured_utc": "2026-10-21T19:24:04.723570+00:00"
+    },
+    {
+      "file": "right.png",
+      "dimensions": [
+        1024,
+        768
+      ],
+      "frames": 1,
+      "sha256": "e85aa0fb62fecf705b391f32e9382781741135d045557df1718cfe9844eda73f",
+      "captured_utc": "2026-10-21T19:24:22.544934+00:00"
+    },
+    {
+      "file": "bottom.png",
+      "dimensions": [
+        1024,
+        768
+      ],
+      "frames": 1,
+      "sha256": "0f5167951b0f6f2550cf950f121a41e461ecca145e308b245b1f5dfe9f5e7e48",
+      "captured_utc": "2026-10-21T19:24:38.055251+00:00"
+    },
+    {
+      "file": "launcher.png",
+      "dimensions": [
+        1024,
+        768
+      ],
+      "frames": 1,
+      "sha256": "8962cd8aff112f86bf84c2345825f1bf5e68f5ded8404a531409747a508944a4",
+      "captured_utc": "2026-10-21T19:27:15.154472+00:00"
+    },
+    {
+      "file": "scrolling.gif",
+      "dimensions": [
+        1024,
+        768
+      ],
+      "frames": 88,
+      "sha256": "3d9f5c9e3aa33986981fad28fea83a20c475d3824f026995dcd5b3d8e4447350",
+      "captured_utc": "2026-10-21T19:25:49.199708+00:00"
+    }
+  ]
+}

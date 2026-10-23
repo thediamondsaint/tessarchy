@@ -1,0 +1,12 @@
+{
+  "source": "existing QEMU guest, unedited QMP screendump",
+  "commit": "38427ec",
+  "mode": "tablet",
+  "resolution": "1024x768",
+  "wallpaper": "Tessa aurora-fold",
+  "captures": [
+    "tablet-home-no-dock.png",
+    "tablet-cube-shortcuts.png"
+  ],
+  "physical_touch_latency_tested": false
+}

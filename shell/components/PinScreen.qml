@@ -53,7 +53,7 @@ FocusScope {
         source: "../artwork/aurora-fold.png"
         fillMode: Image.PreserveAspectCrop
     }
-    Rectangle { anchors.fill: parent; color: "#b3091325" }
+    Rectangle { anchors.fill: parent; color: Theme.lockScrim }
     ScrollView {
         anchors.fill: parent
         contentWidth: availableWidth
@@ -83,7 +83,7 @@ FocusScope {
                             anchors.horizontalCenter: parent.horizontalCenter
                             text: Qt.formatDateTime(screen.date, screen.use24Hour ? "h:mm" : "h:mm AP").replace(/ [AP]M$/, "")
                             textFormat: Text.PlainText
-                            color: "#f0f5ff"
+                            color: Theme.text
                             font { pixelSize: screen.compact ? 42 : 64; weight: Font.Light; letterSpacing: -2 }
                         }
                         Text {
@@ -91,14 +91,14 @@ FocusScope {
                             anchors.horizontalCenter: parent.horizontalCenter
                             text: Qt.formatDateTime(screen.date, "dddd, MMMM d")
                             textFormat: Text.PlainText
-                            color: "#b4cbd6"; font.pixelSize: 14
+                            color: Theme.lockMutedText; font.pixelSize: 14
                         }
                     }
                 }
                 Text {
                     text: "Enter passcode"
                     textFormat: Text.PlainText
-                    color: "#f0f5ff"; font.pixelSize: 17; font.weight: Font.Medium
+                    color: Theme.text; font.pixelSize: 17; font.weight: Font.Medium
                     Layout.alignment: Qt.AlignHCenter
                 }
                 Row {
@@ -109,16 +109,16 @@ FocusScope {
                         model: 4
                         delegate: Rectangle {
                             required property int index
-                            width: 11; height: 11; radius: 6
-                            color: index < screen.digits.length ? "#e2fff6" : "transparent"
-                            border { color: "#b4d5d2"; width: 1.5 }
+                            width: 11; height: 11; radius: Theme.radius("tile", 6, height)
+                            color: index < screen.digits.length ? Theme.pinDot : "transparent"
+                            border { color: Theme.pinDotBorder; width: Theme.borderWidth(1.5) }
                         }
                     }
                 }
                 Text {
                     text: screen.busy && screen.message.length === 0 ? "Checking…" : screen.message
                     textFormat: Text.PlainText
-                    color: "#b4cbd6"; font.pixelSize: 12
+                    color: Theme.lockMutedText; font.pixelSize: 12
                     horizontalAlignment: Text.AlignHCenter
                     wrapMode: Text.WordWrap
                     Layout.fillWidth: true
@@ -160,28 +160,28 @@ FocusScope {
                                         anchors.horizontalCenter: parent.horizontalCenter
                                         text: key.modelData.digit
                                         textFormat: Text.PlainText
-                                        color: "#f0f5ff"; font.pixelSize: screen.compact ? 24 : 30
+                                        color: Theme.text; font.pixelSize: screen.compact ? 24 : 30
                                     }
                                     Text {
                                         visible: text.length > 0
                                         anchors.horizontalCenter: parent.horizontalCenter
                                         text: key.modelData.letters
                                         textFormat: Text.PlainText
-                                        color: "#b4cbd6"; font.pixelSize: 8; font.letterSpacing: 1.3
+                                        color: Theme.lockMutedText; font.pixelSize: 8; font.letterSpacing: 1.3
                                     }
                                 }
-                                Image {
+                                Icon {
                                     visible: key.erase
                                     anchors.centerIn: parent
-                                    width: 24; height: 24
-                                    source: "../icons/backspace.svg"
+                                    symbol: "backspace"
+                                    color: Theme.text
                                 }
                             }
                             background: Rectangle {
-                                radius: width / 2
-                                color: key.down ? "#507dabaa" : "#283a5268"
-                                border.color: key.activeFocus ? "#a9e8d5" : "#45688091"
-                                border.width: key.activeFocus ? 2 : 1
+                                radius: Theme.radius("button", width / 2, height)
+                                color: key.down ? Theme.pinKeyPressed : Theme.pinKey
+                                border.color: key.activeFocus ? Theme.accent : Theme.pinKeyBorder
+                                border.width: Theme.borderWidth(key.activeFocus ? 2 : 1)
                             }
                             onClicked: { if (erase) screen.eraseDigit(); else screen.appendDigit(modelData.digit); }
                         }
@@ -190,7 +190,7 @@ FocusScope {
                 Text {
                     text: screen.accountName
                     textFormat: Text.PlainText
-                    color: "#a9e8d5"; font.pixelSize: 10; font.letterSpacing: 2
+                    color: Theme.accent; font.pixelSize: 10; font.letterSpacing: 2
                     elide: Text.ElideRight
                     Layout.maximumWidth: content.width
                     Layout.alignment: Qt.AlignHCenter

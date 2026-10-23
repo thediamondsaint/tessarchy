@@ -1,0 +1,3 @@
+[D-BUS Service]
+Name=org.freedesktop.impl.portal.desktop.tessarchy
+Exec=/usr/lib/tessarchy/tessarchy-portal

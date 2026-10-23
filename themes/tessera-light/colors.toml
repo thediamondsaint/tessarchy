@@ -1,0 +1,32 @@
+# Tessa Light: daylight counterpart to Tessa.
+mode = "light"
+
+accent = "#1f8a72"
+selection = "#c4d3e3"
+muted = "#8796a8"
+
+background = "#eef3f8"
+dark_background = "#e1e8f0"
+darker_background = "#cfd9e4"
+lighter_background = "#ffffff"
+
+foreground = "#13213a"
+dark_foreground = "#5a6d85"
+light_foreground = "#2c3d57"
+bright_foreground = "#0a1426"
+
+red = "#c23b54"
+yellow = "#9a6b00"
+orange = "#b5591f"
+green = "#2f8f4e"
+cyan = "#16858a"
+blue = "#1f6fb2"
+magenta = "#7a52c7"
+brown = "#7b5b55"
+
+bright_red = "#d4566d"
+bright_yellow = "#b38212"
+bright_green = "#3fa862"
+bright_cyan = "#1f9da3"
+bright_blue = "#3384c9"
+bright_magenta = "#8f68d8"

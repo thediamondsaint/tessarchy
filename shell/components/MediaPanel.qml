@@ -5,7 +5,7 @@ import QtQuick.Layouts
 ColumnLayout {
     id: panel
     property var player: null
-    property color accentColor: "#a9e8d5"
+    property color accentColor: Theme.accent
     spacing: 6
 
     function activate(action) {
@@ -21,7 +21,7 @@ ColumnLayout {
     Text {
         text: panel.player ? (panel.player.trackTitle || "Unknown track") : "No media player connected"
         textFormat: Text.PlainText
-        color: "#f0f5ff"
+        color: Theme.text
         font.pixelSize: 14
         elide: Text.ElideRight
         Layout.fillWidth: true
@@ -30,7 +30,7 @@ ColumnLayout {
         visible: !!panel.player
         text: panel.player ? ((panel.player.trackArtist || "Unknown artist") + " · " + (panel.player.identity || "Player")) : ""
         textFormat: Text.PlainText
-        color: "#aabccb"
+        color: Theme.subtitleText
         font.pixelSize: 12
         elide: Text.ElideRight
         Layout.fillWidth: true

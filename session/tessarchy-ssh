@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+# Safe SSH lifecycle helper. It never opens a port implicitly.
+set -euo pipefail
+usage() {
+    cat >&2 <<'EOF'
+Usage: tessarchy-ssh <check|status|enable|disable|keys>
+
+enable  validate sshd, create missing host keys, and enable sshd now (root)
+disable stop and disable sshd (root)
+check   validate the effective sshd configuration
+status  report the service state without changing it
+keys    print fingerprints for host public keys
+EOF
+    exit 64
+}
+action=${1-}
+[[ $# -eq 1 ]] || usage
+command -v sshd >/dev/null || { echo "openssh is not installed" >&2; exit 1; }
+case "$action" in
+    check)
+        sshd -t
+        echo "sshd configuration is valid"
+        ;;
+    status)
+        systemctl --no-pager --full status sshd.service || true
+        ;;
+    keys)
+        shopt -s nullglob
+        keys=(/etc/ssh/ssh_host_*_key.pub)
+        ((${#keys[@]})) || { echo "no SSH host keys found" >&2; exit 1; }
+        ssh-keygen -lf "${keys[@]}"
+        ;;
+    enable|disable)
+        [[ $EUID -eq 0 ]] || { echo "Run '$0 $action' with sudo." >&2; exit 1; }
+        if [[ $action == enable ]]; then
+            ssh-keygen -A
+            sshd -t
+            systemctl enable --now sshd.service
+        else
+            systemctl disable --now sshd.service
+        fi
+        ;;
+    *) usage ;;
+esac

@@ -1,0 +1,33 @@
+# Tessa: the default night palette. Same keys as Omarchy's colors.toml, so an
+# Omarchy theme directory works here unchanged.
+mode = "dark"
+
+accent = "#a9e8d5"
+selection = "#34465e"
+muted = "#7a8589"
+
+background = "#101b30"
+dark_background = "#0b1424"
+darker_background = "#040d1a"
+lighter_background = "#1c2c43"
+
+foreground = "#f0f5ff"
+dark_foreground = "#8da7b9"
+light_foreground = "#d0dced"
+bright_foreground = "#ffffff"
+
+red = "#ef8a9b"
+yellow = "#f2d58c"
+orange = "#f4b48a"
+green = "#9fe0a6"
+cyan = "#8fe3e0"
+blue = "#99d7ff"
+magenta = "#c6b7ff"
+brown = "#8a6a55"
+
+bright_red = "#f6a7b4"
+bright_yellow = "#f7e2ad"
+bright_green = "#bdebc2"
+bright_cyan = "#b0ece9"
+bright_blue = "#bfe6ff"
+bright_magenta = "#dacfff"

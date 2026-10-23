@@ -27,7 +27,7 @@ checkpoints, not permanent branch positions.
 
 ## Product and design
 
-Tessarchy is a touch-first Arch Linux session. Tessera is its Quickshell/QML UI.
+Tessarchy is a touch-first Arch Linux session. Tessa is its Quickshell/QML UI.
 Hyprland provides compositing and window management. The development target is
 an x86_64 QEMU/KVM guest; the next product milestone is one physical reference
 device, followed by a tablet pilot and phone-specific integration.
@@ -168,6 +168,11 @@ after the last assigned ID; preserve existing IDs when reorganizing sections.
 
 | Task ID | Status | Owner | Branch / PR | Next action or evidence |
 | --- | --- | --- | --- | --- |
+| T80 | In progress | Codex | feat/operation-tessa | Integrate #61/#85 and #58, cube/radial/launcher, VM acceptance |
+| T79 | Review | Codex | docs/touch-window-tape | Native Hyprland scrolling prototype #61 |
+| T78 | Review | Codex | integrate/vm-accepted-20261020 | Existing integration |
+| T77 | Done | Codex | feat/osk-super-key | Existing OSK Super key |
+
 | T73 | Done | Codex | review/audit-2026-10-19 | PR #52 merged; small PRs integrated, shell/site defects fixed, CI and live Pages verified |
 | T74 | Done | Codex | PR #53 | Installer preflight safeguards merged into the feature branch; full installer integration and installed-disk acceptance remain open |
 | T76 | Done | Codex | PR #55 | All 21 captures refreshed; public image/ZIP hashes and deployed package repository verified; shell/session revisions raised for installed updates |
@@ -229,7 +234,7 @@ Read [pr-triage.md](docs/pr-triage.md) and inspect current PR heads first.
 
 | ID | Task | Completion result |
 | --- | --- | --- |
-| T21 | Add configurable navigation gestures | Discoverable settings, conflict handling and visible-button fallback |
+| T21 | Add configurable navigation gestures | — | `feat/nav-gestures` (stacked on #48) | In progress: edge-strip swipes for Home, Recents (hold) and Back, handle pill, Settings → Navigation Gestures/Buttons fallback; guest swipes verified with uinput touch, hardware touchscreen pending |
 | T22 | Refine switcher transitions | Smooth card movement, stable selection and rapid window-close handling |
 | T23 | Expand the keyboard/application matrix | Foot, browser forms, passwords, multiline fields and dialogs tested |
 | T24 | Audit scaling and accessibility | Logical target sizes, readable contrast, text scaling and accessible names checked |

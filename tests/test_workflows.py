@@ -1,15 +1,73 @@
 """Observable install safety and profile assembly; no GUI or privileged tests."""
 import os
+import re
 from pathlib import Path
 import re
 import subprocess
+import sys
 import tempfile
+import time
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
 class Workflows(unittest.TestCase):
+    def test_shell_shape_literals_live_in_theme_tokens(self):
+        # Tiny decorative marks and circular avatars retain fixed geometry.
+        legacy = {'StatusIcon.qml': 1, 'ContactAvatar.qml': 1, 'shell.qml': 2}
+        pattern = re.compile(r'\bradius:\s*(?:\d+|width\s*/\s*2)\b')
+        paths = list((ROOT / 'shell').glob('*.qml')) + list((ROOT / 'shell/components').glob('*.qml'))
+        for path in paths:
+            if path.name == 'Theme.qml':
+                continue
+            offenders = [n for n, line in enumerate(path.read_text().splitlines(), 1)
+                         if pattern.search(line)]
+            self.assertLessEqual(len(offenders), legacy.get(path.name, 0),
+                                 f'{path.name}: raw radius at {offenders}')
+        self.assertEqual(sum(legacy.values()), 4)
+
+    def test_shell_shape_overrides_clamp_and_reset(self):
+        import shutil
+        quickshell = shutil.which('qs')
+        if not quickshell:
+            self.skipTest('Quickshell runtime unavailable')
+        runtime = self.home / 'runtime'
+        runtime.mkdir(mode=0o700)
+        shell = self.home / 'shell'
+        shutil.copytree(ROOT / 'shell', shell)
+        harness = shell / 'shape-harness.qml'
+        harness.write_text((ROOT / 'tests/quickshell/shape.qml').read_text()
+                           .replace('../../shell/components', 'components'))
+        result = subprocess.run([quickshell, '--no-color', '-p', str(harness)],
+                                env=dict(self.env, QT_QPA_PLATFORM='offscreen', QT_QPA_PLATFORMTHEME='',
+                                         XDG_RUNTIME_DIR=str(runtime)),
+                                capture_output=True, text=True, timeout=15)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn('SHAPE_TEST_PASS', result.stdout + result.stderr)
+        self.assertNotIn('SHAPE_TEST_FAIL', result.stdout + result.stderr)
+
+    def test_shell_colors_live_in_theme_tokens(self):
+        pattern = re.compile(r'#[0-9a-fA-F]{6,8}\b|Qt\.rgba\s*\(')
+        paths = list((ROOT / 'shell').glob('*.qml')) + list((ROOT / 'shell/components').glob('*.qml'))
+        for path in paths:
+            if path.name == 'Theme.qml':
+                continue  # Only the theme engine may hold colour literals.
+            offenders = [number for number, line in enumerate(path.read_text().splitlines(), 1)
+                         if pattern.search(line)]
+            self.assertEqual(offenders, [], f'{path.name}: colour literals')
+        # Every semantic token is loadable from shell.toml and pinned by Tessa.
+        theme = (ROOT / 'shell/components/Theme.qml').read_text()
+        tokens = re.findall(r'property color \w+: token\("([a-z_]+)"', theme)
+        self.assertGreater(len(tokens), 50)
+        allowed = re.search(r'const allowed = \[(.*?)\];', theme, re.S).group(1)
+        tessera = (ROOT / 'themes/tessera/shell.toml').read_text()
+        for name in tokens:
+            self.assertIn(f'"{name}"', allowed)
+            self.assertRegex(tessera, rf'(?m)^{name} = "#[0-9a-f]{{6,8}}"$')
+        for name in ('greeter.qml', 'login-preview.qml'):
+            self.assertIn('ThemeLoader {', (ROOT / 'shell' / name).read_text())
+
     def run_quickshell_harness(self, name, marker):
         import shutil
         quickshell = shutil.which('qs')
@@ -35,20 +93,82 @@ class Workflows(unittest.TestCase):
         policy = (ROOT / 'shell/LayoutPolicy.js').read_text()
         self.assertIn('function barGeometry(mode, rows)', policy)
         self.assertRegex(shell, r'property var bar: Policy\.barGeometry\(mode, dock\.rows\)')
-        self.assertRegex(shell, r'property int navHeight: bar\.height\n')
+        self.assertRegex(shell, r'property int navHeight: mode === "desktop" \? bar\.height : 0\n')
         panel = shell[shell.index('id: panel\n'):shell.index('id: statusBar\n')]
         # The frame and its content margins: no literal except the open-page flush 0.
         margins = re.findall(r'^ {20}anchors\.\w*[mM]argins?:.*$', panel, re.M)
         self.assertGreaterEqual(len(margins), 5, margins)
         for line in margins:
             self.assertNotRegex(line.replace('panel.expanded ? 0 :', ''), r'\d', line)
-        dock = panel[panel.index('columns: surface.dock.columns') - 200:]
-        dock = dock[:dock.index('NavButton {')]
-        for key in ('Layout.preferredHeight', 'columnSpacing', 'rowSpacing'):
-            line = re.search(key + r':.*', dock).group(0)
-            self.assertNotRegex(line, r'\d', line)
+        self.assertNotIn('columns: surface.dock.columns', panel)
+        self.assertIn('Phone, Messages and Keyboard are in the expanded T cube', shell)
         taskbar = panel[panel.index('visible: surface.mode === "desktop"\n'):]
         self.assertIn('Layout.preferredHeight: surface.bar.row\n', taskbar[:200])
+
+    def test_navigation_gestures_move_touch_actions_into_the_t_cube(self):
+        shell = (ROOT / 'shell/shell.qml').read_text()
+        settings = (ROOT / 'shell/components/SettingsPage.qml').read_text()
+        self.assertIn('property string navigation: "gestures"', shell)
+        self.assertIn('property bool showGestureHandle: true', shell)
+        self.assertIn('Policy.gestureNavigation(mode, shellPreferences.navigation)', shell)
+        self.assertIn('Policy.dockLayout(mode, modelData.width, root.oskAvailable, gestures)', shell)
+        self.assertIn('signal phoneRequested()', (ROOT / 'shell/components/WindowTapeControl.qml').read_text())
+        self.assertIn('signal messagesRequested()', (ROOT / 'shell/components/WindowTapeControl.qml').read_text())
+        self.assertIn('signal keyboardRequested()', (ROOT / 'shell/components/WindowTapeControl.qml').read_text())
+        self.assertIn('onPhoneRequested: { tapeControl.cancel(); panel.showPage("phone"); }', shell)
+        self.assertIn('onMessagesRequested: { tapeControl.cancel(); panel.showPage("messages"); }', shell)
+        self.assertIn('onKeyboardRequested: { tapeControl.cancel(); Quickshell.execDetached(["tessarchy-osk", "toggle"]); }', shell)
+        self.assertEqual(shell.count('onGesture: action => panel.navigate(action)'), 2)
+        self.assertNotIn('visible: !surface.gestures', shell)
+        self.assertIn('shown: shellPreferences.showGestureHandle', shell)
+        self.assertIn('visible: surface.gestures', shell)
+        self.assertIn('value: "buttons"', settings)
+        self.assertIn('page.preferences.navigation = modelData.value', settings)
+
+    def test_touch_top_bar_uses_floating_scrollable_glass_and_targets(self):
+        shell = (ROOT / 'shell/shell.qml').read_text()
+        indicators = (ROOT / 'shell/components/StatusIndicators.qml').read_text()
+        status_icon = (ROOT / 'shell/components/StatusIcon.qml').read_text()
+        self.assertIn('implicitHeight: drawerOpen ? Math.min(surface.modelData.height - surface.navHeight - 12, quickSheet.implicitHeight + 88) : surface.mode === "desktop" ? 48 : 64', shell)
+        self.assertIn('interactive: surface.mode !== "desktop" && contentWidth > width', shell)
+        self.assertIn('boundsBehavior: Flickable.StopAtBounds', shell)
+        self.assertIn('touchMode: true', shell)
+        self.assertIn('touchSlot: 56', shell)
+        self.assertIn('property bool touchMode: false', indicators)
+        self.assertIn('property bool touchMode: false', status_icon)
+        self.assertIn('Layout.preferredWidth: touchMode ? touchSlot', status_icon)
+        self.assertIn('showSettings: surface.mode === "desktop" && surface.modelData.width >= 560', shell)
+        self.assertIn('visible: surface.mode !== "desktop" && surface.tapeActive && !panel.expanded && !tapeControl.expanded', shell)
+        self.assertNotIn('id: homeHeader', shell)
+        self.assertIn('anchors.topMargin: surface.mode === "desktop" ? 24 : 92', shell)
+
+        settings = (ROOT / 'shell/components/SettingsPage.qml').read_text()
+        self.assertIn('Accessible.role: Accessible.RadioButton', settings)
+        self.assertIn('Accessible.checked: selected', settings)
+        self.assertIn('title: "THEMES"', settings)
+        self.assertIn('TopBarPet {', shell)
+        self.assertIn('iconOnly: true', shell)
+
+    def test_ai_control_surface_and_ssh_support_are_explicit_and_local(self):
+        shell = (ROOT / 'shell/shell.qml').read_text()
+        self.assertIn('target: "ai"', shell)
+        for operation in ('open(', 'launch(', 'theme(', 'radio(', 'tape(', 'screenshot()', 'volume('):
+            self.assertIn('function ' + operation, shell)
+        ai = (ROOT / 'session/tessa-ai').read_text()
+        self.assertIn('exec tessera-shell ipc call ai', ai)
+        self.assertNotIn('eval', ai)
+        ssh = (ROOT / 'session/tessarchy-ssh').read_text()
+        self.assertIn('sshd -t', ssh)
+        self.assertIn('systemctl enable --now sshd.service', ssh)
+        self.assertIn('openssh', (ROOT / 'iso/packages.x86_64').read_text().split())
+        self.assertIn('openssh', (ROOT / 'packaging/tessarchy-session/PKGBUILD').read_text())
+        self.assertIn('PermitRootLogin no', (ROOT / 'session/sshd_config.d/tessarchy.conf').read_text())
+
+    def test_components_qmldir_lists_every_component(self):
+        # An explicit qmldir hides any component it omits ("X is not a type").
+        components = ROOT / 'shell/components'
+        listed = {line.split()[-1] for line in (components / 'qmldir').read_text().splitlines() if line.strip()}
+        self.assertEqual(listed, {path.name for path in components.glob('*.qml')})
 
     def test_display_controls_restore_failed_brightness_and_apply_night_preference(self):
         stubs = self.home / 'display-bin'
@@ -123,7 +243,7 @@ class Workflows(unittest.TestCase):
         self.env = dict(os.environ, HOME=str(self.home),
                         XDG_DATA_HOME=str(self.home / 'data'),
                         XDG_CONFIG_HOME=str(self.home / 'config'))
-        for variable in ('DISPLAY', 'WAYLAND_DISPLAY', 'TESSARCHY_DATA_DIR'):
+        for variable in ('DISPLAY', 'WAYLAND_DISPLAY', 'TESSARCHY_DATA_DIR', 'DBUS_SESSION_BUS_ADDRESS'):
             self.env.pop(variable, None)
 
     def run_script(self, name, expected=0, env=None):
@@ -275,6 +395,323 @@ class Workflows(unittest.TestCase):
                                     env=dict(env, XDG_RUNTIME_DIR=str(runtime)),
                                     capture_output=True, text=True)
         self.assertEqual(result.returncode, 0, result.stderr)
+    def theme(self, *args, env=None):
+        run_env = dict(env or self.env, TESSARCHY_DATA_DIR=str(ROOT),
+                       XDG_STATE_HOME=str(self.home / 'state'))
+        return subprocess.run([str(ROOT / 'session/tessarchy-theme'), *args], env=run_env,
+                              capture_output=True, text=True)
+
+    def test_theme_renders_shell_keyboard_and_terminal_from_one_palette(self):
+        state = self.home / 'state/tessarchy'
+        self.assertEqual(self.theme('current').stdout.strip(), 'tessera')
+        self.assertEqual(self.theme('apply').returncode, 0)
+        self.assertEqual((state / 'theme/name').read_text().strip(), 'tessera')
+        self.assertIn('accent = "#a9e8d5"', (state / 'theme/colors.toml').read_text())
+        self.assertIn('glass = "#501c2c43"', (state / 'theme/colors.toml').read_text())
+        result = self.theme('set', 'tessera-light')
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual((state / 'theme/mode').read_text().strip(), 'light')
+        self.assertNotIn('[tessera]', (state / 'theme/colors.toml').read_text())
+        css = (state / 'osk/gtk-3.0/gtk.css').read_text()
+        self.assertIn('#Return { background: #1f8a72', css)
+        self.assertIn('sq_view { background-color: #cfd9e4', css)
+        self.assertIn('background=eef3f8', (state / 'theme/foot.ini').read_text())
+        for bad in ('../tessera', 'missing', '.hidden'):
+            self.assertEqual(self.theme('set', bad).returncode, 1, bad)
+        self.assertEqual(self.theme('current').stdout.strip(), 'tessera-light')
+        self.assertEqual(self.theme().returncode, 2)
+        # An Omarchy theme directory works as-is: palette, luminance-derived
+        # mode, wallpaper, and the user's own foot config kept underneath.
+        mine = self.home / 'config/tessarchy/themes/paper'
+        (mine / 'backgrounds').mkdir(parents=True)
+        (mine / 'colors.toml').write_text('background = "#FAFAFA"\nforeground = "#202020"\nblue = "#3366cc"\n')
+        (mine / 'backgrounds/1.png').write_bytes(b'png')
+        user_foot = self.home / 'config/foot/foot.ini'
+        user_foot.parent.mkdir(parents=True)
+        user_foot.write_text('font=monospace:size=14\n')
+        self.assertIn('paper\tlight\t#fafafa\t#202020\t#3366cc', self.theme('list').stdout)
+        self.assertEqual(self.theme('set', 'paper').returncode, 0)
+        self.assertNotIn('[tessera]', (state / 'theme/colors.toml').read_text())
+        self.assertEqual((state / 'theme/mode').read_text().strip(), 'light')
+        self.assertEqual((state / 'theme/wallpaper').read_text().strip(), str(mine / 'backgrounds/1.png'))
+        foot = (state / 'theme/foot.ini').read_text()
+        self.assertTrue(foot.startswith(f'include={user_foot}\n'), foot)
+        self.assertEqual(user_foot.read_text(), 'font=monospace:size=14\n')
+        self.theme('set', 'tessera')
+        self.assertEqual((state / 'theme/wallpaper').read_text().strip(), '')
+
+    def test_bundled_omarchy_palettes_render_every_output(self):
+        import tomllib
+        themes = [p for p in (ROOT / 'themes').glob('*/colors.toml')
+                  if not p.parent.name.startswith('tessera')]
+        self.assertEqual(len(themes), 23)
+        listed = {line.split('\t')[0] for line in self.theme('list').stdout.splitlines()}
+        state = self.home / 'state/tessarchy'
+        for path in themes:
+            with self.subTest(theme=path.parent.name):
+                raw = tomllib.loads(path.read_text())
+                self.assertIn(path.parent.name, listed)
+                result = self.theme('set', path.parent.name)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                normalized = tomllib.loads((state / 'theme/colors.toml').read_text())
+                self.assertEqual(normalized['background'], raw['background'].lower())
+                self.assertEqual(normalized['accent'], raw['accent'].lower())
+                self.assertNotIn('[tessera]', (state / 'theme/colors.toml').read_text())
+                self.assertIn('background=' + raw['background'][1:].lower(),
+                              (state / 'theme/foot.ini').read_text())
+                self.assertIn(raw['accent'].lower(), (state / 'osk/gtk-3.0/gtk.css').read_text())
+        self.assertEqual(self.theme('set', 'tessera').returncode, 0)
+        self.assertIn('[tessera]', (state / 'theme/colors.toml').read_text())
+
+    def test_theme_surface_defaults_overrides_and_invalid_values(self):
+        state = self.home / 'state/tessarchy/theme'
+        borders = 'window_border = 0, window_border_active = "rgb(a9e8d5)", window_border_inactive = "rgb(34465e)"'
+        defaults = f'return {{ window_rounding = 18, blur_enabled = true, blur_size = 4, blur_passes = 2, {borders} }}\n'
+        self.assertEqual(self.theme('set', 'tessera').returncode, 0)
+        self.assertEqual((state / 'surface.lua').read_text(), defaults)
+        custom = self.home / 'config/tessarchy/themes/shape'
+        custom.mkdir(parents=True)
+        (custom / 'colors.toml').write_text((ROOT / 'themes/tessera/colors.toml').read_text())
+        (custom / 'shell.toml').write_text('[surface]\nradius_card = 4\nradius_button = 4\n'
+                                           'border_width = 3\nwindow_rounding = 4\nblur_enabled = false\n'
+                                           'blur_size = 8\nblur_passes = 3\n')
+        result = self.theme('set', 'shape')
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual((state / 'surface.lua').read_text(),
+                         f'return {{ window_rounding = 4, blur_enabled = false, blur_size = 8, blur_passes = 3, {borders} }}\n')
+        self.assertIn('radius_card = 4', (state / 'colors.toml').read_text())
+        (custom / 'shell.toml').write_text('[surface]\nwindow_rounding = 4; os.execute("false")\n'
+                                           'blur_enabled = "false"\nblur_size = -1\nblur_passes = 999\n'
+                                           'radius_card = "garbage"\nborder_width = 9\n')
+        result = self.theme('set', 'shape')
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual((state / 'surface.lua').read_text(), defaults)
+        self.assertEqual(self.theme('set', 'tessera-light').returncode, 0)
+        self.assertIn('blur_passes = 2, window_border = 0, window_border_active = "rgb(1f8a72)"',
+                      (state / 'surface.lua').read_text())
+
+    def hyprland_config(self):
+        # Evaluate session/hyprland.lua with a stub hl and print what it configures.
+        script = r'''local seen = {}
+local noop = function() end
+hl = setmetatable({ config = function(t) seen = t end, dsp = setmetatable({}, { __index = function()
+    return setmetatable({}, { __index = function() return noop end, __call = noop }) end }) },
+    { __index = function() return noop end })
+dofile(arg[1])
+local g, col = seen.general, seen.general.col or {}
+local group = seen.group and seen.group.col or {}
+print(g.border_size, col.active_border, col.inactive_border, group.border_active, group.border_inactive)
+'''
+        env = dict(self.env, XDG_STATE_HOME=str(self.home / 'state'))
+        result = subprocess.run(['lua', '-', str(ROOT / 'session/hyprland.lua')],
+                                input=script, text=True, capture_output=True, env=env)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        return result.stdout.split()
+
+    def test_theme_window_borders_default_off_clamp_and_fall_back(self):
+        import shutil
+        if not shutil.which('lua'):
+            self.skipTest('Lua interpreter unavailable')
+        state = self.home / 'state/tessarchy/theme'
+        # No staged theme: the session config keeps border_size 0 and Hyprland's colours.
+        self.assertEqual(self.hyprland_config(), ['0', 'nil', 'nil', 'nil', 'nil'])
+        self.assertEqual(self.theme('set', 'tessera').returncode, 0)
+        self.assertEqual(self.hyprland_config(), ['0', 'rgb(a9e8d5)', 'rgb(34465e)', 'rgb(a9e8d5)', 'rgb(34465e)'])
+        custom = self.home / 'config/tessarchy/themes/framed'
+        custom.mkdir(parents=True)
+        (custom / 'colors.toml').write_text((ROOT / 'themes/tessera/colors.toml').read_text())
+        shell = lambda body: (custom / 'shell.toml').write_text('[surface]\n' + body)
+        shell('window_border = 2\nwindow_border_active = "#FF8800"  # orange\n'
+              'window_border_inactive = "#202020"\n')
+        self.assertEqual(self.theme('set', 'framed').returncode, 0)
+        self.assertIn('window_border = 2, window_border_active = "rgb(ff8800)", window_border_inactive = "rgb(202020)"',
+                      (state / 'surface.lua').read_text())
+        self.assertEqual(self.hyprland_config(), ['2', 'rgb(ff8800)', 'rgb(202020)', 'rgb(ff8800)', 'rgb(202020)'])
+        shell('window_border = 9\n')
+        self.theme('set', 'framed')
+        self.assertEqual(self.hyprland_config()[0], '4')
+        # Invalid widths and colours fall back to no border and palette colours.
+        for bad in ('window_border = -1\nwindow_border_active = "red"\nwindow_border_inactive = #123456\n',
+                    'window_border = 2.5\nwindow_border_active = "#12345"\n',
+                    'window_border = "2"\nwindow_border_active = "#123456"; os.execute("false")\n',
+                    'window_border = 2; os.exit(1)\nwindow_border_inactive = "#zzzzzz"\n'):
+            shell(bad)
+            self.assertEqual(self.theme('set', 'framed').returncode, 0, bad)
+            self.assertEqual(self.hyprland_config(), ['0', 'rgb(a9e8d5)', 'rgb(34465e)', 'rgb(a9e8d5)', 'rgb(34465e)'], bad)
+        # A hand-edited out-of-range staged file is still refused by the session.
+        (state / 'surface.lua').write_text('return { window_border = 12, window_border_active = "red; x" }\n')
+        self.assertEqual(self.hyprland_config(), ['0', 'nil', 'nil', 'nil', 'nil'])
+        self.assertEqual(self.theme('set', 'tessera').returncode, 0)
+        self.assertEqual(self.hyprland_config()[0], '0')
+
+    def test_theme_never_sources_theme_hyprland_or_chromium_files(self):
+        import shutil
+        if not shutil.which('lua'):
+            self.skipTest('Lua interpreter unavailable')
+        marker = self.home / 'theme-code-ran'
+        custom = self.home / 'config/tessarchy/themes/coded'
+        custom.mkdir(parents=True)
+        (custom / 'colors.toml').write_text((ROOT / 'themes/tessera/colors.toml').read_text())
+        (custom / 'hyprland.lua').write_text(f'os.execute("touch {marker}")\nerror("theme code ran")\n')
+        (custom / 'chromium.theme').write_text('255,0,0\n')
+        result = self.theme('set', 'coded')
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(self.hyprland_config()[0], '0')
+        self.assertFalse(marker.exists())
+        staged = self.home / 'state/tessarchy/theme'
+        self.assertEqual(sorted(p.name for p in staged.iterdir()),
+                         ['colors.toml', 'foot.ini', 'mode', 'name', 'surface.lua', 'wallpaper'])
+        for path in staged.iterdir():
+            self.assertNotIn('theme code ran', path.read_text())
+
+    def test_theme_icon_theme_is_validated_and_applied_only_when_installed(self):
+        stubs = self.home / 'bin'
+        stubs.mkdir()
+        log = self.home / 'gsettings.log'
+        (stubs / 'gsettings').write_text(f'#!/bin/bash\necho \"$*\" >> {log}\n')
+        (stubs / 'gsettings').chmod(0o755)
+        (self.home / 'data/icons/Good-Icons').mkdir(parents=True)
+        (self.home / 'data/icons/Good-Icons/index.theme').write_text('[Icon Theme]\nName=Good\n')
+        (self.home / 'data/icons/No-Index').mkdir(parents=True)
+        env = dict(self.env, PATH=f'{stubs}:{os.environ["PATH"]}', XDG_DATA_DIRS=str(self.home / 'none'),
+                   DBUS_SESSION_BUS_ADDRESS='unix:path=/nonexistent')
+        custom = self.home / 'config/tessarchy/themes/iconic'
+        custom.mkdir(parents=True)
+        (custom / 'colors.toml').write_text((ROOT / 'themes/tessera/colors.toml').read_text())
+        staged = self.home / 'state/tessarchy/theme/icons'
+        calls = lambda: log.read_text().splitlines() if log.exists() else []
+        # Omarchy's icons.theme has no trailing newline.
+        (custom / 'icons.theme').write_text('Good-Icons')
+        self.assertEqual(self.theme('set', 'iconic', env=env).returncode, 0)
+        self.assertEqual(calls(), ['set org.gnome.desktop.interface icon-theme Good-Icons'])
+        self.assertEqual(staged.read_text(), 'Good-Icons\n')
+        for bad in ('Missing-Icons', 'No-Index', '../data/icons/Good-Icons', 'Good Icons', '$(touch x)',
+                    '-Good-Icons', '', 'A' * 65, 'Good-Icons/../Good-Icons'):
+            (custom / 'icons.theme').write_text(bad + '\n')
+            self.assertEqual(self.theme('set', 'iconic', env=env).returncode, 0, bad)
+            self.assertEqual(len(calls()), 1, bad)
+            self.assertFalse(staged.exists(), bad)
+        # Surrounding whitespace is tolerated; no session bus means no GSettings write.
+        (custom / 'icons.theme').write_text('  Good-Icons \n')
+        self.assertEqual(self.theme('set', 'iconic', env=dict(env, DBUS_SESSION_BUS_ADDRESS='')).returncode, 0)
+        self.assertEqual(len(calls()), 1)
+        self.assertEqual(staged.read_text(), 'Good-Icons\n')
+        # A theme without icons.theme leaves the current icon theme alone.
+        self.assertEqual(self.theme('set', 'tessera', env=env).returncode, 0)
+        self.assertEqual(len(calls()), 1)
+        self.assertFalse(staged.exists())
+
+    def test_theme_list_reports_preview_images(self):
+        custom = self.home / 'config/tessarchy/themes/pictured'
+        custom.mkdir(parents=True)
+        (custom / 'colors.toml').write_text('background = "#101010"\nforeground = "#f0f0f0"\naccent = "#ff8800"\n')
+        (custom / 'preview.png').write_bytes(b'png')
+        rows = {line.split('\t')[0]: line.split('\t') for line in self.theme('list').stdout.splitlines()}
+        self.assertEqual(rows['pictured'], ['pictured', 'dark', '#101010', '#f0f0f0', '#ff8800', str(custom / 'preview.png')])
+        self.assertEqual(rows['tessera'][5], '')
+        settings = (ROOT / 'shell/components/SettingsPage.qml').read_text()
+        self.assertIn('fillMode: Image.PreserveAspectCrop', settings)
+        # Every picker card has one size; palette themes draw a mock thumbnail.
+        self.assertIn('Layout.preferredHeight: Math.min(Math.round(width * 9 / 16), 120) + labelHeight', settings)
+        self.assertNotIn('hasPreview ? Math.min', settings)
+        self.assertIn('visible: !themeButton.hasPreview', settings)
+        shell = (ROOT / 'shell/shell.qml').read_text()
+        self.assertIn('preview: field[5] || ""', shell)
+        # Page glass covers the column margins; scroll edges are marked.
+        self.assertIn('expandedContent.width + pageColumn.anchors.leftMargin + pageColumn.anchors.rightMargin', shell)
+        self.assertIn('opacity: pageScroll.ScrollBar.vertical.position > 0 ? 1 : 0', shell)
+
+    def test_run_launches_apps_in_theme_mode(self):
+        stubs = self.home / 'bin'
+        stubs.mkdir()
+        for name in ('foot', 'chromium'):
+            (stubs / name).write_text('#!/bin/bash\necho "$GTK_THEME|$*"\n')
+            (stubs / name).chmod(0o755)
+        env = dict(self.env, PATH=f'{stubs}:{os.environ["PATH"]}', XDG_STATE_HOME=str(self.home / 'state'))
+        run = lambda *a: subprocess.run([str(ROOT / 'session/tessarchy-run'), *a], env=env,
+                                        capture_output=True, text=True).stdout.strip()
+        self.assertEqual(run('chromium', 'about:blank'), 'Adwaita:dark|about:blank')
+        self.theme('set', 'tessera-light')
+        config = self.home / 'state/tessarchy/theme/foot.ini'
+        self.assertEqual(run('foot', '-e', 'ls'), f'Adwaita|--config={config} -e ls')
+        self.assertEqual(run('chromium'), 'Adwaita|')
+
+    def test_chatgpt_status_uses_chromium_app_mode_when_native_client_is_absent(self):
+        stubs = self.home / 'bin'
+        stubs.mkdir()
+        chromium = stubs / 'chromium'
+        chromium.write_text('#!/bin/sh\nprintf "%s\\n" "$*" > "$CHATGPT_ARGS"\n')
+        chromium.chmod(0o755)
+        codex = stubs / 'codex'
+        codex.write_text('#!/bin/sh\nexit 1\n')
+        codex.chmod(0o755)
+        env = dict(self.env, PATH=str(stubs),
+                   CHATGPT_ARGS=str(self.home / 'chatgpt-args'))
+        command = [sys.executable, str(ROOT / 'session/tessera-chatgpt-status')]
+        status = subprocess.run(command + ['status'],
+                                env=env, capture_output=True, text=True, check=True)
+        payload = __import__('json').loads(status.stdout)
+        self.assertEqual(payload['state'], 'signed-out')
+        self.assertTrue(payload['installed'])
+        self.assertEqual(payload['command'], str(chromium))
+        subprocess.run(command + ['open'], env=env, check=True)
+        for _ in range(20):
+            if (self.home / 'chatgpt-args').exists():
+                break
+            time.sleep(0.01)
+        self.assertEqual((self.home / 'chatgpt-args').read_text().strip(), '--app=https://chatgpt.com')
+
+    def test_portal_asks_shell_and_falls_back_to_gtk_in_desktop(self):
+        import shutil
+        need = ('cc', 'make', 'pkg-config', 'gdbus', 'dbus-run-session')
+        if not all(shutil.which(tool) for tool in need):
+            self.skipTest('portal build/D-Bus tools unavailable')
+        out = self.home / 'portal-build'
+        build = subprocess.run(['make', '-s', '-C', str(ROOT / 'portal'), f'O={out}'],
+                               capture_output=True, text=True)
+        self.assertEqual(build.returncode, 0, build.stderr)
+        stubs = self.home / 'bin'
+        stubs.mkdir()
+        log = self.home / 'asked'
+        # Stand-in shell: logs the request, answers per $SHELL_ANSWER.
+        (stubs / 'tessera-shell').write_text(f'''#!/bin/bash
+printf '%s\\n' "$*" >> {log}
+[[ $3 == picker && $4 == pick ]] || exit 0
+case $SHELL_ANSWER in
+  pick) printf '%s\\n' "$8/$9" "" > "$5"; echo ok ;;
+  cancel) echo > "$5"; echo ok ;;
+  *) echo desktop ;;
+esac
+''')
+        (stubs / 'tessera-shell').chmod(0o755)
+        env = dict(self.env, PATH=f'{stubs}:{os.environ["PATH"]}', XDG_RUNTIME_DIR=str(self.home))
+
+        def call(answer, method, options):
+            # One private bus per case: the stub reads SHELL_ANSWER from the portal's environment.
+            script = (f'{out}/tessarchy-portal & sleep 0.5; gdbus call --session '
+                      '--dest org.freedesktop.impl.portal.desktop.tessarchy '
+                      '--object-path /org/freedesktop/portal/desktop '
+                      f'--method org.freedesktop.impl.portal.FileChooser.{method} '
+                      '/org/freedesktop/portal/desktop/request/1_1/t1 app "" Title "$0"')
+            result = subprocess.run(['dbus-run-session', '--', 'bash', '-c', script, options],
+                                    env=dict(env, SHELL_ANSWER=answer), capture_output=True, text=True, timeout=30)
+            return result.stdout.strip()
+
+        # NUL-terminated, as xdg-desktop-portal sends it (gdbus's b'' text form is not).
+        folder = '<@ay [' + ', '.join(f'0x{c:02x}' for c in b'/srv/x\0') + ']>'
+        self.assertEqual(call('pick', 'SaveFile', "{'current_name': <'a b.txt'>, 'current_folder': " + folder + "}"),
+                         "(uint32 0, {'uris': <['file:///srv/x/a%20b.txt']>})")
+        self.assertEqual(call('cancel', 'OpenFile', "{'filters': <[('Images', [(uint32 0, '*.png'), (uint32 0, '*.jpg')])]>}"),
+                         '(uint32 1, @a{sv} {})')
+        # Desktop mode: forwarded to xdg-desktop-portal-gtk, absent on this bus.
+        self.assertEqual(call('desktop', 'OpenFile', "{'directory': <true>}"), '(uint32 2, @a{sv} {})')
+        asked = log.read_text()
+        self.assertIn('ipc call picker pick ', asked)
+        self.assertIn(' save 0 /srv/x a b.txt Title \n', asked)
+        self.assertIn(' open 0 ' + str(self.home), asked)
+        self.assertIn(' *.png;*.jpg\n', asked)
+        self.assertIn(' folder 0 ', asked)
+        self.assertEqual(list((self.home / 'tessarchy-portal').iterdir()), [])  # FIFOs removed
 
     def test_session_start_launches_shell_and_optional_keyboard(self):
         import shutil
@@ -282,7 +719,7 @@ class Workflows(unittest.TestCase):
             self.skipTest('Lua interpreter unavailable')
         script = r'''local callbacks, commands = {}, {}
 hl = {
-    layer_rule = function() end,
+    layer_rule = function() end, workspace_rule = function() end,
     monitor = function() end, config = function() end, bind = function() end,
     on = function(name, callback) callbacks[name] = callback end,
     exec_cmd = function(command) table.insert(commands, command) end,
@@ -459,6 +896,79 @@ assert(#commands == 4, "unexpected extra autostart commands")
         self.assertEqual(result.returncode, 2)
         self.assertIn('VM_SSH_PORT', result.stderr)
 
+    def test_aarch64_vm_plan_profile_and_refusals(self):
+        import shlex
+        repo = self.home / 'source'
+        self.copy_repo(repo, ('scripts',))
+        command = [str(repo / 'scripts/vm-aarch64.sh'), 'plan']
+        result = subprocess.run(command, env=self.env, capture_output=True, text=True)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn('build-aarch64-disk.sh', result.stderr)
+        vm = repo / 'vm/aarch64'
+        vm.mkdir(parents=True)
+        for name in ('rootfs.img', 'Image', 'initramfs-linux.img'):
+            (vm / name).write_text(name)
+        env = dict(self.env, VM_ACCEL='tcg', VM_QMP='/tmp/test-qmp.sock', VM_DISPLAY='vnc=127.0.0.1:0')
+        result = subprocess.run(command, env=env, capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        args = shlex.split(result.stdout.removeprefix('VM command:'))
+        self.assertEqual(args[0], 'qemu-system-aarch64')
+        for option in ['virt', 'max', str(vm / 'Image'), 'virtio-gpu-pci', 'vnc=127.0.0.1:0',
+                       f'file={vm / "rootfs.img"},format=raw,if=virtio',
+                       'virtio-multitouch-pci', 'unix:/tmp/test-qmp.sock,server=on,wait=off']:
+            self.assertIn(option, args)
+        self.assertEqual((vm / 'Image').read_text(), 'Image')
+        for name, value in [('VM_ACCEL', 'bad'), ('VM_RAM', '4G'), ('VM_CPUS', '0'),
+                            ('VM_DISPLAY', 'gtk,gl=on'), ('VM_SSH_PORT', '80'),
+                            ('VM_QMP', '/tmp/a,server=off')]:
+            result = subprocess.run(command, env=dict(env, **{name: value}),
+                                    capture_output=True, text=True)
+            self.assertEqual(result.returncode, 2)
+            self.assertIn(name, result.stderr)
+        result = subprocess.run([str(repo / 'scripts/vm-aarch64.sh'), 'wat'], env=self.env,
+                                capture_output=True, text=True)
+        self.assertEqual(result.returncode, 2)
+
+    def test_aarch64_disk_build_refuses_missing_input_and_existing_output(self):
+        repo = self.home / 'source'
+        self.copy_repo(repo, ('scripts',))
+        command = [str(repo / 'scripts/build-aarch64-disk.sh')]
+        result = subprocess.run(command, env=self.env, capture_output=True, text=True)
+        self.assertEqual(result.returncode, 1)
+        if 'fetch-alarm' not in result.stderr:
+            self.skipTest('fakeroot, bsdtar or mke2fs unavailable')
+        vm = repo / 'vm/aarch64'
+        vm.mkdir(parents=True)
+        (vm / 'ArchLinuxARM-aarch64-latest.tar.gz').write_text('archive')
+        result = subprocess.run(command, env=dict(self.env, VM_DISK_SIZE='16'),
+                                capture_output=True, text=True)
+        self.assertEqual(result.returncode, 2)
+        self.assertIn('VM_DISK_SIZE', result.stderr)
+        (vm / 'rootfs.img').write_text('mine')
+        result = subprocess.run(command, env=self.env, capture_output=True, text=True)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn('Keeping existing', result.stderr)
+        self.assertEqual((vm / 'rootfs.img').read_text(), 'mine')
+        self.assertFalse(list(vm.glob('.build.*')))
+
+    def test_alarm_fetch_refuses_existing_archive_and_plain_keyserver(self):
+        repo = self.home / 'source'
+        self.copy_repo(repo, ('scripts',))
+        command = [str(repo / 'scripts/fetch-alarm.sh')]
+        vm = repo / 'vm/aarch64'
+        vm.mkdir(parents=True)
+        result = subprocess.run(command, env=dict(self.env, ALARM_KEYSERVER='http://keys.example'),
+                                capture_output=True, text=True)
+        if 'Missing' in result.stderr:
+            self.skipTest('curl, gpg, gpgv or md5sum unavailable')
+        self.assertEqual(result.returncode, 1)
+        self.assertIn('ALARM_KEYSERVER', result.stderr)
+        (vm / 'ArchLinuxARM-aarch64-latest.tar.gz').write_text('existing')
+        result = subprocess.run(command, env=self.env, capture_output=True, text=True)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn('already exists', result.stderr)
+        self.assertEqual((vm / 'ArchLinuxARM-aarch64-latest.tar.gz').read_text(), 'existing')
+
     def test_vm_hardware_profile_and_invalid_options(self):
         import shlex
         repo = self.home / 'source'
@@ -550,7 +1060,7 @@ assert(#commands == 4, "unexpected extra autostart commands")
     def test_export_vm_source_keeps_existing_snapshot_idempotent(self):
         repo = self.home / 'source'
         self.copy_repo(repo, ('shell', 'session', 'scripts', 'packaging', 'iso',
-                              'docs', 'tests', 'assets'))
+                              'docs', 'tests', 'assets', 'website', 'themes', 'portal', 'plugins'))
         share = repo / 'build/vm-share/tessarchy'
         def run():
             return subprocess.run([str(repo / 'scripts/export-vm-source.sh')], env=self.env,
@@ -558,6 +1068,7 @@ assert(#commands == 4, "unexpected extra autostart commands")
         self.assertEqual(run().returncode, 0)
         self.assertEqual((share / 'scripts/install-dev.sh').read_bytes(),
                          (ROOT / 'scripts/install-dev.sh').read_bytes())
+        self.assertTrue((share / 'website/index.html').is_file())
         marker = share / 'README.md'
         first = marker.read_bytes()
         self.assertEqual(run().returncode, 0)
@@ -622,11 +1133,12 @@ assert(#commands == 4, "unexpected extra autostart commands")
         fakebin.mkdir()
         fakeqemu = fakebin / 'qemu-system-x86_64'
         fakeqemu.write_text('#!/bin/bash\nprintf "%s\\n" "$@"\n'
-                            'test -f "$VM_SOURCE_SHARE/tessarchy/scripts/setup-guest.sh"\n')
+                            'test -f "$VM_SOURCE_SHARE/tessarchy/scripts/setup-guest.sh"\n'
+                            'test -f "$VM_SOURCE_SHARE/tessarchy/website/index.html"\n')
         fakeqemu.chmod(0o755)
         import shutil
         source = self.home / 'source'
-        for directory in ('scripts', 'shell', 'session', 'packaging', 'iso', 'docs', 'tests', 'assets'):
+        for directory in ('scripts', 'shell', 'session', 'packaging', 'iso', 'docs', 'tests', 'assets', 'website', 'themes', 'portal', 'plugins'):
             shutil.copytree(ROOT / directory, source / directory)
         for name in ('README.md', 'AGENTS.md', 'LICENSE'):
             shutil.copy2(ROOT / name, source / name)
@@ -643,6 +1155,7 @@ assert(#commands == 4, "unexpected extra autostart commands")
         self.assertFalse(list((source / 'build').glob('source-share.*')))
 
     def test_new_windows_follow_saved_mode_without_touching_dialogs(self):
+        self.skipTest('legacy mobile/window policy removed from the vanilla Hyprland baseline')
         import shutil
         if not shutil.which('lua'):
             self.skipTest('Lua interpreter unavailable')
@@ -652,7 +1165,7 @@ assert(#commands == 4, "unexpected extra autostart commands")
 hl = {
     monitor = function() end, config = function() end,
     bind = function(keys, dispatcher, flags) binds[keys] = { dispatcher = dispatcher, flags = flags } end,
-    layer_rule = function() end,
+    layer_rule = function() end, workspace_rule = function() end,
     on = function(name, callback) callbacks[name] = callback end,
     dispatch = function(action) table.insert(actions, action) end,
     dsp = { exec_cmd = function(command) return { exec = command } end, exit = function() end,
@@ -686,12 +1199,12 @@ assert(binds["XF86AudioMute"].flags.locked == true and binds["XF86AudioMute"].fl
     "volume keys must work on the lock screen and repeat")
 assert(binds["SUPER + Q"].dispatcher.exec == "tessera-shell ipc call actions closeWindow")
 assert(binds["SUPER + SHIFT + E"].dispatcher.exec == "tessera-shell ipc call actions endSession")
-local function check(mode, width, height, scale, transform, floating, fullscreen, expected)
+local function check(mode, width, height, scale, transform, floating, fullscreen, expected, workspace)
     local f = assert(io.open(os.getenv("XDG_CONFIG_HOME") .. "/tessarchy/shell.ini", "w"))
     f:write("[Other]\nlayoutMode=desktop\n[Shell]\nlayoutMode=" .. mode .. "\n")
     f:close()
     actions = {}
-    local window = { floating = floating, fullscreen = fullscreen,
+    local window = { floating = floating, fullscreen = fullscreen, workspace = workspace,
         monitor = {width=width, height=height, scale=scale, transform=transform} }
     callbacks["window.open"](window)
     assert(#actions == expected, mode .. ": unexpected app startup policy")
@@ -709,12 +1222,16 @@ check("phone", 1280, 800, 1, 0, false, 0, 4)
 check("invalid", 400, 800, 1, 0, false, 0, 4)
 check("phone", 400, 800, 1, 0, true, 0, 0)
 check("phone", 400, 800, 1, 0, false, 2, 0)
+check("phone", 400, 800, 1, 0, false, 0, 0, {name="tessarchy-tape"})
+check("tablet", 800, 1280, 1, 0, false, 0, 0, {name="tessarchy-tape"})
+check("desktop", 1280, 800, 1, 0, false, 0, 0, {name="tessarchy-tape"})
 '''
         result = subprocess.run(['lua', '-', str(ROOT / 'session/hyprland.lua')],
                                 input=script, text=True, capture_output=True, env=self.env)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
     def test_mobile_policy_keeps_active_app_maximized_and_fits_dialogs(self):
+        self.skipTest('legacy mobile/window policy removed from the vanilla Hyprland baseline')
         import shutil
         if not shutil.which('lua'):
             self.skipTest('Lua interpreter unavailable')
@@ -722,7 +1239,7 @@ check("phone", 400, 800, 1, 0, false, 2, 0)
         script = r'''local callbacks, actions = {}, {}
 local function action(kind) return function(a) a = a or {}; a.kind = kind; return a end end
 hl = {
-    layer_rule = function() end,
+    layer_rule = function() end, workspace_rule = function() end,
     monitor = function() end, config = function() end, bind = function() end,
     on = function(name, callback) callbacks[name] = callback end,
     dispatch = function(a) table.insert(actions, a) end,
@@ -801,6 +1318,7 @@ assert(#fire("window.open", dialog) == 0, "desktop dialogs are left alone")
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
     def test_windowed_desktop_floats_new_windows_and_honors_settings_toggle(self):
+        self.skipTest('legacy desktop window policy removed from the vanilla Hyprland baseline')
         import shutil
         if not shutil.which('lua'):
             self.skipTest('Lua interpreter unavailable')
@@ -808,7 +1326,7 @@ assert(#fire("window.open", dialog) == 0, "desktop dialogs are left alone")
         script = r'''local callbacks, actions = {}, {}
 local function action(kind) return function(a) a = a or {}; a.kind = kind; return a end end
 hl = {
-    layer_rule = function() end,
+    layer_rule = function() end, workspace_rule = function() end,
     monitor = function() end, config = function() end, bind = function() end,
     on = function(name, callback) callbacks[name] = callback end,
     dispatch = function(a) table.insert(actions, a) end,
@@ -856,6 +1374,41 @@ local phone = { floating = false, fullscreen = 0, monitor = monitor(720, 1440) }
 a = fire("window.open", phone)
 assert(#a == 4 and a[1].kind == "tag" and a[2].kind == "float")
 assert(a[3].kind == "resize" and a[3].x == 720 and a[3].y == 1440)
+'''
+        result = subprocess.run(['lua', '-', str(ROOT / 'session/hyprland.lua')],
+                                input=script, text=True, capture_output=True, env=self.env)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_hyprland_baseline_keeps_tessa_bridges_without_window_policy(self):
+        import shutil
+        if not shutil.which('lua'):
+            self.skipTest('Lua interpreter unavailable')
+        script = r'''local callbacks, binds, seen = {}, {}, {}
+local noop = function() return {} end
+hl = {
+    monitor = function() end,
+    config = function(value) seen.config = value end,
+    layer_rule = function() end,
+    workspace_rule = function(value) seen.workspace = value end,
+    bind = function(keys, dispatcher, flags) binds[keys] = {dispatcher = dispatcher, flags = flags} end,
+    on = function(name, callback) callbacks[name] = callback end,
+    exec_cmd = noop,
+    dsp = {exec_cmd = function(command) return {exec = command} end,
+           focus = noop, layout = noop, no_op = noop,
+           window = {fullscreen = noop, close = noop}},
+}
+dofile(arg[1])
+assert(seen.config.scrolling.column_width == 1.0, "native scrolling config missing")
+assert(seen.workspace.layout == "scrolling", "tape workspace must use scrolling")
+assert(callbacks["window.open"] == nil and callbacks["window.active"] == nil,
+       "vanilla baseline must not mutate application windows")
+assert(callbacks["monitor.layout_changed"] == nil and callbacks["layer.opened"] == nil,
+       "vanilla baseline must not refit windows around shell layers")
+for _, key in ipairs({"SUPER + T", "SUPER + SPACE", "SUPER + bracketleft", "SUPER + bracketright"}) do
+    assert(binds[key], "missing Tessa bridge bind: " .. key)
+end
+assert(binds["SUPER + 1"] == nil and binds["SUPER + left"] == nil,
+       "vanilla baseline must not replace normal workspace/focus bindings")
 '''
         result = subprocess.run(['lua', '-', str(ROOT / 'session/hyprland.lua')],
                                 input=script, text=True, capture_output=True, env=self.env)
@@ -1027,7 +1580,7 @@ esac
         repo = self.home / 'source'
         (repo / 'scripts').mkdir(parents=True)
         import shutil
-        for directory in ('shell', 'session', 'iso', 'docs'):
+        for directory in ('shell', 'session', 'iso', 'docs', 'themes', 'portal'):
             shutil.copytree(ROOT / directory, repo / directory)
         shutil.copy2(ROOT / 'scripts/stage-iso.sh', repo / 'scripts')
         shutil.copy2(ROOT / 'scripts/export-boot-assets.py', repo / 'scripts')
@@ -1133,6 +1686,9 @@ esac
         self.assertIn('fish', (profile / 'packages.x86_64').read_text().splitlines())
         self.assertTrue((profile / 'airootfs/home/tess/.config/fish/config.fish').is_file())
         self.assertIn('/home/tess/.config/fish/config.fish', (profile / 'profiledef.sh').read_text())
+        self.assertTrue((profile / 'airootfs/usr/bin/tessarchy-theme').stat().st_mode & 0o111)
+        self.assertTrue((profile / 'airootfs/usr/share/tessarchy/themes/tessera/colors.toml').is_file())
+        self.assertIn('u tess 1000', (profile / 'airootfs/etc/sysusers.d/tessarchy.conf').read_text())
         result = subprocess.run(command, env=env, capture_output=True, text=True)
         self.assertNotEqual(result.returncode, 0)
 
@@ -1159,7 +1715,7 @@ esac
         repo = self.home / 'source'
         (repo / 'scripts').mkdir(parents=True)
         import shutil
-        for directory in ('shell', 'session', 'iso', 'docs'):
+        for directory in ('shell', 'session', 'iso', 'docs', 'themes', 'portal'):
             shutil.copytree(ROOT / directory, repo / directory)
         shutil.copy2(ROOT / 'scripts/stage-iso.sh', repo / 'scripts')
         shutil.copy2(ROOT / 'scripts/export-boot-assets.py', repo / 'scripts')

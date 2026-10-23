@@ -6,7 +6,7 @@ import QtQuick.Layouts
 ColumnLayout {
     id: app
     required property var backend
-    property color accentColor: "#a9e8d5"
+    property color accentColor: Theme.accent
     property string recipient: ""
     readonly property bool wide: width >= 600
     readonly property var threads: {
@@ -19,7 +19,7 @@ ColumnLayout {
         target: app.backend
         function onCompleted(action, success) { if (action === "send-sms" && success) compose.text = ""; }
     }
-    Text { textFormat: Text.PlainText; text: app.backend.state.cellular.label; color: "#9eb6c3"; Layout.fillWidth: true; wrapMode: Text.WordWrap }
+    Text { textFormat: Text.PlainText; text: app.backend.state.cellular.label; color: Theme.hintText; Layout.fillWidth: true; wrapMode: Text.WordWrap }
     RowLayout {
         Layout.fillWidth: true
         GlassField { id: recipient; text: app.recipient; placeholderText: "Phone number"; inputMethodHints: Qt.ImhDialableCharactersOnly; onTextEdited: app.recipient = text; maximumLength: 32 }
@@ -52,7 +52,7 @@ ColumnLayout {
                     onClicked: app.recipient = modelData
                 }
             }
-            Text { textFormat: Text.PlainText; visible: app.threads.length === 0; text: "Start a conversation. Your SMS threads stay here."; color: "#9eb6c3"; Layout.fillWidth: true; wrapMode: Text.WordWrap }
+            Text { textFormat: Text.PlainText; visible: app.threads.length === 0; text: "Start a conversation. Your SMS threads stay here."; color: Theme.hintText; Layout.fillWidth: true; wrapMode: Text.WordWrap }
         }
         ColumnLayout {
             Layout.fillWidth: true
@@ -66,27 +66,28 @@ ColumnLayout {
                     required property var modelData
                     Layout.fillWidth: true
                     implicitHeight: bubble.implicitHeight + 24
-                    radius: 18
-                    color: messageCard.modelData.incoming ? "#50314a60" : Qt.alpha(app.accentColor, 0.15)
+                    radius: Theme.radius("card", 18, height)
+                    color: messageCard.modelData.incoming ? Theme.messageIncoming : Qt.alpha(app.accentColor, 0.15)
+                    border.width: Theme.borderWidth(1)
                     border.color: Qt.alpha(app.accentColor, 0.12)
                     Column {
                         id: bubble
                         x: 12; y: 12; width: parent.width - 24; spacing: 8
-                        Text { text: messageCard.modelData.text; textFormat: Text.PlainText; color: "#eef6f8"; font.pixelSize: 16; width: parent.width; wrapMode: Text.WrapAnywhere }
-                        Text { textFormat: Text.PlainText; text: messageCard.modelData.status + (messageCard.modelData.timestamp ? " · " + messageCard.modelData.timestamp : ""); color: "#91abb8"; font.pixelSize: 11; width: parent.width; wrapMode: Text.WordWrap }
+                        Text { text: messageCard.modelData.text; textFormat: Text.PlainText; color: Theme.itemText; font.pixelSize: 16; width: parent.width; wrapMode: Text.WrapAnywhere }
+                        Text { textFormat: Text.PlainText; text: messageCard.modelData.status + (messageCard.modelData.timestamp ? " · " + messageCard.modelData.timestamp : ""); color: Theme.captionText; font.pixelSize: 11; width: parent.width; wrapMode: Text.WordWrap }
                     }
                 }
             }
             TextArea {
                 id: compose
                 placeholderText: "Message"
-                placeholderTextColor: "#91abb8"; color: "#eef6f8"
+                placeholderTextColor: Theme.captionText; color: Theme.itemText
                 font.pixelSize: 16
                 textFormat: TextEdit.PlainText
                 wrapMode: TextEdit.Wrap
                 Layout.fillWidth: true; Layout.minimumHeight: 104
                 padding: 14; selectByMouse: true
-                background: Rectangle { radius: 18; color: "#501c2c43"; border.color: compose.activeFocus ? app.accentColor : "#50677f8d" }
+                background: Rectangle { radius: Theme.radius("field", 18, height); color: Theme.glass; border.width: Theme.borderWidth(1); border.color: compose.activeFocus ? app.accentColor : Theme.inputBorder }
                 Accessible.name: "Message text"
             }
             NavButton {
@@ -95,8 +96,8 @@ ColumnLayout {
                 enabled: !app.backend.busy && !!app.backend.state.cellular.sms && !!app.backend.state.cellular.registered && compose.text.trim().length > 0 && compose.text.length <= 1600
                 onClicked: app.backend.request("send-sms", {number: app.recipient, text: compose.text})
             }
-            Text { textFormat: Text.PlainText; text: compose.text.length + "/1600 · SMS"; color: "#91abb8"; font.pixelSize: 11 }
+            Text { textFormat: Text.PlainText; text: compose.text.length + "/1600 · SMS"; color: Theme.captionText; font.pixelSize: 11 }
         }
     }
-    Text { textFormat: Text.PlainText; text: app.backend.state.error || app.backend.state.notice || ""; visible: text.length > 0; color: app.backend.state.error ? "#efb6bd" : app.accentColor; Layout.fillWidth: true; wrapMode: Text.WordWrap }
+    Text { textFormat: Text.PlainText; text: app.backend.state.error || app.backend.state.notice || ""; visible: text.length > 0; color: app.backend.state.error ? Theme.errorText : app.accentColor; Layout.fillWidth: true; wrapMode: Text.WordWrap }
 }

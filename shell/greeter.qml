@@ -6,6 +6,11 @@ import Quickshell.Services.Greetd
 import "components"
 
 ShellRoot {
+    // The greeter account cannot read a user's staged theme; use bundled Tessa.
+    ThemeLoader {
+        palettePath: Quickshell.shellPath("../themes/tessera/colors.toml")
+        layerPath: Quickshell.shellPath("../themes/tessera/shell.toml")
+    }
     PinLoginController {
         id: login
         backend: Greetd
@@ -19,7 +24,7 @@ ShellRoot {
         visibility: Window.FullScreen
         flags: Qt.Window | Qt.FramelessWindowHint
         title: "Tessarchy sign-in"
-        color: "#091325"
+        color: Theme.darkerBackground
         onClosing: close => { close.accepted = false; }
         PinScreen {
             anchors.fill: parent

@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+# Named, local-only AI control client for the running Tessa shell.
+set -euo pipefail
+usage() {
+    cat >&2 <<'EOF'
+Usage: tessa-ai <open|close|launch|theme|controls|radio|window|tape|cube|keyboard|screenshot|volume|mute> [value]
+Examples:
+  tessa-ai open settings
+  tessa-ai launch chromium
+  tessa-ai radio wifi
+  tessa-ai cube radial
+  tessa-ai volume 0.35
+EOF
+    exit 64
+}
+[[ $# -ge 1 && $# -le 2 ]] || usage
+action=$1
+value=${2-}
+case "$action" in
+    open|launch|theme|radio|window|tape|cube|keyboard|volume)
+        [[ -n "$value" ]] || usage
+        ;;
+    close|controls|screenshot|mute)
+        [[ -z "$value" ]] || usage
+        ;;
+    *) usage ;;
+esac
+case "$action" in
+    volume)
+        [[ "$value" =~ ^(0([.][0-9]+)?|1([.]0+)?)$ ]] || { echo "volume must be between 0 and 1" >&2; exit 64; }
+        ;;
+    radio) [[ "$value" =~ ^(wifi|bluetooth|cellular|airplane)$ ]] || usage ;;
+    window) [[ "$value" =~ ^(next|previous|accept|cancel)$ ]] || usage ;;
+    tape) [[ "$value" =~ ^(previous|next|settle|begin|cancel)$ ]] || usage ;;
+    cube) [[ "$value" =~ ^(open|close|radial)$ ]] || usage ;;
+    keyboard) [[ "$value" =~ ^(show|hide|toggle)$ ]] || usage ;;
+esac
+exec tessera-shell ipc call ai "$action" ${value:+"$value"}

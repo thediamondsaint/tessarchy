@@ -9,7 +9,7 @@ ColumnLayout {
     id: center
     required property var server
     required property var preferences
-    property color accentColor: "#a9e8d5"
+    property color accentColor: Theme.accent
     readonly property int count: center.server.trackedNotifications.values.length
     signal clearAllRequested
     spacing: 12
@@ -28,7 +28,7 @@ ColumnLayout {
         }
         Text {
             text: center.count === 1 ? "1 alert" : center.count + " alerts"
-            color: "#aabccb"
+            color: Theme.subtitleText
             font.pixelSize: 13
         }
     }
@@ -36,7 +36,7 @@ ColumnLayout {
         Layout.fillWidth: true
         visible: center.count === 0
         wrapMode: Text.WordWrap
-        color: "#b7c7cc"
+        color: Theme.detailText
         text: "No notifications. Alerts appear above the status bar and collect here until you dismiss them or the session ends."
     }
     Repeater {
@@ -65,7 +65,7 @@ ColumnLayout {
     Text {
         Layout.fillWidth: true
         text: "Tessarchy does not persist notifications across sessions."
-        color: "#8da7b9"
+        color: Theme.textMuted
         font.pixelSize: 12
         wrapMode: Text.WordWrap
     }

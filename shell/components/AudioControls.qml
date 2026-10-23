@@ -9,7 +9,7 @@ ColumnLayout {
     property var devices: []
     property var streams: []
     property bool backendAvailable: false
-    property color accentColor: "#a9e8d5"
+    property color accentColor: Theme.accent
     signal outputRequested(var node)
     spacing: 6
 
@@ -26,7 +26,7 @@ ColumnLayout {
     Text {
         text: !panel.backendAvailable ? "Audio service unavailable" : panel.usable(panel.sink) ? "Output · " + Policy.nodeLabel(panel.sink.description, panel.sink.nickname, panel.sink.name) : "No audio output connected"
         textFormat: Text.PlainText
-        color: "#f0f5ff"
+        color: Theme.text
         Layout.fillWidth: true
         wrapMode: Text.WrapAnywhere
     }
@@ -34,7 +34,7 @@ ColumnLayout {
         textFormat: Text.PlainText
         visible: panel.devices.length > 1
         text: "OUTPUT DEVICE"
-        color: "#8da7b9"
+        color: Theme.textMuted
         font {
             pixelSize: 11
             letterSpacing: 2
@@ -59,7 +59,7 @@ ColumnLayout {
         textFormat: Text.PlainText
         visible: panel.streams.length > 0
         text: "APPS"
-        color: "#8da7b9"
+        color: Theme.textMuted
         font {
             pixelSize: 11
             letterSpacing: 2
@@ -77,7 +77,7 @@ ColumnLayout {
             Text {
                 textFormat: Text.PlainText
                 text: ((panel.usable(streamRow.modelData) && streamRow.modelData.audio.muted) ? "Muted · " : "") + streamRow.streamName
-                color: "#f0f5ff"
+                color: Theme.text
                 Layout.fillWidth: true
                 wrapMode: Text.WrapAnywhere
             }

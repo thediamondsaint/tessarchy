@@ -5,7 +5,7 @@ import "../LayoutPolicy.js" as Policy
 
 ColumnLayout {
     id: panel
-    property color accentColor: "#a9e8d5"
+    property color accentColor: Theme.accent
 
     property var backend: powerBackend
     PowerBackend { id: powerBackend; active: panel.visible }
@@ -16,7 +16,7 @@ ColumnLayout {
 
     Text {
         Layout.fillWidth: true
-        color: "#f0f5ff"
+        color: Theme.text
         wrapMode: Text.WrapAnywhere
         Accessible.name: text
         text: {
@@ -44,13 +44,13 @@ ColumnLayout {
     Text {
         visible: panel.batteryPresent && panel.device.healthSupported
         text: "Battery health · " + Policy.volumePercent(panel.device.healthPercentage) + "%"
-        color: "#b7c7cc"
+        color: Theme.detailText
         Layout.fillWidth: true
         wrapMode: Text.WrapAnywhere
     }
     Text {
         text: "POWER MODE"
-        color: "#8da7b9"
+        color: Theme.textMuted
         font {
             pixelSize: 11
             letterSpacing: 2
@@ -59,7 +59,7 @@ ColumnLayout {
     Text {
         visible: !panel.backend.state.available
         text: "Power profile service unavailable"
-        color: "#9eb6c3"
+        color: Theme.hintText
         Layout.fillWidth: true
         wrapMode: Text.WordWrap
     }
@@ -99,6 +99,6 @@ ColumnLayout {
             onClicked: panel.backend.select("performance")
         }
     }
-    Text { visible: !!panel.backend.state.error; text: panel.backend.state.error || ""; color: "#efb6bd"; Layout.fillWidth: true; wrapMode: Text.WordWrap }
-    Text { visible: !!panel.backend.state.degraded; text: "Performance limited · " + panel.backend.state.degraded; color: "#9eb6c3"; Layout.fillWidth: true; wrapMode: Text.WordWrap }
+    Text { visible: !!panel.backend.state.error; text: panel.backend.state.error || ""; color: Theme.errorText; Layout.fillWidth: true; wrapMode: Text.WordWrap }
+    Text { visible: !!panel.backend.state.degraded; text: "Performance limited · " + panel.backend.state.degraded; color: Theme.hintText; Layout.fillWidth: true; wrapMode: Text.WordWrap }
 }

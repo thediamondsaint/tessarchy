@@ -1,0 +1,50 @@
+{
+  "captured_on": "2026-10-21",
+  "source_commit": "0dc2061cb091c7bcf48e73ed65d40c36867b4048",
+  "type": "actual VM screenshots",
+  "method": "grim in existing QEMU/KVM guest; copied unchanged over SSH",
+  "generated": false,
+  "interaction": "QMP virtual touch; real Files, Calculator and Foot; icon selection and horizontal flicking",
+  "files": [
+    {
+      "file": "tablet-glass-files.png",
+      "dimensions": [
+        1024,
+        768
+      ],
+      "sha256": "721219520000f7ea66067ca419bfe00f6aaff9caf9099204bbe94d3f51ce665f"
+    },
+    {
+      "file": "phone-glass-files.png",
+      "dimensions": [
+        400,
+        800
+      ],
+      "sha256": "7e1a659425a54d6f6e863825568efbb880d5ce6825276e78fb661a88a33f83bd"
+    },
+    {
+      "file": "phone-icons.png",
+      "dimensions": [
+        400,
+        800
+      ],
+      "sha256": "047a89f0495a47d30da5b0b6b72d516b01e97ede5bb017d0bf90a3563c06b535"
+    },
+    {
+      "file": "phone-icons-swiped.png",
+      "dimensions": [
+        400,
+        800
+      ],
+      "sha256": "aabbfc00e5856224e80355c971981e8aac962ae1567b98c935feac292ea739db"
+    },
+    {
+      "file": "phone-radial-icons.png",
+      "dimensions": [
+        400,
+        800
+      ],
+      "sha256": "20b114e036a3e4f38319b3708f471c9f50c1557a52e2bd1c4d3a7efd2ed1a810"
+    }
+  ]
+}

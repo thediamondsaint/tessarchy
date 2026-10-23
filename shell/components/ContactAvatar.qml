@@ -4,12 +4,13 @@ Rectangle {
     id: avatar
     property string name: ""
     property string photo: ""
-    property color accentColor: "#a9e8d5"
+    property color accentColor: Theme.accent
     implicitWidth: 48
     implicitHeight: 48
     radius: width / 2
     color: Qt.alpha(accentColor, 0.14)
     border.color: Qt.alpha(accentColor, 0.35)
+    border.width: Theme.borderWidth(1)
     clip: true
     Image {
         id: picture

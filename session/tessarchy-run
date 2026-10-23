@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# Launch an app in the current Tessarchy theme: GTK/libadwaita follow its
+# dark/light mode, foot gets the themed config (which includes the user's), and
+# file dialogs go through the portal.
+set -euo pipefail
+[[ $# -ge 1 ]] || { echo "Usage: $0 <command> [args...]" >&2; exit 2; }
+theme=${XDG_STATE_HOME:-$HOME/.local/state}/tessarchy/theme
+if [[ $(cat -- "$theme/mode" 2>/dev/null) == light ]]; then
+    export GTK_THEME=Adwaita ADW_DEBUG_COLOR_SCHEME=prefer-light
+else
+    export GTK_THEME=Adwaita:dark ADW_DEBUG_COLOR_SCHEME=prefer-dark
+fi
+# GTK3 apps' own file dialogs go through the portal, so Phone/Tablet get
+# Tessa's picker (tessarchy-filechooser); portal-aware apps already do.
+if [[ -e /usr/lib/gtk-3.0/modules/libtessarchy-filechooser.so ]]; then
+    export GTK_MODULES=${GTK_MODULES:+$GTK_MODULES:}tessarchy-filechooser GTK_USE_PORTAL=1
+fi
+if [[ ${1##*/} == foot && -f $theme/foot.ini ]]; then
+    shift
+    exec foot --config="$theme/foot.ini" "$@"
+fi
+exec "$@"

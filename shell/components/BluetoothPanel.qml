@@ -7,7 +7,7 @@ import "../LayoutPolicy.js" as Policy
 ColumnLayout {
     id: panel
     required property var adapter
-    property color accentColor: "#a9e8d5"
+    property color accentColor: Theme.accent
 
     readonly property bool bluetoothAvailable: !!panel.adapter
     readonly property bool bluetoothOn: panel.bluetoothAvailable && panel.adapter.enabled
@@ -84,7 +84,7 @@ ColumnLayout {
         visible: !panel.bluetoothAvailable
         textFormat: Text.PlainText
         text: "Bluetooth · no adapter available"
-        color: "#8da7b9"
+        color: Theme.textMuted
         font.pixelSize: 13
         Layout.fillWidth: true
         wrapMode: Text.WordWrap
@@ -104,7 +104,7 @@ ColumnLayout {
         textFormat: Text.PlainText
         visible: panel.bluetoothAvailable && panel.bluetoothOn && panel.devices.length === 0
         text: panel.adapter && panel.adapter.discovering ? "Discovering nearby devices…" : "No known devices"
-        color: "#8da7b9"
+        color: Theme.textMuted
         font.pixelSize: 13
         Layout.fillWidth: true
         wrapMode: Text.WordWrap

@@ -27,6 +27,9 @@ function controls.activate(selector)
         end
     end
     hl.dispatch(hl.dsp.focus({ window = window }))
+    if window.workspace.name == "tessarchy-tape" and not window.floating then
+        hl.dispatch(hl.dsp.layout("fit_into_view"))
+    end
     if window.floating then
         hl.dispatch(hl.dsp.window.alter_zorder({ window = window, mode = "top" }))
     end

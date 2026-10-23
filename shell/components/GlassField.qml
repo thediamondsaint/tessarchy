@@ -7,16 +7,17 @@ TextField {
     implicitHeight: 52
     Layout.minimumHeight: 52
     Layout.fillWidth: true
-    color: "#edf6f6"
-    placeholderTextColor: "#91aab7"
-    selectionColor: "#467c7a"
+    color: Theme.inputText
+    placeholderTextColor: Theme.inputPlaceholder
+    selectionColor: Theme.inputSelection
     font.pixelSize: 16
     padding: 14
     selectByMouse: true
     background: Rectangle {
-        radius: 16
-        color: "#501c2c43"
-        border.color: field.activeFocus ? "#a9e8d5" : "#50677f8d"
+        radius: Theme.radius("field", 16, height)
+        color: Theme.glass
+        border.color: field.activeFocus ? Theme.accent : Theme.inputBorder
+        border.width: Theme.borderWidth(1)
     }
     Accessible.name: placeholderText
 }

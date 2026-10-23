@@ -9,12 +9,14 @@ TestCase {
         for (const mode of ["phone", "tablet", "desktop"]) {
             for (const width of [320, 360, 400, 800, 1280]) {
                 for (const keyboard of [true, false]) {
-                    const dock = Policy.dockLayout(mode, width, keyboard);
-                    const bar = Policy.barGeometry(mode, dock.rows);
-                    const available = dock.width - 2 * bar.padding;
-                    verify((available - (dock.columns - 1) * bar.columnGap) / dock.columns >= 48);
-                    verify(dock.width <= width);
-                    verify(dock.rows >= 1);
+                    for (const gestures of [true, false]) {
+                        const dock = Policy.dockLayout(mode, width, keyboard, gestures);
+                        const bar = Policy.barGeometry(mode, dock.rows);
+                        const available = dock.width - 2 * bar.padding;
+                        verify((available - (dock.columns - 1) * bar.columnGap) / dock.columns >= 48);
+                        verify(dock.width <= width);
+                        verify(dock.rows >= 1);
+                    }
                 }
             }
         }
@@ -26,6 +28,65 @@ TestCase {
         compare(Policy.dockLayout("phone", 400, true).columns, 6);
         compare(Policy.dockLayout("tablet", 800, true).columns, 6);
         compare(Policy.dockLayout("tablet", 800, true).rows, 1);
+    }
+    // Gesture mode leaves Phone, Messages and the optional Keyboard in the dock.
+    function test_gesture_dock_drops_back_home_and_recents() {
+        for (const mode of ["phone", "tablet"]) {
+            const width = mode === "phone" ? 400 : 800;
+            const gestures = Policy.gestureNavigation(mode, "gestures");
+            verify(gestures);
+            compare(Policy.dockLayout(mode, width, true, gestures).columns, 3);
+            compare(Policy.dockLayout(mode, width, false, gestures).columns, 2);
+            const buttons = Policy.gestureNavigation(mode, "buttons");
+            verify(!buttons);
+            compare(Policy.dockLayout(mode, width, true, buttons).columns, 6);
+            compare(Policy.dockLayout(mode, width, false, buttons).columns, 5);
+        }
+        // Gestures are the default; unknown values keep them; Desktop never uses them.
+        verify(Policy.gestureNavigation("phone", undefined));
+        verify(Policy.gestureNavigation("tablet", "other"));
+        verify(!Policy.gestureNavigation("desktop", "gestures"));
+        compare(Policy.dockLayout("desktop", 1280, true, true).rows, 1);
+    }
+    function test_bottom_swipe_needs_distance_and_hold_for_recents() {
+        const d = Policy.GESTURE_DISTANCE;
+        const hold = Policy.GESTURE_HOLD;
+        verify(d >= 32);
+        verify(hold > 0);
+        compare(Policy.classifyGesture("bottom", 0, -(d - 1), 0), "none");
+        compare(Policy.classifyGesture("bottom", 0, -d, 0), "home");
+        compare(Policy.classifyGesture("bottom", 10, -200, hold - 1), "home");
+        compare(Policy.classifyGesture("bottom", 10, -200, hold), "recents");
+        // A short hold without enough travel is not Recents.
+        compare(Policy.classifyGesture("bottom", 0, -(d - 1), hold * 3), "none");
+        // Downward or mostly sideways motion does nothing.
+        compare(Policy.classifyGesture("bottom", 0, 200, 0), "none");
+        compare(Policy.classifyGesture("bottom", 300, -100, 0), "none");
+    }
+    function test_side_swipe_inward_is_back() {
+        const d = Policy.GESTURE_BACK_DISTANCE;
+        compare(Policy.classifyGesture("left", d, 0, 0), "back");
+        compare(Policy.classifyGesture("right", -d, 0, 0), "back");
+        compare(Policy.classifyGesture("left", d - 1, 0, 0), "none");
+        // Outward or mostly vertical motion is not Back; holding does not matter.
+        compare(Policy.classifyGesture("left", -d * 2, 0, 0), "none");
+        compare(Policy.classifyGesture("right", d * 2, 0, 0), "none");
+        compare(Policy.classifyGesture("left", d, d * 2, 0), "none");
+        compare(Policy.classifyGesture("right", -d, 0, Policy.GESTURE_HOLD * 2), "back");
+        compare(Policy.classifyGesture("top", 0, d * 2, 0), "none");
+    }
+    function test_gesture_strips_leave_dock_buttons_uncovered() {
+        for (const mode of ["phone", "tablet"]) {
+            const bar = Policy.barGeometry(mode, 1);
+            const edge = Policy.gestureEdgeSize(mode, false);
+            // The collapsed dock row starts gap + inset above the screen edge.
+            compare(edge.bottom, bar.gap + bar.inset);
+            // An open page's row starts pageBottom above it.
+            verify(Policy.gestureEdgeSize(mode, true).bottom <= bar.pageBottom);
+            verify(edge.side > 0 && edge.side <= 24);
+            // The pill sits centred in the gap under the dock frame.
+            compare(edge.handle, bar.gap / 2);
+        }
     }
     // Every bar floats and centres its rows: equal inset above and below.
     function test_bar_rows_are_centred_in_a_floating_frame() {

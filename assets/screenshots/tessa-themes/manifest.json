@@ -1,0 +1,66 @@
+{
+  "captured_on": "2026-10-21",
+  "source_commit": "bf63497a67456c56d0de3b8b29058f4c7de40bae",
+  "type": "actual VM screenshots",
+  "method": "grim in existing QEMU/KVM guest; copied unchanged over SSH",
+  "generated": false,
+  "interaction": "QMP virtual touchscreen selection and browsing; live theme changes; real themed Foot terminal",
+  "files": [
+    {
+      "file": "catppuccin-latte-cube.png",
+      "dimensions": [
+        1024,
+        768
+      ],
+      "sha256": "f14efac658d084448082428145484b84a637a0d699c3dd15823bd8ab1e1723ea"
+    },
+    {
+      "file": "tokyo-night-cube.png",
+      "dimensions": [
+        1024,
+        768
+      ],
+      "sha256": "12d84337359b6a39866c6bc75d35f772499c1b80fe6fd0c56f6fbe4a1367e9bf"
+    },
+    {
+      "file": "gruvbox-cube.png",
+      "dimensions": [
+        1024,
+        768
+      ],
+      "sha256": "3a1d777ca9a7000bba7f6b8a820012a5a60fce855b851bb3ad70ca275b265c78"
+    },
+    {
+      "file": "rose-pine-cube.png",
+      "dimensions": [
+        1024,
+        768
+      ],
+      "sha256": "f11481f3c5ccd13cc98b2b09f43a605cdffd59b77db9f064ca50f5fdfca9057a"
+    },
+    {
+      "file": "tessera-cube.png",
+      "dimensions": [
+        1024,
+        768
+      ],
+      "sha256": "b3496537d6a089eeb1d6a8d8c6099df58a65c42524c220f545b40253e3f7e81a"
+    },
+    {
+      "file": "picker-latte.png",
+      "dimensions": [
+        1024,
+        768
+      ],
+      "sha256": "27886da326b3c2ed19540bc7ce874d76f6f0cc111576e996a2fc9dc1785c83e4"
+    },
+    {
+      "file": "phone-picker.png",
+      "dimensions": [
+        400,
+        800
+      ],
+      "sha256": "0ae9c471795bfa9bc349922c567ecf2c5947b9cfa531bf6214650d8494ce16bb"
+    }
+  ]
+}

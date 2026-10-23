@@ -1,0 +1,61 @@
+# Touch and widget research
+
+This first pass keeps the Hyprland compositor close to its defaults and puts
+touch behavior in Tessa's QML layer. No external widget code was copied.
+
+## Patterns reviewed
+
+- [short-circuit/qml-widgets](https://github.com/short-circuit/qml-widgets) uses
+  thin edge `PanelWindow` strips, `keyboardFocus: None`, accumulated drag
+  distance, and orientation-aware anchors. These constraints fit the existing
+  Tessa edge wheel and gesture surfaces.
+- [caelestia-dots/shell](https://github.com/caelestia-dots/shell) provides a
+  large Quickshell widget/dashboard architecture with weather, media, calendar,
+  visualizer, and settings widgets. It is GPL-3.0; only interaction ideas were
+  reviewed.
+- [sluets/quickshell-hyprland](https://github.com/sluets/quickshell-hyprland)
+  demonstrates a modular widget catalog, shared theme singleton, desktop
+  widgets, weather/clock/media services, and live theme changes. Tessa already
+  has equivalent service boundaries, so no dependency was added.
+- [AvengeMedia/DankMaterialShell](https://github.com/AvengeMedia/DankMaterialShell)
+  documents a shared QML widget library and plugin surface. Tessa keeps its
+  smaller local component set and theme tokens until a stable plugin contract
+  is needed.
+- [fbuedding/quickshell](https://github.com/fbuedding/quickshell) uses a
+  floating, blurred top bar with a slide-in quick-controls surface and
+  input-transparent regions around the controls. Its 34px desktop defaults are
+  too small for Tessa touch layouts, so Tessa adapts the pattern to a 64px
+  floating glass bar, horizontally scrollable on phones, with every action
+  given a 48px target.
+- [sluets/quickshell-hyprland](https://github.com/sluets/quickshell-hyprland)
+  documents configurable floating bars, blur, spacing, and attached menus.
+  Tessa reuses the architecture pattern and existing service bindings rather
+  than importing its shell or dependencies.
+- [end-4/dots-hyprland](https://github.com/end-4/dots-hyprland) ships a
+  Material 3-style `FloatingActionButton.qml` under GPL-3.0. Tessa adapts its
+  compact-to-expanded FAB behavior and touch sizing in `WindowTapeControl.qml`,
+  while retaining Tessa's cube mark, native Hyprland tape bridge, radial menu,
+  and local theme tokens. No source file was copied.
+- [valorisa/Quickshell-Hyprland](https://github.com/valorisa/Quickshell-Hyprland)
+  documents reusable `BlurPanel`/glow surfaces built with Qt Quick Effects and
+  a palette singleton. Tessa keeps the no-dependency approach, applying the
+  same layered highlight, tinted surface, and accent rim to native widget
+  cards so the selected theme remains visible.
+- [xscriptor-colors/hyprland](https://github.com/xscriptor-colors/hyprland/blob/main/docs/quickshell-widgets.md)
+  uses independent widget modules and a shared palette with live reload. Tessa
+  follows that boundary: `Theme.qml` is the semantic palette source and each
+  widget reads its colors from it instead of embedding a fixed glass palette.
+
+## Current implementation
+
+`DesktopWidgets.qml` is the first native Tessa widget surface. It provides
+calendar, weather, media, and battery cards with large touch targets, a
+single-column phone layout, a two-column tablet layout, and a four-column
+desktop layout. Cards use `Theme.glass`, theme borders, and existing Quickshell
+weather/MPRIS/UPower services. Weather refresh and media transport actions are
+signals, so the cards do not spawn new daemons or bypass the shell backends.
+
+Next widgets should follow the same rules: no hard-coded palette, no permanent
+desktop reservation, no keyboard focus theft, and no new dependency without a
+measured need. Candidate additions are notifications/calendar agenda, network
+and audio controls, clipboard, system health, and a configurable widget grid.

@@ -11,14 +11,19 @@ e2fsprogs
 edk2-shell
 efibootmgr
 ffmpeg
-firefox
+file-roller
+amberol
+celluloid
+chromium
 fish
 foot
+glib2
 gnome-calculator
 gnome-text-editor
 gptfdisk
 grim
 grub
+gtk3
 gvfs
 gvfs-mtp
 hypridle
@@ -26,8 +31,10 @@ hyprland
 hyprpolkitagent
 hyprsunset
 iio-sensor-proxy
+krita
 libinput
 libnotify
+libreoffice-fresh
 linux
 linux-firmware
 loupe
@@ -41,6 +48,7 @@ mpv
 nautilus
 network-manager-applet
 networkmanager
+openssh
 noto-fonts
 noto-fonts-emoji
 pacman
@@ -59,6 +67,7 @@ qt6-declarative
 qt6-wayland
 quickshell
 rsync
+rnote
 rtkit
 sof-firmware
 squeekboard
@@ -72,6 +81,7 @@ vulkan-intel
 vulkan-radeon
 wireless-regdb
 wireplumber
+xdg-desktop-portal
 xdg-desktop-portal-gtk
 xdg-desktop-portal-hyprland
 xdg-user-dirs

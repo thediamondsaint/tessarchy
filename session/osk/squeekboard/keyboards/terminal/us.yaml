@@ -1,0 +1,208 @@
+# Language: English (US)
+---
+outlines:
+    nav: { width: 50, height: 52 }
+    default:       { width: 35.657, height: 52 }
+    change-view:   { width: 53.485, height: 52 }
+    change-view-2: { width: 62.399, height: 52 }
+    large:         { width: 44.571, height: 52 }
+    spaceline:     { width: 41.772, height: 52 }
+    special:       { width: 44.571, height: 52 }
+    special-2:     { width: 53.485, height: 52 }
+    special-3:     { width: 62.399, height: 52 }
+
+views:
+    base:
+        - "q w e r t y u i o p"
+        - "a s d f g h j k l"
+        - "show_upper z x c v b n m BackSpace"
+        - "show_numbers Ctrl Alt Super space show_controls Return"
+    upper:
+        - "Q W E R T Y U I O P"
+        - "A S D F G H J K L"
+        - "show_upper Z X C V B N M BackSpace"
+        - "show_numbers Ctrl Alt Super space show_controls Return"
+    numbers:
+        - "1 2 3 4 5 6 7 8 9 0"
+        - "@ # $ % & - _ + ( )"
+        - "show_symbols , \" ' : ; ! ? BackSpace"
+        - "show_letters Ctrl Alt Super space show_controls Return"
+    symbols:
+        - "~ ` | · √ π τ ÷ × ¶"
+        - "© ® £ € ¥ ^ ° * { }"
+        - "show_numbers_from_symbols \\ / < > = [ ] BackSpace"
+        - "show_letters Ctrl Alt Super space show_controls Return"
+
+    controls:
+        - "Esc Tab Ctrl Alt Super Shift"
+        - "Home Up End PageUp"
+        - "Left Down Right PageDown"
+        - "show_letters show_functions Insert Del"
+    functions:
+        - "F1 F2 F3 F4 F5 F6"
+        - "F7 F8 F9 F10 F11 F12"
+        - "Pause Menu Break Ctrl Alt Super"
+        - "show_letters show_controls space Return"
+
+buttons:
+    F1:
+        keysym: "F1"
+        outline: "nav"
+    F2:
+        keysym: "F2"
+        outline: "nav"
+    F3:
+        keysym: "F3"
+        outline: "nav"
+    F4:
+        keysym: "F4"
+        outline: "nav"
+    F5:
+        keysym: "F5"
+        outline: "nav"
+    F6:
+        keysym: "F6"
+        outline: "nav"
+    F7:
+        keysym: "F7"
+        outline: "nav"
+    F8:
+        keysym: "F8"
+        outline: "nav"
+    F9:
+        keysym: "F9"
+        outline: "nav"
+    F10:
+        keysym: "F10"
+        outline: "nav"
+    F11:
+        keysym: "F11"
+        outline: "nav"
+    F12:
+        keysym: "F12"
+        outline: "nav"
+    show_controls:
+        action: { set_view: "controls" }
+        label: "Fn"
+        outline: "special"
+    show_functions:
+        action: { set_view: "functions" }
+        label: "F"
+        outline: "special"
+    Shift:
+        modifier: "Shift"
+        label: "⇧"
+        outline: "nav"
+    Esc:
+        keysym: "Escape"
+        outline: "nav"
+    Tab:
+        keysym: "Tab"
+        outline: "nav"
+    Home:
+        keysym: "Home"
+        label: "↖"
+        outline: "nav"
+    End:
+        keysym: "End"
+        label: "↘"
+        outline: "nav"
+    PageUp:
+        keysym: "Page_Up"
+        label: "⇞"
+        outline: "nav"
+    PageDown:
+        keysym: "Page_Down"
+        label: "⇟"
+        outline: "nav"
+    Up:
+        keysym: "Up"
+        label: "↑"
+        outline: "nav"
+    Down:
+        keysym: "Down"
+        label: "↓"
+        outline: "nav"
+    Left:
+        keysym: "Left"
+        label: "←"
+        outline: "nav"
+    Right:
+        keysym: "Right"
+        label: "→"
+        outline: "nav"
+    Insert:
+        keysym: "Insert"
+        label: "Ins"
+        outline: "nav"
+    Del:
+        keysym: "Delete"
+        outline: "nav"
+    Pause:
+        keysym: "Pause"
+        label: "Ⅱ"
+        outline: "nav"
+    Menu:
+        keysym: "Menu"
+        label: "☰"
+        outline: "nav"
+    Break:
+        keysym: "Break"
+        label: "Brk"
+        outline: "nav"
+    Ctrl:
+        modifier: "Control"
+        label: "Ctrl"
+        outline: "nav"
+    Alt:
+        modifier: "Alt"
+        label: "Alt"
+        outline: "nav"
+    Super:
+        modifier: "Mod4"
+        icon: "tessarchy-super-symbolic"
+        outline: "special"
+    show_upper:
+        action:
+            locking:
+                lock_view: "upper"
+                unlock_view: "base"
+        outline: "change-view"
+        icon: "key-shift"
+    BackSpace:
+        outline: "special-2"
+        icon: "edit-clear-symbolic"
+        action: "erase"
+    preferences:
+        action: "show_prefs"
+        outline: "special"
+        icon: "keyboard-mode-symbolic"
+    show_numbers:
+        action:
+            set_view: "numbers"
+        outline: "change-view-2"
+        label: "123"
+    show_numbers_from_symbols:
+        action:
+            set_view: "numbers"
+        outline: "change-view"
+        label: "123"
+    show_letters:
+        action:
+            set_view: "base"
+        outline: "change-view-2"
+        label: "ABC"
+    show_symbols:
+        action:
+            set_view: "symbols"
+        outline: "change-view"
+        label: "*/="
+    .:
+        outline: "large"
+    space:
+        outline: "spaceline"
+        text: " "
+    Return:
+        outline: "special-3"
+        icon: "key-enter"
+        keysym: "Return"

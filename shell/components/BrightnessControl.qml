@@ -5,7 +5,7 @@ import Quickshell.Io
 
 ColumnLayout {
     id: control
-    property color accentColor: "#a9e8d5"
+    property color accentColor: Theme.accent
     // Probe on startup and when quick controls open; no background polling.
     property bool probed: false
     property int probePercent: -1
@@ -66,12 +66,12 @@ ColumnLayout {
     Text {
         visible: control.available && !!control.error
         Layout.fillWidth: true
-        text: control.error; color: "#ebbbbd"; wrapMode: Text.WordWrap
+        text: control.error; color: Theme.errorText; wrapMode: Text.WordWrap
     }
     Text {
         visible: control.available
         text: "Brightness · " + Math.round(control.level * 100) + "%"
-        color: "#f0f5ff"
+        color: Theme.text
         Layout.fillWidth: true
         wrapMode: Text.WrapAnywhere
     }

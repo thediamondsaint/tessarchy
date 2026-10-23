@@ -33,7 +33,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Prepare video conversion tools
-        run: sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends ffmpeg
+        run: sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends ffmpeg libgtk-3-dev libglib2.0-dev pkg-config
       - name: Check source workflows
         run: ./scripts/check.sh
       - name: Build Arch live image in disposable container
@@ -48,7 +48,7 @@ jobs:
             --env "TESSARCHY_COMMIT=$GITHUB_SHA" \
             --env "TESSARCHY_REPO_URL=${REPO_URL:-}" \
             archlinux:base bash -euo pipefail -c '
-              pacman -Syu --noconfirm --needed archiso ffmpeg base-devel
+              pacman -Syu --noconfirm --needed archiso ffmpeg base-devel gtk3 glib2
               # The medium carries the packages an installed machine updates from,
               # so build the repository first: staging refuses an image without it.
               useradd -m builder

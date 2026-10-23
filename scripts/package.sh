@@ -17,8 +17,8 @@ source_commit=$(git -C "$root" rev-parse HEAD)
 # (packaging/tessarchy-update installs files out of iso/airootfs).
 tar --exclude=__pycache__ --exclude='*.pyc' --exclude='*.pyo' --exclude='*.ppm' \
     -czf "$source_archive" -C "$root" \
-    shell session docs iso LICENSE packaging \
-    scripts/export-brand-assets.py scripts/export-boot-assets.py
+    shell session themes portal plugins docs iso LICENSE packaging \
+    scripts/export-brand-assets.py scripts/export-boot-assets.py scripts/build-window-tape.sh
 # Every directory under packaging/ that has a PKGBUILD is part of the release;
 # adding a package means adding a directory, not editing this list.
 mapfile -t packages < <(find "$root/packaging" -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | sort)

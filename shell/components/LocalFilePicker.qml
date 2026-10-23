@@ -18,7 +18,7 @@ ColumnLayout {
             enabled: !picker.backend.busy
             onClicked: picker.backend.request("browse", {kind: picker.kind, folder: picker.backend.picker.parent})
         }
-        Text { textFormat: Text.PlainText; text: picker.backend.picker.title || "Files"; color: "#a9e8d5"; font.pixelSize: 20; Layout.fillWidth: true; elide: Text.ElideRight }
+        Text { textFormat: Text.PlainText; text: picker.backend.picker.title || "Files"; color: Theme.accent; font.pixelSize: 20; Layout.fillWidth: true; elide: Text.ElideRight }
         TouchButton { text: "Cancel"; Layout.preferredWidth: 96; focusPolicy: Qt.StrongFocus; onClicked: picker.canceled() }
     }
     GlassField {
@@ -50,5 +50,5 @@ ColumnLayout {
             }
         }
     }
-    Text { textFormat: Text.PlainText; visible: !(picker.backend.picker.entries || []).length; text: "No matching files in this folder."; color: "#9eb6c3"; Layout.fillWidth: true; wrapMode: Text.WordWrap }
+    Text { textFormat: Text.PlainText; visible: !(picker.backend.picker.entries || []).length; text: "No matching files in this folder."; color: Theme.hintText; Layout.fillWidth: true; wrapMode: Text.WordWrap }
 }

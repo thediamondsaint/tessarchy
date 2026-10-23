@@ -3,7 +3,7 @@ import QtQuick.Layouts
 
 RowLayout {
     id: control
-    property color accentColor: "#a9e8d5"
+    property color accentColor: Theme.accent
     property bool compact: false
     property int notificationCount: 0
     property int cellularStrength: -1
@@ -18,6 +18,9 @@ RowLayout {
     property bool showBatteryText: true
     property bool showVolume: true
     property bool showSettings: true
+    property bool touchMode: false
+    property int touchSlot: 56
+    property bool reducedMotion: false
     signal notificationsRequested
     signal settingsRequested
     signal muteToggled
@@ -28,11 +31,12 @@ RowLayout {
 
     TrayButton {
         id: bellButton
-        slotWidth: control.compact ? 28 : 48
+        slotWidth: control.touchMode ? control.touchSlot : control.compact ? 28 : 48
         icon.source: "../icons/bell.svg"
         icon.width: control.glyphSize
         icon.height: control.glyphSize
         accentColor: control.accentColor
+        reducedMotion: control.reducedMotion
         selected: control.notificationsSelected
         Rectangle {
             visible: control.notificationCount > 0
@@ -42,12 +46,12 @@ RowLayout {
             anchors.topMargin: control.compact ? 1 : 8
             width: 14
             height: 14
-            radius: 7
-            color: "#e2796d"
+            radius: Theme.radius("tile", 7, height)
+            color: Theme.danger
             Text {
                 anchors.centerIn: parent
                 text: control.notificationCount
-                color: "#21151a"
+                color: Theme.darkerBackground
                 font.pixelSize: 9
                 font.bold: true
             }
@@ -57,13 +61,17 @@ RowLayout {
     }
     Item {
         visible: control.airplaneOn
-        Layout.preferredWidth: control.compact ? 28 : 18
+        Layout.preferredWidth: control.touchMode ? control.touchSlot : control.compact ? 28 : 48
         Layout.preferredHeight: 48
-        Image {
+        Rectangle {
             anchors.centerIn: parent
-            source: "../icons/airplane.svg"
-            sourceSize.width: 18
-            sourceSize.height: 18
+            width: 44
+            height: 44
+            radius: Theme.radius("button", 20, height)
+            color: Qt.alpha(Theme.text, 0.08)
+            border.width: Theme.borderWidth(1)
+            border.color: Qt.alpha(control.accentColor, 0.18)
+            Icon { anchors.centerIn: parent; symbol: "airplane"; size: 20; color: control.accentColor }
         }
         Accessible.name: "Airplane mode on"
     }
@@ -73,7 +81,8 @@ RowLayout {
         strength: control.cellularStrength
         uniform: control.compact
         showFallback: control.compact
-        Layout.preferredWidth: control.compact ? 28 : 18
+        touchMode: control.touchMode
+        touchSlot: control.touchSlot
         onClicked: control.panelRequested()
     }
     StatusIcon {
@@ -82,49 +91,68 @@ RowLayout {
         strength: control.wifiStrength
         uniform: control.compact
         showFallback: control.compact
-        Layout.preferredWidth: control.compact ? 28 : 18
+        touchMode: control.touchMode
+        touchSlot: control.touchSlot
         onClicked: control.panelRequested()
     }
     Item {
-        Layout.preferredWidth: control.compact ? 28 : batteryRow.implicitWidth
+        Layout.preferredWidth: control.touchMode ? control.touchSlot : control.compact ? 28 : batteryRow.implicitWidth
         Layout.preferredHeight: 48
+        Rectangle {
+            visible: control.touchMode
+            anchors.centerIn: parent
+            width: 44
+            height: 44
+            radius: Theme.radius("button", 20, height)
+            color: Qt.alpha(Theme.text, 0.08)
+            border.width: Theme.borderWidth(1)
+            border.color: Qt.alpha(control.accentColor, 0.16)
+        }
         RowLayout {
             id: batteryRow
             anchors.centerIn: parent
             spacing: 4
-            Image {
-                source: "../icons/battery.svg"
-                sourceSize.width: control.compact ? 18 : 22
-                sourceSize.height: control.compact ? 18 : 22
-                opacity: control.compact || control.batteryPresent ? 1 : 0.35
+            Icon {
+                symbol: "battery"
+                size: control.compact ? 18 : 22
+                color: control.batteryPresent ? control.accentColor : Theme.textMuted
+                opacity: control.compact || control.batteryPresent ? 1 : 0.55
             }
             Text {
                 visible: control.showBatteryText
                 text: control.batteryPresent ? Math.round(control.batteryPercent * 100) + "%" : "—"
-                color: control.compact ? "#d0f3e9" : "#a9e8d5"
+                color: control.compact ? Theme.textSecondary : Theme.accent
                 font.pixelSize: control.compact ? 10 : 11
                 Accessible.name: control.batteryPresent ? "Battery " + text : "Battery status unavailable"
             }
         }
+        Accessible.role: Accessible.Button
+        Accessible.name: control.batteryPresent ? "Battery " + Math.round(control.batteryPercent * 100) + " percent" : "Battery status unavailable"
+        MouseArea {
+            anchors.fill: parent
+            onClicked: control.panelRequested()
+        }
     }
     TrayButton {
         visible: control.showVolume
-        slotWidth: control.compact ? 28 : 48
+        slotWidth: control.touchMode ? control.touchSlot : control.compact ? 28 : 48
         enabled: control.audioAvailable
         icon.source: "../icons/" + (control.audioMuted ? "volume-muted" : "volume") + ".svg"
         icon.width: control.glyphSize
         icon.height: control.glyphSize
         accentColor: control.accentColor
+        reducedMotion: control.reducedMotion
         Accessible.name: control.audioMuted ? "Unmute audio" : "Mute audio"
         onClicked: control.muteToggled()
     }
     TrayButton {
         visible: control.showSettings
-        slotWidth: control.compact ? 28 : 48
+        slotWidth: control.touchMode ? control.touchSlot : control.compact ? 28 : 48
         icon.source: "../icons/settings.svg"
         icon.width: control.glyphSize
         icon.height: control.glyphSize
         accentColor: control.accentColor
+        reducedMotion: control.reducedMotion
         selected: control.settingsSelected
         Accessible.name: "Settings"
         onClicked: control.settingsRequested()

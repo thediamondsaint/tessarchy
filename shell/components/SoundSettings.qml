@@ -5,11 +5,11 @@ import QtQuick.Layouts
 ColumnLayout {
     id: page
     required property var backend
-    property color accentColor: "#a9e8d5"
+    property color accentColor: Theme.accent
     property bool browsing: false
     spacing: 12
     Text { text: "SOUNDS"; color: page.accentColor; font { pixelSize: 11; bold: true; letterSpacing: 2 } }
-    Text { text: "VoidRing · Your sound, your signal."; color: "#a8bdc9"; font.pixelSize: 15; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+    Text { text: "VoidRing · Your sound, your signal."; color: Theme.subtitleText; font.pixelSize: 15; wrapMode: Text.WordWrap; Layout.fillWidth: true }
     LocalFilePicker {
         id: picker
         backend: page.backend
@@ -30,7 +30,7 @@ ColumnLayout {
             required property var modelData
             readonly property var tones: [{id: "silent", name: "Silent", path: ""}].concat(page.backend.state.tones)
             Layout.fillWidth: true
-            Text { text: choice.modelData.name; color: "#e7f1f4"; font.pixelSize: 15 }
+            Text { text: choice.modelData.name; color: Theme.itemText; font.pixelSize: 15 }
             RowLayout {
                 Layout.fillWidth: true
                 GlassCombo {
@@ -56,7 +56,7 @@ ColumnLayout {
         TouchButton { text: "Import MP3"; Layout.fillWidth: true; focusPolicy: Qt.StrongFocus; enabled: !page.backend.busy; onClicked: { page.browsing = true; picker.open(); } }
         TouchButton { text: "Stop preview"; Layout.fillWidth: true; focusPolicy: Qt.StrongFocus; onClicked: page.backend.preview("") }
     }
-    Text { visible: !page.backend.state.playerAvailable; text: "Install ffmpeg to preview and play alert sounds."; color: "#9eb6c3"; Layout.fillWidth: true; wrapMode: Text.WordWrap }
-    Text { text: "Alarm sound is saved for alarm apps. Incoming calls ring until answered or ended; new SMS messages use the selected message tone."; color: "#9eb6c3"; Layout.fillWidth: true; wrapMode: Text.WordWrap; font.pixelSize: 12 }
+    Text { visible: !page.backend.state.playerAvailable; text: "Install ffmpeg to preview and play alert sounds."; color: Theme.hintText; Layout.fillWidth: true; wrapMode: Text.WordWrap }
+    Text { text: "Alarm sound is saved for alarm apps. Incoming calls ring until answered or ended; new SMS messages use the selected message tone."; color: Theme.hintText; Layout.fillWidth: true; wrapMode: Text.WordWrap; font.pixelSize: 12 }
     }
 }

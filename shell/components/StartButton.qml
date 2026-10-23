@@ -5,7 +5,7 @@ import QtQuick.Layouts
 // Compact mark with a shallow background and a full-size touch target.
 Button {
     id: control
-    property color accentColor: "#a9e8d5"
+    property color accentColor: Theme.accent
     // True while the Start menu is open.
     property bool selected: false
     Layout.minimumHeight: 48
@@ -27,7 +27,7 @@ Button {
             anchors.centerIn: parent
             width: parent.width
             height: 32
-            radius: 8
+            radius: Theme.radius("card", 8, height)
             color: Qt.alpha(control.accentColor, control.down ? 0.3 : control.selected ? 0.22 : 0.10)
             border.color: Qt.alpha(control.accentColor, control.selected ? 0.7 : 0.3)
         }

@@ -12,7 +12,13 @@ if [[ ! -f "$share/session/hyprland.lua" ]]; then share=/usr/share/tessarchy; fi
 [[ -f "$share/session/hyprland.lua" ]] || { echo "Session defaults not installed" >&2; exit 1; }
 export TESSARCHY_DATA_DIR="$share"
 export PATH="$HOME/.local/bin:$PATH"
-export XDG_CURRENT_DESKTOP=Hyprland
+# Stage the saved (or default) theme before anything reads it.
+if command -v tessarchy-theme >/dev/null; then
+    tessarchy-theme apply || echo "Theme unavailable; using built-in colours" >&2
+fi
+# Tessarchy first so xdg-desktop-portal reads tessarchy-portals.conf (file
+# dialogs to tessarchy-portal), then Hyprland's for everything else.
+export XDG_CURRENT_DESKTOP=Tessarchy:Hyprland
 export XDG_SESSION_DESKTOP=tessarchy
 export XDG_SESSION_TYPE=wayland
 # Prefer the login user bus so portals, audio and authorization share the session.

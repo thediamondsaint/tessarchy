@@ -9,7 +9,7 @@ import QtQuick.Layouts
 Button {
     id: card
     required property var notification
-    property color accentColor: "#a9e8d5"
+    property color accentColor: Theme.accent
     signal opened
     signal closed
     implicitWidth: 360
@@ -42,7 +42,7 @@ Button {
                     textFormat: Text.PlainText
                     visible: card.notification.urgency === 2
                     text: "IMPORTANT"
-                    color: "#ffc2cd"
+                    color: Theme.urgentText
                     font {
                         pixelSize: 10
                         bold: true
@@ -53,7 +53,7 @@ Button {
                 textFormat: Text.PlainText
                 Layout.fillWidth: true
                 text: card.notification.summary || ""
-                color: "#f0f5ff"
+                color: Theme.text
                 font {
                     pixelSize: 15
                     bold: true
@@ -65,7 +65,7 @@ Button {
                 Layout.fillWidth: true
                 visible: text.length > 0
                 text: card.notification.body || ""
-                color: "#b7c7cc"
+                color: Theme.detailText
                 font.pixelSize: 13
                 maximumLineCount: 3
                 elide: Text.ElideRight
@@ -87,10 +87,10 @@ Button {
         }
     }
     background: Rectangle {
-        radius: 14
-        color: card.down ? "#24344d" : "#16223a"
-        border.width: 1
-        border.color: card.notification.urgency === 2 ? "#bf7383" : Qt.alpha(card.accentColor, 0.35)
+        radius: Theme.radius("card", 14, height)
+        color: card.down ? Theme.notificationCardPressed : Theme.notificationCard
+        border.width: Theme.borderWidth(1)
+        border.color: card.notification.urgency === 2 ? Theme.urgentBorder : Qt.alpha(card.accentColor, 0.35)
     }
     Accessible.name: (card.notification.appName || "Notification") + ": " + card.notification.summary
     Accessible.role: Accessible.Button

@@ -9,23 +9,28 @@ FocusScope {
     id: control
     property var windows: []
     property var activeWindow: null
-    property color accentColor: "#a9e8d5"
+    property color accentColor: Theme.accent
     property bool reducedMotion: false
     property bool fillApp: false
     property bool phoneMode: false
+    property bool compactMode: false
+    readonly property bool interacting: cards.moving
     property var iconForWindow: window => ""
     property var nameForWindow: window => window.title || "Untitled window"
     property string emptyHint: "No open apps"
     property var pendingTarget: null
     property var selection: null
     property var activateTarget: target => target.activate()
+    // Leave a breathing edge around live previews so rounded app corners and
+    // close targets never touch the panel or disappear under the dock.
+    readonly property int safeInset: phoneMode ? 12 : 10
     readonly property int currentIndex: cards.currentIndex
     /// Screen the apps are running on; keeps card previews at the real aspect
     /// so nothing is letterboxed inside a taller card.
     property var screenSize: Qt.size(400, 800)
     readonly property real aspect: screenSize.height > 0 ? screenSize.width / screenSize.height : 0.5
     /// Every card keeps the same footprint so the stack looks even.
-    readonly property real cardWidth: phoneMode ? Math.min(width * 0.78, Math.max(1, height - 100) * aspect) : Math.min(Math.max(180, width - 72), 320)
+    readonly property real cardWidth: compactMode ? Math.min(176, Math.max(120, width * 0.44)) : phoneMode ? Math.min(width * 0.78, Math.max(1, height - 100) * aspect) : Math.min(Math.max(180, width - 72), 320)
     readonly property real cardHeight: Math.min(height - (phoneMode ? 56 : 0), cardWidth / Math.max(0.2, aspect))
     signal activated
     signal dismissed
@@ -41,6 +46,7 @@ FocusScope {
         const active = windows.indexOf(activeWindow);
         cards.currentIndex = Math.max(0, active >= 0 ? active : SwitcherPolicy.activeIndex(windows));
         selection = windows[cards.currentIndex] || null;
+        if (compactMode) cards.positionViewAtBeginning();
     }
     function step(direction) {
         cards.currentIndex = SwitcherPolicy.advance(windows.indexOf(selection), direction, windows.length);
@@ -109,9 +115,9 @@ FocusScope {
         contentWidth: count ? (count - 1) * (control.cardWidth + spacing) + control.cardWidth : 0
         clip: true
         snapMode: ListView.SnapOneItem
-        highlightRangeMode: ListView.StrictlyEnforceRange
-        preferredHighlightBegin: (width - control.cardWidth) / 2
-        preferredHighlightEnd: preferredHighlightBegin
+        highlightRangeMode: control.compactMode ? ListView.ApplyRange : ListView.StrictlyEnforceRange
+        preferredHighlightBegin: control.compactMode ? 0 : (width - control.cardWidth) / 2
+        preferredHighlightEnd: control.compactMode ? Math.max(0, width - control.cardWidth) : preferredHighlightBegin
         highlightMoveDuration: control.reducedMotion ? 0 : 180
         boundsBehavior: Flickable.StopAtBounds
         delegate: Item {
@@ -150,7 +156,7 @@ FocusScope {
             }
             readonly property real sourceAspect: (preview.sourceSize.height > 0)
                 ? preview.sourceSize.width / preview.sourceSize.height : control.aspect
-            readonly property real cardHeight: control.phoneMode ? control.cardHeight : Math.min(cards.height,
+            readonly property real cardHeight: control.phoneMode ? control.cardHeight : Math.min(cards.height - (control.compactMode ? 56 : 0),
                 control.cardWidth / Math.max(0.2, sourceAspect))
             width: control.cardWidth
             height: cards.height
@@ -173,7 +179,7 @@ FocusScope {
                 if (visible) { closing = false; y = 0; }
             }
             Row {
-                visible: control.phoneMode && card.x <= cards.contentX + cards.preferredHighlightBegin + card.width * 0.5
+                visible: control.compactMode || (control.phoneMode && card.x <= cards.contentX + cards.preferredHighlightBegin + card.width * 0.5)
                 anchors.left: screen.left
                 anchors.bottom: screen.top
                 anchors.bottomMargin: 10
@@ -188,13 +194,13 @@ FocusScope {
                 }
                 Text {
                     objectName: "appSwitcherName" + card.index
-                    visible: card.distance < 0.55
+                    visible: control.compactMode || card.distance < 0.55
                     width: Math.max(0, screen.width - 36)
                     anchors.verticalCenter: parent.verticalCenter
                     text: control.nameForWindow(card.modelData)
                     textFormat: Text.PlainText
-                    color: "#ffffff"
-                    font.pixelSize: 20
+                    color: Theme.text
+                    font.pixelSize: control.compactMode ? 14 : 20
                     font.weight: Font.DemiBold
                     elide: Text.ElideRight
                 }
@@ -202,12 +208,15 @@ FocusScope {
 
             ClippingRectangle {
                 id: screen
-                width: control.cardWidth
-                height: card.cardHeight
-                anchors.verticalCenter: parent.verticalCenter
+                width: Math.max(1, control.cardWidth - control.safeInset * 2)
+                height: Math.max(1, card.cardHeight - control.safeInset * 2)
+                anchors.centerIn: parent
+                anchors.verticalCenterOffset: control.compactMode ? 20 : 0
+                border.width: control.compactMode ? Theme.borderWidth(1) : 0
+                border.color: card.ListView.isCurrentItem ? control.accentColor : Theme.tileBorder
                 x: control.phoneMode ? 0 : (card.width - width) / 2
                 radius: control.phoneMode ? 36 : 24
-                color: "#0d1622"
+                color: Theme.darkerBackground
                 ScreencopyView {
                     id: preview
                     anchors.fill: parent
@@ -224,7 +233,7 @@ FocusScope {
                     spacing: 12
                     Image {
                         anchors.horizontalCenter: parent.horizontalCenter
-                        source: "../artwork/tessarchy-mark.svg"
+                        source: control.iconForWindow(card.modelData) || "../artwork/tessarchy-mark.svg"
                         width: 44
                         height: 44
                     }
@@ -232,7 +241,7 @@ FocusScope {
                         width: parent.width
                         text: card.modelData.title || "Untitled window"
                         textFormat: Text.PlainText
-                        color: "#f2f8ff"
+                        color: Theme.text
                         wrapMode: Text.WrapAnywhere
                         horizontalAlignment: Text.AlignHCenter
                         font.pixelSize: 13
@@ -246,20 +255,20 @@ FocusScope {
                 id: closeButton
                 width: 48
                 height: 48
-                radius: 24
-                visible: !control.phoneMode
+                radius: Theme.radius("card", 24, height)
+                visible: !control.phoneMode && !control.compactMode
                 z: 2
                 anchors.top: screen.top
                 anchors.right: screen.right
                 anchors.topMargin: 8
                 anchors.rightMargin: 8
-                color: closeArea.pressed ? "#e6dfe9f6" : closeArea.containsMouse ? "#c2162334" : "#8c0d1622"
+                color: closeArea.pressed ? Qt.alpha(Theme.text, 0.90) : closeArea.containsMouse ? Qt.alpha(Theme.surface, 0.76) : Qt.alpha(Theme.background, 0.55)
                 border.width: 1
-                border.color: closeArea.containsMouse ? "#9fd8ff" : "#4d6b86"
+                border.color: closeArea.containsMouse ? Theme.accent : Theme.muted
                 Text {
                     anchors.centerIn: parent
                     text: "\u00d7"
-                    color: closeArea.containsMouse ? "#0d1622" : "#eaf4ff"
+                    color: closeArea.containsMouse ? Theme.darkerBackground : Theme.text
                     font.pixelSize: 16
                     font.bold: true
                 }
@@ -325,7 +334,7 @@ FocusScope {
             anchors.centerIn: parent
             width: parent.width - 48
             text: control.emptyHint
-            color: "#dfeaf4"
+            color: Theme.textSecondary
             horizontalAlignment: Text.AlignHCenter
             wrapMode: Text.WordWrap
         }

@@ -45,7 +45,7 @@ jobs:
             archlinux:base bash -euo pipefail -c '
               # The bootsplash package renders its frames at build time, so
               # ffmpeg has to be here exactly as it is in the ISO job.
-              pacman -Syu --noconfirm --needed base-devel ffmpeg
+              pacman -Syu --noconfirm --needed base-devel ffmpeg gtk3 glib2
               useradd -m builder
               chown -R builder /workspace
               su builder -c "./scripts/build-packages.sh"

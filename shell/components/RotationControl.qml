@@ -6,7 +6,7 @@ import Quickshell.Hyprland
 
 ColumnLayout {
     id: control
-    property color accentColor: "#a9e8d5"
+    property color accentColor: Theme.accent
 
     readonly property var monitor: Hyprland.focusedMonitor
     // `Item.transform` is FINAL in Qt Quick; this property must not be named transform.
@@ -36,7 +36,7 @@ ColumnLayout {
 
     Text {
         text: "Screen orientation · " + (control.monitor ? control.orientation : "no monitor")
-        color: "#d0dced"
+        color: Theme.textSecondary
         font.pixelSize: 14
     }
     RowLayout {

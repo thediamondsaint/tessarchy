@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+<title>Tessarchy — tessellated T</title>
+<defs><linearGradient id="mint" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#e0fff2"/><stop offset="1" stop-color="#6ed8bd"/></linearGradient></defs>
+<path fill="url(#mint)" d="M64 9 90 24 64 39 38 24Z"/>
+<path fill="#a6edd7" d="m10 40 26-15 26 15-26 15Z"/>
+<path fill="#65baa9" d="m66 40 26-15 26 15-26 15Z"/>
+<path fill="url(#mint)" d="m39 59 25-15 25 15-25 15Z"/>
+<path fill="#8ce1c9" d="m39 64 23 14v35L39 99Z"/>
+<path fill="#4b9f94" d="m66 78 23-14v35l-23 14Z"/>
+</svg>

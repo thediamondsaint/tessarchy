@@ -1,5 +1,119 @@
 # Validation and manual acceptance
 
+## Theme picker layout fix, 2026-10-19
+
+Branch `feat/theme-extras` on `49728ce`. Executed by an agent in the running
+QEMU guest (Virtual-1 1280×800 scale 1, and 400×640 logical at scale 2 /
+transform 1; Phone layout; `catppuccin`, `kanagawa`, `tokyo-night` copied into
+`~/.config/tessarchy/themes`). Captures in ignored `vm/`: `pf-before-*.png`
+(`49728ce`), `pf-after-*.png`; combined in `picker-fix-compare.png`.
+
+- Picker cards: `preview.png` cards were thumbnail height + 32 px, palette
+  cards 56 px, so rows were ragged (400 px: `tessera-light` centred beside
+  `tokyo-night`, `tessera` alone on the next row). After: every card is
+  `min(width × 9/16, 120) + 32`; palette themes draw a bar/window/dock mock in
+  their own colours. Selection is the 3 px accent border on both kinds.
+- Page glass: the background was exactly as wide as the content column, so
+  content sat on the glass edge and the 10–12 px column margins were
+  transparent; Foot's prompt showed there as a stray `[`. The glass now adds
+  the column margins (full width at 400 px, column + 20 px on Desktop).
+  Same code on `origin/main` (`af042fb`).
+- Heading: the `ScrollView` already clips, but its edge sat 8 px under the
+  title, so half-clipped lines read as drawn through it (same code on
+  `origin/main`; compared by source, not deployed). A 1 px accent hairline now appears under the title once the
+  page is scrolled, and another above the dock while more content follows.
+- Dock: the `ScrollView` and dock are separate rows of one column, so content
+  cannot reach under the dock; the last card ends above the hairline and dock
+  at both widths, and at the bottom the final line clears the dock.
+- After every deploy `hyprctl reload` left `hyprctl -j configerrors` empty;
+  no capture shows a config banner. Desktop layout mode was checked once: the
+  glass is padded 10 px around the column.
+
+## Omarchy theme extras, 2026-10-19
+
+Branch `feat/theme-extras`, stacked on `feat/theme-shape` (#47, `6de4413`).
+Executed by an agent in the running QEMU guest (Virtual-1 1280×800, scale 1,
+Phone layout, Hyprland 0.56.2, Quickshell 0.3.2). Captures in ignored `vm/`:
+`extras-0-before.png` (deployed `6de4413`), `extras-1-tessera-after.png`,
+`extras-2-picker-desktop.png`, `extras-3-picker-phone.png`,
+`extras-4-framed.png`, `extras-5-tessera-borders-gone.png`,
+`extras-6-restored.png`; combined in `theme-extras.png`.
+
+- Deploy: guest file hashes matched the worktree; `Hyprland --verify-config`
+  returned `config ok`; after every deploy and theme change `hyprctl reload`
+  left `hyprctl -j configerrors` empty and no capture shows a config banner.
+- Default `tessera`: generated `surface.lua` carries `window_border = 0`;
+  `general:border_size` stayed 0. Below the clock row the new shell was
+  pixel-identical (ImageMagick, 0 pixels over 1% difference) to the `6de4413`
+  shell restarted the same way. Against the pre-existing capture, 1254 pixels
+  of nav label anti-aliasing differ for both shells, which comes from the
+  restart environment, not this change.
+- Picker: with `catppuccin`, `kanagawa` and `tokyo-night` copied into
+  `~/.config/tessarchy/themes`, Settings shows their `preview.png` above the
+  name; `tessera`/`tessera-light` keep the palette swatch. At 1280 px: three
+  columns. At 400 logical px (transform 1, scale 2): two columns, preview
+  buttons about 180×133 logical px, labels unclipped.
+- Borders: a scratch theme (tessera palette plus `window_border = 2`,
+  `"#ff8800"` active, `"#3388ff"` inactive) gave `border_size` 2 and those
+  colours (also `group:col.border_active`); two tiled Foot windows showed an
+  orange and a blue 2 px border. Back to `tessera`: border size 0, no border
+  visible.
+- Icons: Yaru is not installed in the guest (nor in Arch core/extra), so
+  `kanagawa` (`Yaru-blue`) left `icon-theme` at `'Adwaita'` and wrote no
+  staged `icons`. An installed name (`AdwaitaLegacy`) was applied via
+  `gsettings`; `../../etc` was rejected. No guest packages were installed.
+  Rendering of icons inside GTK apps was not inspected.
+- `kanagawa` ships `hyprland.lua`; applying it changed no border option.
+- The guest was restored to `6de4413`, `tessera`, `icon-theme 'Adwaita'`,
+  empty configerrors, and the original window geometry.
+
+`./scripts/check.sh`: 115 Python tests OK (one skipped), 49 QML tests passed;
+shellcheck unavailable on the host.
+
+## Surface shape theme, 2026-10-19
+
+Branch `feat/theme-shape`, implementation commit `e6e7fee`, draft PR #47:
+https://github.com/thediamondsaint/tessarchy/pull/47 (stacked on #9).
+
+Executed in the running QEMU guest using source based on PR #9 (`a6b357a`)
+and the shape worktree, with the VM's Virtual-1 at 1280×800, scale 1.
+The guest ran Hyprland 0.56.2 and Quickshell 0.3.2. Captures in ignored `vm/`:
+`shape-baseline-1280.png` (complete `a6b357a` shell),
+`shape-default-complete.png`, `shape-custom-complete.png`, and
+`shape-reverted-complete.png`. The first two have the same rounded glass
+shapes and layout on visual inspection; clock, weather and app focus can
+change between captures. A scratch user theme with radius 4, border 2,
+window rounding 4, and blur disabled made Start/task buttons squarer and
+the wallpaper sharp behind the bars without restarting the shell. Reverting
+to `tessera` restored rounded/blurred glass in the screenshot. Actual
+`hyprctl getoption` reported rounding 4/blur false, then 18/true.
+
+`./scripts/check.sh`: 111 Python tests passed, one skipped for unavailable
+GObject metadata; available QML, Lua and syntax checks passed. Fish and
+shellcheck unavailable (skipped). The shape-specific Quickshell harness passed
+numeric overrides, radius and border caps, invalid values and reset. Guest
+`Hyprland --verify-config -c .../session/hyprland.lua` returned `config ok`.
+No physical-device or touch-interaction acceptance was performed; screenshot
+inspection covers visual change and restoration, not input hit testing.
+
+Border width follow-up (commit `b777f8c` deployed; executed by an agent in
+the QEMU guest, 1280×800, scale 1). Scratch user themes in
+`~/.config/tessarchy/themes` copied `tessera` and appended only
+`[surface] border_width = 4` or `= 0`; no colour token changed. Each was
+applied with `tessarchy-theme set` while the shell ran, then captured in
+Tablet layout, Tablet with quick controls open (`qs ipc call controls
+toggle`), and Desktop layout. Captures in ignored `vm/`:
+`border-{base,bw4,bw0}-{tablet,controls,desktop}.png`,
+`border-{bw4,bw0}-live.png`, `border-reverted.png`; side-by-side zoomed crops
+in `border-compare.png`. Result on visual inspection: border 4 gives a
+visibly thick outline and border 0 removes it on the Start button, task
+buttons, tray, workspace buttons, the nav/quick-controls panel frame and the
+quick-controls tiles and buttons. The live-applied captures were
+pixel-identical (ImageMagick AE 0) to captures after a shell restart, so
+the token applies without restart. Reverting to `tessera` restored the
+baseline (AE 0 on the workspace-button region). `./scripts/check.sh`: 111
+tests, OK (one skipped); fish and shellcheck unavailable.
+
 ## Actually performed, 2026-10-16
 
 Environment: Omarchy/Arch, Hyprland 0.56.2-2, Quickshell 0.3.1-1,
@@ -83,7 +197,7 @@ maximized apps; application UI and exclusive fullscreen escape remain constraint
 ## Basic guest conversion workflow, 2026-10-16
 
 The user reports that the official Basic image boots. This is user-reported
-Arch boot success, not an agent-observed Tessera GUI pass. Added a launcher for
+Arch boot success, not an agent-observed Tessa GUI pass. Added a launcher for
 that existing image, fresh read-only source sharing, guest-only setup, and a
 reversible tty1 login hook. All nine workflow tests pass, including a QEMU stub
 that checks disk selection/share contents and preserves the guest image, plus
@@ -91,12 +205,12 @@ login-hook roundtrip, idempotence and modified/symlinked profile refusal.
 The real launcher command was inspected using `run-basic-vm.sh plan`.
 Hyprland config parsing and QML static checks still pass (same known tooling
 warning); shellcheck remains unavailable. The actual guest has not been changed
-by the agent. Dependency installation, Tessera graphics, tty1 login startup and
+by the agent. Dependency installation, Tessa graphics, tty1 login startup and
 VM graphics compatibility still require running the documented guest commands.
 
 ## First graphical smoke test, 2026-10-16
 
-The user confirms Tessera runs in the Basic Arch QEMU guest and its dock is
+The user confirms Tessa runs in the Basic Arch QEMU guest and its dock is
 visible and working. This is a user-reported graphical smoke test; the agent
 has not observed the guest screen. Exact guest package versions and detailed
 results for switching/maximize/close/focus/scaling were not captured. The full
@@ -218,7 +332,7 @@ Actually performed:
   launcher columns, scrollable controls, and a Desktop override at phone size.
   The final launcher uses row-based height rather than a mostly empty drawer.
 - Used guest uinput to select Desktop/Automatic and Iris appearance. The actual
-  `shell.ini` changed and the mode/accent loaded again after restarting Tessera.
+  `shell.ini` changed and the mode/accent loaded again after restarting Tessa.
   Inspected the longer Settings page after scrolling, including appearance,
   branded sliders, clock, labels, and motion controls.
 - Guest `hyprctl reload` succeeds and `configerrors` is empty with the new Lua
@@ -238,7 +352,7 @@ Actually performed:
 
 - Added `fish` to `iso/packages.x86_64`, changed the sysusers shell for `tess`
   to `/usr/bin/fish`, and gave the skel tree a fish profile: greeting off, two
-  abbreviations, and the same gated tty1 one-shot Tessera start as
+  abbreviations, and the same gated tty1 one-shot Tessa start as
   `.bash_profile` (interactive only, tty1 only, no DISPLAY/WAYLAND_DISPLAY).
 - `scripts/stage-iso.sh` now copies the whole skel tree to `/home/tess` and
   records `file_permissions` for the fish config; tmpfiles keeps the `.config`
@@ -340,7 +454,7 @@ Actually performed:
   Verification passed in CI and matches GitHub's uploaded asset digest.
 - Two diskless QEMU/KVM VMs (2 GiB, 2 vCPUs, virtio-vga, no NIC) booted the
   exact image through BIOS and non-Secure-Boot UEFI. The agent visually
-  inspected both final screenshots at 90 seconds: each shows the Tessera GUI,
+  inspected both final screenshots at 90 seconds: each shows the Tessa GUI,
   wallpaper, clock, logo, status bar, mode badge and navigation after autologin.
   The first 120-second TCG attempts only reached Linux userspace, so they were
   not treated as graphical boot passes. Full capture evidence is attached.
@@ -406,7 +520,7 @@ Actual validation:
   no host Hyprland/Omarchy configuration files were changed.
 - Verified installed Quickshell QML type metadata for screencopy, desktop entries,
   IPC and layer keyboard focus, and Hyprland Lua metadata for layer rules/binds.
-  Guest reload/configerrors was clean with the Tessera-only frosted layer rule.
+  Guest reload/configerrors was clean with the Tessa-only frosted layer rule.
 - Visually inspected status bar, floating navigation, launcher, settings and
   card switcher. Switcher headings/instructions are absent; return/close actions
   are glass icon controls with accessible names and >=48px targets. App names
@@ -501,7 +615,7 @@ Actual validation:
 - Actions run 39063437439 built the ISO from
   `aa8b59a73a8d5d6b1d3fab6c17272e68e0bfac58`, verified its checksum,
   and captured diskless BIOS and non-Secure-Boot UEFI QEMU/KVM boots.
-- Inspected both final 1280×800 screenshots: Tessera's graphical home screen,
+- Inspected both final 1280×800 screenshots: Tessa's graphical home screen,
   current wallpaper/logo, glass status bar and floating dock are visible.
   Each guest used 2 GiB RAM, 2 vCPUs and virtio graphics, with no disk or NIC.
 - Downloaded the published Alpha 2 ISO and verified its complete local SHA-256
@@ -807,7 +921,7 @@ Actual validation after explicit owner approval:
 - One VM reboot completed. Because QEMU used -no-reboot it exited; the old process
   was confirmed gone before relaunching the same disk. The removed temporary
   read-only share was recreated; no concurrent disk writer or image rebuild.
-- Real PAM rejected an incorrect PIN, with no Tessera process started. The chosen
+- Real PAM rejected an incorrect PIN, with no Tessa process started. The chosen
   PIN opened the authenticated desktop. The real session-exit confirmation was
   used and the phone greeter returned. Fixed a follow-up backend error overwriting
   the rejection message; confirmed the corrected message in the VM.
@@ -1153,7 +1267,7 @@ locking and native network association remain separate work.
 
 Actions run 39127243527 built source `566a4385432697ffbb21147355476bed5727d9f5`
 using archiso 91-1. The diskless BIOS and non-Secure-Boot UEFI QEMU/KVM captures
-were inspected: both reached Tessera and opened the curated main-app picker.
+were inspected: both reached Tessa and opened the curated main-app picker.
 The guests had 2 GiB RAM, 2 vCPUs, no NIC and software virtio graphics, at 1280×800.
 The supplied Plymouth video is visible in the early captures; a blank interval
 remains during compositor handoff before the desktop appears. No physical tablet
@@ -1289,7 +1403,7 @@ Actually performed:
 - Guest cycle on the build 10 debug line (QEMU x86_64, Hyprland 0.56.2, 1280x800):
   with the session live, the generated `display.lua` carrying `transform = 1`
   reloaded through Hyprland and `hyprctl monitors` reported `transform: 1`; the
-  Tessera shell re-laid out to the portrait canvas (capture
+  Tessa shell re-laid out to the portrait canvas (capture
   `rotate-applied-90deg.png`). Running `tessera-rotate` itself as the live user
   then uncovered a real reload race: the helper writes `display.lua` inside the
   watched config directory, Hyprland's own watcher starts a reload, and the
@@ -1383,7 +1497,7 @@ Built by Actions run 39144935780 from `main` = `0f71636a0aecb20cd76359a71d2e911e
   identical to the digest GitHub reports for the uploaded asset and to the
   checksum the workflow verified before upload. The download URL returns HTTP 200.
 - Boot captures were inspected, not just collected: both `boot-bios.png` and
-  `boot-uefi.png` show the live image reaching the graphical Tessera desktop
+  `boot-uefi.png` show the live image reaching the graphical Tessa desktop
   (workspace strip, notification bell, tray indicator, dock, wallpaper and the
   Tessarchy mark), and both `launcher-bios.png` and `launcher-uefi.png` show the
   curated "Your space" picker with Firefox, Files, Text Editor, Document Viewer,
@@ -1990,10 +2104,614 @@ expected; no system upgrade was applied. The 38 updater tests passed. Arch CI
 caught the tablet bundle's old, pinned package filenames after the revision bump;
 updated the bundle list and tablet installation examples to the new revisions.
 
-## Title-bar scope — 2026-10-19
+## Navigation gestures (T21) — 2026-10-19
 
-Hyprland plugins load once at compositor start, so Hyprbars is a startup-time
-decision in `session/hyprland.lua`: only a session that starts already in
-Desktop mode loads it. Title bars are an optional desktop-only development
-feature — the patched plugin is built/deployed separately and is not part of
-the standard packages or ISO. They do not adapt at runtime to a layout change.
+Phone and Tablet default to gesture navigation; Settings → Navigation →
+Buttons restores Back, Home and Recents in the dock. Desktop is unchanged.
+Hyprland's own `gesture` bindings are touchpad-only, so the shell catches
+touch swipes on thin layer-shell strips: a full-width bottom strip covering the
+gap below the dock (Phone 20 px, Tablet 24 px; it never covers a dock button)
+and 16 px left/right strips between the status bar and the dock. A touch that
+starts in a strip does not reach the application below it. Thresholds live in
+`LayoutPolicy.js`: 48 px travel, Recents after a 350 ms hold.
+
+Executed by an agent in the QEMU VM (1280x800, theme tessera) with real kernel
+touch events from `scripts/guest-touch.py` (uinput, through libinput and
+Hyprland; not a hardware touchscreen). Phone, Gestures: the dock showed Phone,
+Messages and Keyboard with the handle pill; swipe up from the bottom edge
+opened Home; swipe up and hold opened Recents; a right-edge swipe closed
+Recents; a left-edge swipe closed Home and the pull-down drawer; a 30 px swipe
+did nothing; tapping Phone in the dock still opened the Phone page. Settings →
+Buttons (tapped) switched the dock live to Phone, Messages, Keyboard, Back,
+Home, Recents, removed the gesture layers, persisted `navigation=buttons`, and
+the same bottom swipe then did nothing. Tablet, Gestures: Home, Recents and
+both Back swipes behaved the same. Rotation, multiple outputs and a hardware
+touchscreen were not tested. `./scripts/check.sh` passed (106 Python tests,
+1 skipped; 64 Qt Quick tests, including press/move/release sequences on the
+gesture strip).
+
+## aarch64 VM bring-up, 2026-10-18 UTC
+
+Emulated aarch64 guest on an x86_64 host: QEMU 10.0.13 `virt` machine, TCG,
+4 vCPUs, 4 GiB, virtio-gpu with software rendering. Arch Linux ARM root
+filesystem from 2026-08-05 (signature verified against key
+`68B3537F39A313B3E574D06777193F152BDBE6A6`), upgraded to kernel
+7.2.10-1-aarch64, Hyprland 0.56.2-4, Quickshell 0.3.2-1, Aquamarine 0.15.1-1
+and Mesa 26.2.4.
+
+- `fetch-alarm.sh`, `build-aarch64-disk.sh` and `vm-aarch64.sh run` produced a
+  disk that reached the serial login prompt about 35 seconds after start.
+- `setup-guest.sh --autostart` ran inside the guest after accepting
+  `ID=archarm`: 89 Python tests passed (one skipped for missing disk tools),
+  49 Qt Quick results passed, and both Hyprland config checks passed.
+- With tty1 autologin, the guest started Tessa through the login hook.
+  QMP screenshots at 3 and 10 minutes showed the 1280x800 status bar,
+  workspaces 1-5, pull-down handle, status icons, clock, Tessarchy mark,
+  wallpaper and dock; the clock advanced between them.
+- The first guest run failed both site-builder tests because the VM source
+  snapshot omitted `website/`. `export-vm-source.sh` and `run-basic-vm.sh` now
+  include it; this also affected the x86_64 guest.
+
+Touch input, the launcher, quick controls, audio and Virgl were not exercised
+on aarch64. This guest does not establish support for any physical ARM device.
+
+
+## System theme, 2026-10-17
+
+Actually performed by an agent in the development QEMU
+guest (720x1440, Hyprland 0.56.2, Quickshell 0.3.2, squeekboard, foot 1.28.0):
+
+- `tessarchy-theme apply` staged Tessa; shell icons and colours rendered as before.
+- Copied Omarchy's stock `catppuccin` directory unchanged into
+  `~/.config/tessarchy/themes`; `tessarchy-theme set catppuccin` recoloured the
+  running shell live, used its Totoro wallpaper, restarted squeekboard with
+  Catppuccin keys (blue Return), and `tessarchy-run foot` opened in its palette.
+- `tessera-light` switched the shell, Settings theme picker, keyboard and Foot
+  to light.
+- Found and fixed: date/label text was unreadable over a bright theme wallpaper;
+  a translucent theme-coloured card now sits behind the clock.
+- A Foot opened under Catppuccin turned light in place after
+  `tessarchy-theme set tessera-light` (OSC 4/10/11/12 written to its pty).
+- Firefox follows dark/light only under `GTK_THEME`; it does not get the palette.
+- Window borders are not themed: this branch sets `border_size = 0`.
+- Not checked: real hardware.
+
+## Desktop glass theme follow-up, 2026-10-19
+
+Actually performed in the development QEMU guest (1280×800 Desktop, Foot
+window open), against `origin/main` af042fb, pre-fix PR #9 3d415d3, and the
+fixed branch. Captured Start, taskbar, switcher and quick drawer with the
+VM framebuffer; switched tessera -> tessera-light **without restarting** the
+shell and inspected each image directly. Side-by-side captures in ignored
+`vm/glass-{start,taskbar,quick,switcher}-comparison.png` (left-to-right:
+main, pre-fix PR, fixed dark, fixed light; switcher uses PR, dark, light).
+
+Pre-fix: the dark Start/taskbar looked close to main, but the Start header,
+tiles, app switcher preview and buttons, tray bevel, quick-settings text and
+input fields retained hard-coded blue/white from upstream. Light mode kept
+those blues and white glyphs on a pale panel. The rebased TouchButton's
+destructive fill additionally re-alpha'd an already-translucent danger tint.
+Fixed: desktop surface colours now resolve through Theme semantic tokens;
+Tessa's optional `shell.toml` reproduces the upstream dark glass, while
+unlayered light/Omarchy palettes derive translucent colours. The Start header
+gradient, taskbar bevel and compositor blur rules are unchanged. Quick radio
+glyphs and tray indicators tint to the foreground on light backgrounds.
+
+The focused window title is displayed in the **status strip**, not in a
+shell-drawn app title bar; that label and taskbar text now follow Theme. The
+VM's existing Foot opened tiled and covered most of the desktop; no claim is
+made about app-owned title bar theming. It remained dark after changing theme
+because it was opened directly (not through the themed Foot launcher).
+Guest lacks tessera-brightness/nightlight and UPower; those warnings were
+already present and do not block rendering. Physical hardware not checked.
+
+## Mobile subpage theme tokens, 2026-10-19
+
+Moved the last 85 literal-colour lines (sign-in, Messages, Phone, SIM & cellular,
+Sounds, notifications, audio/display/power/rotation controls, Settings, file
+picker, greeter) to Theme tokens. Values equal to the palette use it directly
+(`accent`, `text`, `textMuted`, `textSecondary`, `glass`, `input_*`); 18 new
+semantic tokens carry the rest, and Tessa's `shell.toml` pins their previous
+values. Near-identical literals in the same role now share one token, so a few
+Tessa colours moved by at most 7/255 per channel (e.g. Sounds row titles,
+display-control errors, Messages compose text/placeholder). The sign-in
+backspace glyph is now tinted with the theme text colour instead of fixed white.
+
+Actually performed in the development QEMU guest (1280×800, Phone layout,
+Hyprland 0.56.2, Quickshell 0.3.2), deploying `shell/` and `themes/` only;
+`hyprctl reload` after each deploy, `hyprctl -j configerrors` empty, no banner
+in any capture. Opened each page over shell IPC (Settings and Alerts through a
+guest-only IPC hook), the Power panel by scrolling Quick Settings with the
+guest touch helper, and the sign-in screen through `login-preview.qml`; sent one
+normal and one critical notification first. Captured pre-change and changed
+builds under `tessera` and `tessera-light`; comparison in ignored
+`vm/theme-subpages.png` (columns: pre-change light, changed Tessa, changed
+light).
+
+- Tessa: every page matched the pre-change capture to within 7/255 per
+  channel, apart from the clock and text anti-aliasing. Subpixel versus
+  greyscale anti-aliasing varied between shell sessions in both directions
+  (Phone had fewer colour-fringed pixels after, Power more) on untouched
+  components too; glyph colours were identical.
+- Light, pre-change: pale help/empty-state text on pale panels, dark-blue
+  notification cards and popups, a dark sign-in screen and a white backspace.
+- Light, changed: all page text readable, notification cards and popups light
+  with a red urgent edge, sign-in screen light over the artwork.
+- Greeter: launched `greeter.qml` while the user theme was `tessera-light`; it
+  rendered the dark bundled Tessa, and the scrim pixels matched the
+  pre-change sign-in screen. Not run under greetd.
+
+## Touch file dialogs, 2026-10-17
+
+Executed by an agent in the QEMU VM, Phone size
+(720x1440 at scale 1.8 = 400x800 logical), Firefox 158 launched with
+`tessarchy-run`, xdg-desktop-portal 1.22.1, xdg-desktop-portal-gtk 1.15.3.
+
+Mechanism (adapted from omalauncher's portal and GTK3 module, MIT):
+`libtessarchy-filechooser.so` (GTK_MODULES) sends plain GtkFileChooserDialogs
+through the file chooser portal; `tessarchy-portals.conf` routes FileChooser to
+`tessarchy-portal`, which asks the shell (`tessera-shell ipc call picker pick`).
+In Desktop mode the shell answers `desktop` and the request goes to
+xdg-desktop-portal-gtk unchanged.
+
+Validated:
+- Ctrl+S in Firefox: the Tessa picker opened with Firefox's suggested name
+  (Untitled.html) and folder (~/Downloads); no GTK dialog appeared. Save wrote
+  ~/Downloads/Untitled.html.
+- Cancel: the picker closed, Firefox kept no dialog, nothing was written.
+- Ctrl+O: the picker listed Untitled.html; tapping it opened
+  file:///home/arch/Downloads/Untitled.html. The keyboard is hidden for
+  Open/folder pickers, since only Save types.
+- layoutMode=desktop: Ctrl+S gave GTK's own floating Save As (746x394).
+- `tests/test_workflows.py`: the real portal over a private D-Bus with a stub
+  shell (pick, cancel, Desktop fallback, filter globs, FIFO cleanup).
+
+- Follow-up, same VM: a plain GTK3 GtkFileChooserDialog (PyGObject script via
+  `tessarchy-run`) with select_multiple: two of three files ticked, Open (2)
+  returned both and the folder. SELECT_FOLDER: entered a subfolder, Select
+  returned it. Both started in the folder the app set; before a fix they
+  opened in $HOME, because GTK3 applies set_current_folder asynchronously and
+  the module asked the portal first (omalauncher's module has the same gap).
+- GTK4 (zenity 4.2.2): open and save went through the portal with no GTK
+  window; open returned the tapped file, save returned the suggested name in
+  the requested folder.
+
+Not checked: wxWidgets apps, hardware.
+
+Rebase verification (2026-10-19, isolated worktree, no VM changes):
+`./scripts/check.sh` passed (108 Python tests, one skipped; Qt 49 passed,
+0 failed, 0 skipped, 0 blacklisted); `make -s -C portal O=/tmp/pb-rb`
+built the portal. This does not revalidate the earlier live guest results above.
+
+Review decision: upstream's `LocalFilePicker.qml` is an in-shell browser for
+PhoneApp/SoundSettings, backed by their private file browser and limited to
+photo/audio selection. This PR's `FilePicker.qml` is a portal-backed app dialog
+with save, folder and multi-file handling. Keep both integrations for now;
+decide whether to share their navigation/list UI in a follow-up after aligning
+their backend interfaces. Do not replace either picker merely by renaming it.
+
+## T-cube Super key (2026-10-20)
+
+Added a real Mod4 modifier to US standard/terminal layouts in both keyboard
+shapes. The key uses the existing Tessarchy T-cube SVG through a private GTK
+icon theme. Terminal layouts keep Control and Alt in four full-height rows.
+The private XDG data directory leaves host and other session keyboards unchanged.
+All four layouts passed the installed Squeekboard layout parser in the guest.
+At 390×844 scale 1, actual QMP touches on the T-cube and Enter opened one new
+Foot window through Hyprland's Super+Return binding. Inspected the rendered
+keyboard screenshot; its four rows retain the established minimum key height.
+Local evidence: `build/vm-test-20261020/osk-super-latched.png` and
+`osk-super-proof.png` in the development workspace.
+
+## Combined VM-accepted PR integration (2026-10-20)
+
+Reconciled #9, #10, #38, #47, #49 and #50 with main, preserving their commit
+history and the current stacked-phone Recents, immediate dismissal, desktop
+taskbar spacing and plain-text rendering. Added the T-cube Super key. The
+previous unfinished theme-integration worktree was left intact.
+
+The combined x86_64 guest loaded the shell and reported empty configerrors at
+390×844 and 1280×800. Real QMP touch passed bottom-edge Home, left/right-edge
+Back, swipe-and-hold Recents and immediate swipe dismissal of a disposable Foot
+window. Inspected Phone Recents, Desktop Start and light/dark theme captures.
+The real compiled portal backend, running on an isolated D-Bus connected to
+the live shell, opened the Phone file picker; tapping Cancel returned response
+1 with an empty result. Desktop picker IPC delegated with `desktop`.
+The prior ARM boot evidence belongs to #38's documented guest; no new ARM boot
+or physical-device/ISO acceptance is claimed for this integration.
+
+Expanded VM snapshots to carry themes and portal sources, declared GTK/GLib
+build dependencies in all package-building CI jobs and added QtQuick.Effects
+to Ubuntu checks. Shell and session package revisions are 0.1.0-4 so installed
+systems detect these changes. Local VM captures/results are retained under
+`build/vm-test-20261020/` in the development workspace.
+
+Final local combined checks passed: 214 Python tests, 76 Qt Quick results and
+four website tests, plus available syntax/Hyprland/QML checks; fish and
+ShellCheck were unavailable locally. Seven packages built without installation.
+Actual guest theme controls changed rounding/blur/border to 4/false/2 and
+restored 18/true/0, with empty configerrors. Ubuntu source CI now uses the
+supported 26.04 runner for QtQuick.Effects; every source/build job declares the
+portal's GTK/GLib build dependencies. Terminal Fn exposes navigation/F1–F12
+without adding short key rows.
+
+## Window tape research RFC — 2026-10-20
+
+Documentation-only proposal on baseline `e52ff9e`; Hyprland remains the compositor.
+Reviewed upstream scrolling/gesture/IPC documentation and current session/shell
+integration. `./scripts/check.sh` passed: 214 Python tests, 76 Qt Quick results
+and 4 website tests; Hyprland config verification passed. Fish and ShellCheck
+were unavailable. QML lint emitted a FilePicker PanelWindow creatability warning.
+No tape implementation, runtime interaction or physical-touch test was performed.
+See [the proposal](window-tape-proposal.md) for planned implementation acceptance.
+
+## Window tape prototype — 2026-10-20
+
+PR #61 now implements an opt-in named tape workspace. Ordinary mobile/desktop
+policies remain covered by the existing workflow tests, including new assertions
+that tape windows bypass floating/maximization. The implementation reuses
+Hyprland's scrolling layout and an optional 48-line bridge to its native gesture
+methods. The bridge compiled without diagnostics against installed Hyprland
+0.56.2 headers and uses the standard client/server plugin ABI hash check.
+
+Actual runtime checks used an isolated nested Hyprland 0.56.2 compositor, private
+runtime/config/state directories and a private session bus, with the real Tessa
+shell and two live Foot windows. At 900×700, scale 1, a Wayland virtual pointer
+verified reveal, continuous drag, retained application focus during movement,
+destination focus on release, previous/next, fallback dragging after unloading
+the bridge, exit to workspace 1 and re-entry. The public pixel move path snapped
+back after hard refocus; the native gesture bridge and `follow_focus=false`
+resolved this. A real [mid-drag capture](images/window-tape-prototype.png) is
+included. No host desktop configuration was changed.
+
+The normal VM launcher crashed in QEMU before guest startup, including with
+headless display and no audio. These nested results do not establish VM, ISO
+or physical-device acceptance. OSK, fractional scale, rotation, dialogs,
+fullscreen, multiple outputs and physical touchscreen latency remain planned
+checks in [the proposal](window-tape-proposal.md).
+
+`./scripts/check.sh` passed: 219 Python tests, 83 Qt Quick results and 4 website
+tests, plus syntax/lint and Hyprland session/greeter config verification. Fish
+and ShellCheck were unavailable. QML lint retained the existing FilePicker
+PanelWindow creatability warning. `git diff --check` passed.
+
+Tested implementation revision: `2dc361a`. The mid-drag capture was refreshed
+from that source after the full checks passed.
+
+## Start installed-application inventory, 2026-10-20
+
+PR #58 removes the primary-role whitelist, uses Quickshell's eligible inventory,
+sorts names and groups Desktop Start by category with Other fallback. Existing
+Start tiles, ScrollView, icon lookup and execution are reused. Native model and
+metadata notifications drive updates; no polling or scanner added. Stable desktop
+IDs retain unaffected tile objects and focused selections during row changes.
+Enter/Return activation, missing/broken icon fallback and empty-menu focus are
+covered by the implementation. Shared Phone/Tablet inventories become complete
+and alphabetical.
+
+Verified source commit: 73031822db8116a88a9a085ab29e7a5a0d8ffca0.
+[Source checks run](https://github.com/thediamondsaint/tessarchy/actions/runs/39425133957):
+
+- Ubuntu and Arch source-check jobs passed ./scripts/check.sh.
+- Arch: 199 Python tests completed, one GObject metadata test skipped; 67 Qt
+  Quick results passed; available QML lint, Hyprland config, Lua, fish and
+  ShellCheck checks passed. Tablet package generation and artifact upload passed.
+- Native Quickshell integration passed on Arch: isolated existing XDG application
+  directory, initial discovery, new desktop entry outside the old whitelist,
+  atomic rename/icon/category changes, NoDisplay masking and removal. This uses
+  real filesystem notifications and application-model updates, without a timer
+  or mocked inventory. The harness imports copied source inside its isolated
+  configuration root, following Quickshell's import boundary.
+- Ubuntu: 199 Python tests completed with unavailable-service/runtime skips;
+  67 Qt Quick results and all 10 Node policy/website tests passed.
+- Policy regressions cover unknown IDs, multiple browsers, nonlaunchable entries,
+  distinct IDs with equal names, category ordering/fallback, additions/removals,
+  metadata changes, stable row identity, no-op refreshes and 500 applications.
+- Qt component coverage includes focused app retention, removal recovery, metadata
+  updates, Enter launch signals and minimum target dimensions.
+- Local git diff --check and the same 10 Node tests passed. Local full Python
+  execution is restricted by root/socket permissions; an updater-status test
+  failure also reproduces on unchanged main here. CI's isolated environment
+  passed, so the local limitations are not reported as launcher regressions.
+
+Not performed: visual VM review, actual package installation/removal in a running
+interactive session, Flatpak/Snap export discovery, directory-watcher edge cases,
+physical input or multi-output acceptance. Source checks and package generation
+do not establish those results or ISO boot acceptance. OnlyShowIn/NotShowIn/
+TryExec and terminal Exec compatibility remain the upstream limitations recorded
+in docs/start-menu-installed-apps.md.
+
+## Operation Tessa integration — 2026-10-21
+
+Implementation revision `81df93b`, branch `feat/operation-tessa`, starts from
+#85 on #61 and integrates #58. #84, #63 and #64 were reviewed; the independent
+tablet split and general auto-hide PRs remain untouched. Existing conflicted
+and modified checkouts were preserved in separate directories.
+
+Host `./scripts/check.sh` passed: 221 Python tests, 94 Qt Quick results and
+11 Node tests; QML lint and Hyprland session/greeter config verification passed.
+Fish and ShellCheck were unavailable. The existing FilePicker PanelWindow
+creatability warning remains. `git diff --check` passed. Tests include actual
+Qt mouse/touch events, radial action selection, launcher search, keyboard and
+reopen behavior, native DesktopEntries install/metadata/hide/removal monitoring,
+workspace guards and bridge/fallback behavior.
+
+The existing MacBookPro15,2 development disk booted through `run-basic-vm.sh`
+with KVM, software virtio-vga, 1536MiB RAM, two vCPUs, opt-in loopback SSH and
+virtio multitouch. Its existing local QEMU module workaround was reused.
+No host desktop configuration, disk formatting or dependency installation was
+performed. Guest shell, session and preferences were backed up before staging
+the new shell. Installation was first exercised in a scratch guest HOME.
+The guest has Hyprland 0.56.2 (`efb50993780079460b0cbed1363e2166a2de1d9f`),
+Quickshell 0.3.2 and Qt 6.12.0. The optional bridge was compiled on the host
+against the identical compositor ABI, then loaded in the guest; the guest has
+no C++ compiler. Guest compositor config errors were empty.
+
+| Guest check | Observed result |
+| --- | --- |
+| Cube | Real multitouch expand, radial opening/center cancel, idle collapse; absolute mouse click retained app focus |
+| Launcher | Responsive grid; `ffx` finds Firefox; type/arrows/Enter opens an existing Foot; Escape dismisses; Super+Space opens it |
+| App discovery | Added a user-installed `.desktop` entry for an existing executable; entry appeared without restarting the shell and disappeared after removal; no pacman/Flatpak/Snap installation claimed |
+| Native horizontal scrolling | Two live Foot windows remained 390×796 with zero bottom dock reservation; positive drag translated both full-width columns |
+| Focus and release | Focus remained on Notes during movement; release snapped to Terminal at x=0; a held drag showed both windows clipped by the output |
+| Bridge fallback | Unloaded bridge; 240px touch drag stepped to the previous window; bridge restored afterward |
+| Radial menu | Recents and center cancel exercised in the VM; all six action signals covered by Qt tests |
+| OSK | Real Squeekboard appeared on launcher text focus; launcher search remained visible above it; cube stayed above keyboard surface |
+| Quick Settings / Recents | Existing Quick Settings IPC opened/dismissed drawer; radial action opened Recents with both applications; side Back dismissed it |
+| Responsive layouts | Actual outputs 320×640, 390×844, 1024×768 and 1280×800; grid and cube fitted; normal Desktop taskbar remained available outside tape |
+| Rotation | Existing `tessera-rotate cycle` produced transform 1, then reset succeeded; original 390×844 preferences restored |
+| Fullscreen | Real native exclusive fullscreen reported mode 2; cube stayed available; returned to normal |
+| Dialog | Real GTK modal transient floated at 390×179 within phone bounds; OK dismissed dialog and test parent |
+| Exit / reentry | Returned to preceding workspace, restored normal navigation, then reentered with both windows retained |
+
+Actual, unedited guest screenshots and hashes are in
+[assets/screenshots/tessa-development](../assets/screenshots/tessa-development/README.md).
+QEMU's direct display capture showed corruption at the custom phone mode;
+compositor `grim` captures were inspected and render correctly. A subsequent
+400×800 supported-mode check produced a correct direct QMP PNG capture; the VM
+was left upright at 400×800 with its original 390×844 preference backed up. Mesa reports no
+DRM render node and Quickshell falls back to SHM; live Recents preview coverage
+is incomplete in this software-rendered guest. Optional BlueZ is absent. No QML
+load failure remains; Wayland text-input disable warnings were observed during
+panel changes.
+
+Physical phone/tablet touch latency, inertia feel, palm rejection, sensor-driven
+rotation, physical OSK behavior, multiple outputs, accelerated live previews,
+XWayland dialogs, real fullscreen video, and package-manager/Flatpak/Snap export
+installation remain manual acceptance work. Virtual touch and output transforms
+do not establish physical-device acceptance. No new ISO boot or release claim
+is made. The scrolling interface remains opt-in and the integration PR is draft.
+
+Guest `./scripts/check.sh` ran all 221 Python tests but stopped with four
+environment failures: VM/export scratch copies exceeded the guest `/tmp` quota,
+and two ISO staging cases require `make`, which is absent. Two pre-existing
+optional tests were skipped. No dependency was installed. A separate guest run
+with disk-backed scratch space passed all six tape/Lua tests, the native live
+DesktopEntries integration test, and all 94 Qt Quick results. The complete host
+suite above remains the full-suite pass; the guest-wide suite is not claimed
+as passing. Host/guest logs are retained in the ignored development `build/`.
+
+Arch CI on `49b9807` passed Python and Qt checks but failed ShellCheck SC2046
+in the inherited bridge build script. Replaced unquoted `pkg-config` expansion
+with a Bash argument array; the native bridge rebuilt successfully. The separate
+400×800 direct QEMU capture is saved with the other evidence (23 PNGs total).
+
+
+## Reference wheel styling — 2026-10-21
+
+Runtime source `d6f30ee` replaces the labelled drag strip with the supplied
+reference's dark glass, blue edge light, graded ticks and center indicator.
+Settings → Window Wheel persists bottom, left or right placement. Input is
+extracted from the prototype into EdgeWheel.qml; coalescing, native IPC,
+release snapping and fallback remain compositor-owned. No dependency added.
+The cube remains a separate focus-preserving control. Glow is a theme token.
+
+`./scripts/check.sh` passed (221 Python, 94 Qt Quick, 11 Node); focused wheel
+checks and QML lint passed after the visual refinements. The existing FilePicker
+warning remains; Fish/ShellCheck are unavailable locally. Qt regression checks
+cover horizontal/vertical touch and mouse movement, coalescing, release and
+cancellation without a later stale release committing movement.
+
+Actual 400×800 guest with real Files and Calculator: genuine virtual-touch drags
+in both directions switched to Calculator then Home for bottom, left and right
+placements. Windows retained full width; config errors were empty. Side wheels
+occupied only the selected 64×440 edge surface; the bottom wheel was 256×64,
+with no keyboard grab or exclusive zone. The selection survived shell restarts.
+Existing software-Mesa/SHM and absent-BlueZ warnings remain.
+
+[Three real screenshots and the updated scrolling GIF](../assets/screenshots/tessa-wheel-styles/README.md)
+record the implementation. The GIF uses captured QMP frames and real frame
+durations. Physical touchscreen feel remains untested.
+
+
+## Tablet wheel preview — 2026-10-21
+
+Runtime `a8e6a45` was captured in the actual 1024×768 QEMU guest with automatic
+Tablet layout. A phone-distance drag initially snapped back on the wider output;
+wheel movement now scales with output width. The original per-pixel behavior is
+retained at phone width. A new Qt regression verifies tablet distance scaling.
+
+`./scripts/check.sh` passed: 221 Python, 95 Qt Quick and 11 Node results; focused
+wheel tests and QML lint also passed. Virtual touch switched real Files/Calculator
+windows in both directions for left, right and bottom placement. The app windows
+remained 1024px wide; the bottom wheel measured 280×64 and side wheels 64×440.
+Config errors were empty. Tablet launcher, three placements and a real scrolling
+GIF are in [tessa-tablet-preview](../assets/screenshots/tessa-tablet-preview/README.md).
+The VM was left at 1024×768; its previous phone preference was backed up first.
+Physical tablet input remains untested.
+
+
+## Compact app launcher — 2026-10-21
+
+Runtime `6e5ff9c` removes the large launcher grid and navigation-panel presentation.
+It adapts DMS/Dux's MIT application-row layout into a centered search popup, while
+retaining Tessa's DesktopEntries and execution/search policies. Attribution is
+shipped in `shell/third-party/dms`; no new dependency was added.
+
+`./scripts/check.sh` passed: 221 Python, 96 Qt Quick and 11 Node results, including
+QML lint and Hyprland configuration validation. Existing FilePicker warning and
+unavailable Fish/ShellCheck remain. Qt checks exercise fuzzy search, reopen reset,
+keyboard selection, touch activation and empty-result activation guards.
+
+The existing VM loaded the shell successfully. Genuine virtual touch/keyboard
+verified Escape and outside-tap dismissal, padding taps keeping the popup open,
+filtered Enter launching a real Calculator window, and touch-row launching.
+Opening the separate layer initially lacked keyboard focus; requesting focus on
+popup visibility fixed the failure, and retesting passed. Launch tests waited
+for asynchronous application mapping. 400×800 and 1024×768 captures verify phone
+and tablet sizing; real Squeekboard opens on phone search without covering the
+search field. Config errors were empty. The VM was returned to Tablet mode with
+OSK enabled. [Four actual captures](../assets/screenshots/tessa-compact-launcher/README.md)
+include the filtered list and phone keyboard. Physical touchscreen behavior
+remains untested; broader prior limitations above still apply.
+
+
+## Cube recent-app shelf — 2026-10-21
+
+Runtime `cf0a0e8` opens a compact recent-app shelf when tapping the Tessa cube.
+It reuses AppSwitcher and the existing MRU history rather than adding a new
+capture service. Native previews have icon/title fallbacks; compact mode leaves
+normal Recents and Alt+Tab behavior intact. Cyan edges share `wheel_glow`.
+The existing previous/next signals were unconnected in the shell; they now call
+the original workspace-isolated native scrolling bridge.
+
+`./scripts/check.sh` passed: 221 Python, 97 Qt Quick and 11 Node results,
+including QML lint and Hyprland config validation. The existing FilePicker
+warning remains; Fish/ShellCheck are unavailable locally. Focused cube tests
+passed (10 results), including touch opening without taking keyboard focus,
+postponing idle collapse while browsing, explicit collapse, narrow sizing and
+retaining the switcher for its deferred focus handoff.
+
+The existing VM disk was booted through the established QEMU workflow. Real
+Files, Calculator and Foot windows were used at 400×800 and 1024×768. Virtual
+touch verified recent-card activation/collapse, horizontal flicking to reveal
+the third window and activate it, radial open/return, explicit and idle collapse,
+and previous/next buttons moving actual scrolling focus. Opening the cube kept
+the active application focused. Testing caught wheel/toolbar overlap and a
+visible IME; the wheel now hides during the shelf and the cube dismisses the IME.
+Retesting passed with the real keyboard enabled and explicitly shown first.
+Config errors were empty. Visible-window preview capture worked; unavailable
+inactive previews showed app icons/titles. Existing Mesa/SHM and absent-BlueZ
+warnings remain. The VM was returned to 1024×768 with the OSK enabled.
+
+[Five real screenshots](../assets/screenshots/tessa-cube-recents/README.md) record
+the phone shelf before/after a flick, radial actions, collapsed cube and tablet
+shelf. Physical-device touch latency and sensors remain untested. Prior broader
+VM/packaging limitations above still apply.
+
+
+## Bundled Omarchy themes — 2026-10-21
+
+Runtime `bf63497` bundles 23 unmodified Omarchy palettes with their upstream MIT
+license/attribution, alongside Tessa Night and Tessa Light. No dependency or
+wallpaper is added. Settings uses the existing responsive palette cards, with
+readable names, applying/error state and a guard against overlapping changes.
+Palette-only themes now drive the cube/wheel glow through their accent.
+
+`./scripts/check.sh` passed: 222 Python, 100 Qt Quick and 11 Node results,
+including QML lint and Hyprland validation. Existing FilePicker warning and
+unavailable Fish/ShellCheck remain. New Python coverage renders all 23 imported
+palettes into normalized shell data, Foot configuration and Squeekboard CSS in
+scratch HOME. Qt coverage checks dark/light switching, semantic override reset,
+input foreground and palette-derived glow. Existing scratch install/uninstall
+checks passed with the bundled themes.
+
+The existing VM discovered 25 themes. Genuine virtual touch selected Catppuccin
+and Catppuccin Latte in Settings and Gruvbox from the 400×800 phone grid. Phone
+touch swipes reached the two-column theme cards. Live updates were captured at
+1024×768 for Catppuccin Latte, Tokyo Night, Gruvbox, Rose Pine and restored Tessa
+Night. The real Foot terminal launched through `tessarchy-run` updated its
+palette while open; keyboard CSS and mode data matched the selected light theme.
+The terminal's shell overwrites its window title, so mapping was confirmed using
+its initial title and client PID. No new terminal failure occurred.
+Config errors were empty; existing Mesa/SHM/absent-BlueZ warnings remain. The VM
+was returned to 1024×768 and Tessa Night. Guest themes were backed up before
+installation. Host configuration was not changed.
+
+[Seven actual screenshots](../assets/screenshots/tessa-themes/README.md) show the
+themed cube/terminal, light picker and phone grid. Theme-card palette previews
+are native UI widgets, not wallpaper downloads. Physical-device latency and
+application-specific GTK/Qt styling beyond existing launcher policies remain
+unverified; previous broader validation limitations still apply.
+
+
+## Icon-only glass cube — 2026-10-21
+
+Runtime `0dc2061` replaces the cube's preview/text shelf with the existing
+QuickSwitcher in glass mode. App icons, a selection dot and themed SVG actions
+replace visible captions; accessible names remain. The radial menu is also
+icon-only. The 408×208 tablet shelf clamps to 384×208 on the 400px phone. Touch
+targets remain at least 48px, with reduced-motion-aware press feedback. Native
+Hyprland blur now includes `tessera-tape`; glass surfaces use theme-derived tint,
+translucency and highlights. Normal Recents and Alt+Tab remain available.
+
+`./scripts/check.sh` passed: 223 Python, 101 Qt Quick and 11 Node results,
+including QML lint and compositor config validation. Existing FilePicker warning
+and unavailable Fish/ShellCheck remain. Qt checks exercise icon touch activation,
+horizontal flicking without accidental activation and preserved focus. A Lua
+regression checks focus-before-fit for tape windows and unchanged normal-layout
+and floating-dialog behavior.
+
+Actual VM at 400×800 and 1024×768: virtual touch opened the cube without taking
+application focus, activated a real window and collapsed the shelf, flicked the
+icon rail, and opened/returned from radial actions. Visual checking caught focus
+changing without revealing the selected window. The existing Lua activation
+helper now focuses and fits tape windows into view in one compositor operation;
+the shell uses it for tape activation. Retesting revealed the real Calculator,
+and actual Files captures show compositor blur through the glass. Config errors
+were empty; existing software Mesa/SHM and absent-BlueZ warnings remain. The VM
+was returned to Tablet with OSK enabled and Tessa Night active.
+
+[Five actual captures](../assets/screenshots/tessa-glass-icons/README.md) show the
+phone/tablet cube, revealed Calculator, touch flick and icon radial menu. Physical
+touchscreen latency remains untested; prior broader limitations still apply.
+
+
+## Vanilla compositor baseline and touch widgets — 2026-10-21
+
+`session/hyprland.lua` now stays close to vanilla Hyprland. It retains only the
+native `tessarchy-tape` scrolling workspace/plugin, theme-derived glass and
+wallpaper handoff, session startup, rotation preferences, and small Tessa
+keyboard fallbacks. Phone maximization/tagging, desktop auto-floating,
+hyprbars, compositor window refitting, workspace remapping, and custom focus
+bindings were removed. Legacy tests for those removed policies are retained as
+explicit skips; the new baseline regression verifies that no window policy is
+registered.
+
+The first touch widget surface is `DesktopWidgets.qml`: calendar, weather,
+media, and battery cards use existing Quickshell services and theme tokens.
+The widget grid is one column on phones, two on tablets, and four on wide
+desktop outputs; the widget test covers the narrow layout and refresh signal.
+The latest full check passed: 224 Python, 105 Qt Quick, and 11 Node results;
+three legacy compositor-policy tests are explicitly skipped because those
+policies were removed from the vanilla baseline.
+GitHub pattern review and license notes are in
+[touch-widget-research.md](touch-widget-research.md).
+
+The touch layouts no longer reserve a persistent bottom dock. Phone, Messages,
+and Keyboard are now icon-only actions in the expanded T cube, while the
+desktop taskbar remains unchanged. Focused cube tests cover the three actions
+and the larger two-row touch target grid. A follow-up VM restart was blocked by
+the host QEMU `virtio-vga` SIGSEGV during device initialization; the previous
+real widget capture remains valid for the underlying shell surface, but this
+specific dock relocation needs a fresh VM capture.
+
+
+## Native ChatGPT panel — 2026-10-21
+
+Tessa now exposes an icon-only ChatGPT shortcut in the tablet status area,
+desktop task strip and radial actions. The panel launches the official Linux
+`chatgpt-bin` app when installed and reports account/rate-limit data only from
+the local Codex app-server in read-only mode. Signed-out systems show a clear
+sign-in state and never display fabricated usage values.
+
+`./scripts/check.sh` passed: 223 Python, 101 Qt Quick and 11 Node results;
+QML lint and Hyprland config validation passed. The only existing diagnostics
+are the FilePicker `PanelWindow` warning and unavailable Fish/ShellCheck tools.
+
+The existing VM installed and verified `chatgpt-bin 26.1016.61520-1`. A real
+1024×768 QMP capture shows the Tessa ChatGPT panel with the installed/signed-out
+state. No credentials were entered, so authenticated usage, physical sign-in,
+and native ChatGPT window rendering remain unverified.
+
+[Actual VM capture and provenance](../assets/screenshots/tessa-chatgpt/README.md).

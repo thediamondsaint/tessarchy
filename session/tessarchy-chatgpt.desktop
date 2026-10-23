@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=ChatGPT
+GenericName=AI assistant
+Comment=ChatGPT in a dedicated Chromium window
+Exec=chromium --app=https://chatgpt.com
+Icon=/usr/share/tessarchy/shell/icons/chatgpt.svg
+Terminal=false
+Categories=Network;
+StartupWMClass=chatgpt.com
+Keywords=AI;assistant;ChatGPT;

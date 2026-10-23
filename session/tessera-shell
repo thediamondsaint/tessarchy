@@ -2,10 +2,15 @@
 set -euo pipefail
 share=${TESSARCHY_DATA_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}/tessarchy}
 if [[ ! -f "$share/shell/shell.qml" ]]; then share=/usr/share/tessarchy; fi
-[[ -f "$share/shell/shell.qml" ]] || { echo "Tessera source not installed" >&2; exit 1; }
-# The audio integration loads unconditionally and reconciles with PipeWire's
-# live state inside the shell (AudioStatus.qml), so a late-starting media
-# daemon no longer leaves audio controls permanently disabled.
+[[ -f "$share/shell/shell.qml" ]] || { echo "Tessa source not installed" >&2; exit 1; }
+export PATH="$HOME/.local/bin:$PATH"
+# `tessera-shell ipc call <target> <function> ...` talks to the running shell.
+if [[ ${1-} == ipc ]]; then
+    shift
+    exec qs ipc --path "$share/shell/shell.qml" "$@"
+fi
+# The shell keeps its audio integration loaded and follows PipeWire's live
+# availability, so a late-starting media service is still detected.
 # Offer the keyboard toggle only when the optional on-screen keyboard exists.
 export TESSARCHY_OSK=0
 if command -v squeekboard >/dev/null && command -v tessarchy-osk >/dev/null; then

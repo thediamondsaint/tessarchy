@@ -7,17 +7,17 @@ root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 # Reject the Omarchy host even when the host itself is virtualized.
 # shellcheck source=/dev/null
 source /etc/os-release
-[[ ${ID:-} == arch ]] || { echo "This setup is for the Arch guest, not the host" >&2; exit 1; }
+[[ ${ID:-} == arch || ${ID:-} == archarm ]] || { echo "This setup is for the Arch guest, not the host" >&2; exit 1; }
 virt=$(systemd-detect-virt --vm || true)
 case "$virt" in qemu|kvm) ;; *) echo "Expected a QEMU/KVM guest; detected: ${virt:-none}" >&2; exit 1;; esac
 missing=()
-for tool in Hyprland qs firefox foot python ffmpeg ffplay; do
+for tool in Hyprland qs chromium foot python ffmpeg ffplay ssh sshd; do
     command -v "$tool" >/dev/null || missing+=("$tool")
 done
 if ((${#missing[@]})); then
     printf 'Missing guest dependencies: %s\n' "${missing[*]}" >&2
     echo "Inside the guest, install explicitly:" >&2
-    echo "sudo pacman -Syu --needed hyprland quickshell firefox foot mesa qt6-declarative qt6-wayland ttf-dejavu python python-gobject ffmpeg" >&2
+    echo "sudo pacman -Syu --needed openssh hyprland quickshell chromium foot mesa qt6-declarative qt6-wayland ttf-dejavu python python-gobject ffmpeg" >&2
     exit 1
 fi
 "$root/scripts/check.sh"

@@ -65,11 +65,52 @@ function barGeometry(mode, rows) {
     };
 }
 
-// Touch docks: Phone, Messages, Back, Home, Recents and the optional Keyboard.
-// Settings lives in the status bar and pull-down, not the dock.
-function dockLayout(mode, width, keyboard) {
+// Navigation gestures for the touch layouts. Distances are logical pixels.
+// edge: width of the left/right swipe strips; the bottom strip is the bar gap
+// plus inset (open pages: BAR_PAGE.bottom), so it never covers a dock button.
+// distance: least upward travel
+// for Home/Recents; back: least inward travel for Back; hold: milliseconds
+// held still at the end of a swipe up for Recents; still: movement allowed
+// while holding.
+const GESTURE_EDGE = 16;
+const GESTURE_DISTANCE = 48;
+const GESTURE_BACK_DISTANCE = 48;
+const GESTURE_HOLD = 350;
+const GESTURE_STILL = 12;
+
+// Gestures replace Back/Home/Recents on Phone and Tablet unless the user
+// chose buttons. Desktop keeps its taskbar.
+function gestureNavigation(mode, choice) {
+    return mode !== "desktop" && choice !== "buttons";
+}
+
+// edge: "bottom", "left" or "right"; dx/dy: travel since the touch began
+// (screen axes, y down); heldMs: time the finger has been still at the end.
+function classifyGesture(edge, dx, dy, heldMs) {
+    if (edge === "bottom") {
+        const up = -dy;
+        if (up < GESTURE_DISTANCE || up < Math.abs(dx)) return "none";
+        return heldMs >= GESTURE_HOLD ? "recents" : "home";
+    }
+    const inward = edge === "left" ? dx : edge === "right" ? -dx : 0;
+    if (inward < GESTURE_BACK_DISTANCE || inward < Math.abs(dy)) return "none";
+    return "back";
+}
+
+// An open page puts its dock row BAR_PAGE.bottom above the screen edge.
+// handle: height of the handle pill's centre, in the gap below the dock frame.
+function gestureEdgeSize(mode, expanded) {
     const bar = barGeometry(mode, 1);
-    const count = 5 + (keyboard && mode !== "desktop" ? 1 : 0);
+    const bottom = expanded ? BAR_PAGE.bottom : bar.gap + bar.inset;
+    return {side: GESTURE_EDGE, bottom: bottom, handle: Math.min(bar.gap, bottom) / 2};
+}
+
+// Touch docks: Phone, Messages and the optional Keyboard, plus Back, Home and
+// Recents when gestures are off. Settings lives in the status bar and pull-down.
+function dockLayout(mode, width, keyboard, gestures) {
+    const bar = barGeometry(mode, 1);
+    const navigation = gestures && mode !== "desktop" ? 0 : 3;
+    const count = 2 + navigation + (keyboard && mode !== "desktop" ? 1 : 0);
     const dockWidth = Math.min(Math.max(0, width - 2 * bar.side), bar.maxWidth);
     const capacity = Math.max(1, Math.floor((dockWidth - 2 * bar.padding + bar.columnGap) / (bar.row + bar.columnGap)));
     const columns = capacity >= count ? count : Math.min(3, capacity);

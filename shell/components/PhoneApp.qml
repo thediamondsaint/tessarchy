@@ -5,7 +5,7 @@ import QtQuick.Layouts
 ColumnLayout {
     id: app
     required property var backend
-    property color accentColor: "#a9e8d5"
+    property color accentColor: Theme.accent
     property string tab: "keypad"
     property string editingId: ""
     property string photo: ""
@@ -177,9 +177,9 @@ ColumnLayout {
                     text: contactRow.modelData.name
                     contentItem: Column {
                         spacing: 4
-                        Text { textFormat: Text.PlainText; text: contactRow.modelData.name; color: "#eef6f8"; font { pixelSize: 15; weight: Font.DemiBold }
+                        Text { textFormat: Text.PlainText; text: contactRow.modelData.name; color: Theme.itemText; font { pixelSize: 15; weight: Font.DemiBold }
                             width: parent.width; elide: Text.ElideRight }
-                        Text { textFormat: Text.PlainText; text: contactRow.modelData.number; color: "#9eb6c3"; font.pixelSize: 12; width: parent.width; elide: Text.ElideRight }
+                        Text { textFormat: Text.PlainText; text: contactRow.modelData.number; color: Theme.hintText; font.pixelSize: 12; width: parent.width; elide: Text.ElideRight }
                     }
                     Layout.fillWidth: true; focusPolicy: Qt.StrongFocus
                     onClicked: { app.editingId = contactRow.modelData.id; contactName.text = contactRow.modelData.name; contactNumber.text = contactRow.modelData.number; app.photo = contactRow.modelData.photo; app.editing = true; app.confirmDelete = false; }
@@ -188,7 +188,7 @@ ColumnLayout {
                 NavButton { text: "Message contact"; symbol: "messages"; showLabel: false; Layout.fillWidth: false; Layout.preferredWidth: 48; focusPolicy: Qt.StrongFocus; onClicked: app.messageRequested(contactRow.modelData.number) }
             }
         }
-        Text { textFormat: Text.PlainText; visible: !app.editing && app.backend.state.contacts.length === 0; text: "Keep your people close. Add your first contact."; color: "#9eb6c3"; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+        Text { textFormat: Text.PlainText; visible: !app.editing && app.backend.state.contacts.length === 0; text: "Keep your people close. Add your first contact."; color: Theme.hintText; wrapMode: Text.WordWrap; Layout.fillWidth: true }
     }
     ColumnLayout {
         visible: app.tab === "recents"
@@ -202,7 +202,7 @@ ColumnLayout {
                 onClicked: { dialNumber.text = modelData.number; app.tab = "keypad"; }
             }
         }
-        Text { textFormat: Text.PlainText; visible: app.backend.state.history.length === 0; text: "Your recent calls will appear here."; color: "#9eb6c3"; Layout.fillWidth: true; wrapMode: Text.WordWrap }
+        Text { textFormat: Text.PlainText; visible: app.backend.state.history.length === 0; text: "Your recent calls will appear here."; color: Theme.hintText; Layout.fillWidth: true; wrapMode: Text.WordWrap }
     }
-    Text { textFormat: Text.PlainText; text: app.backend.state.error || app.backend.state.notice || ""; visible: text.length > 0; color: app.backend.state.error ? "#efb6bd" : app.accentColor; Layout.fillWidth: true; wrapMode: Text.WordWrap }
+    Text { textFormat: Text.PlainText; text: app.backend.state.error || app.backend.state.notice || ""; visible: text.length > 0; color: app.backend.state.error ? Theme.errorText : app.accentColor; Layout.fillWidth: true; wrapMode: Text.WordWrap }
 }

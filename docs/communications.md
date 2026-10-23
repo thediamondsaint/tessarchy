@@ -1,7 +1,7 @@
 # Phone, messages and sound
 
 Phone and Messages live on the bottom dock and in the launcher. They use the
-same Quiet Edge glass controls as the rest of Tessera. Desktop keeps a centered
+same Quiet Edge glass controls as the rest of Tessa. Desktop keeps a centered
 760-pixel panel; Messages adds a conversation column when space permits. Narrow
 screens wrap the dock when its controls would otherwise lose their touch size.
 
@@ -13,7 +13,7 @@ signals operate on the currently reported call object. Recents records observed
 calls. The call button is enabled only when voice service is ready.
 
 Contacts supports search, creation, editing, confirmed deletion, phone numbers
-and local photos. Choose a photo through Tessera's glass file browser. PNG,
+and local photos. Choose a photo through Tessa's glass file browser. PNG,
 JPEG and WebP images are decoded into private PNG copies up to 256 pixels.
 Contact shortcuts open the keypad or an SMS conversation.
 
@@ -48,7 +48,7 @@ on standard input and D-Bus; they are not saved or passed in command arguments.
 **Detect eSIM profiles** uses `lpac` with the device's configured eUICC reader.
 Listed profiles can be enabled or disabled after confirmation. **Add or manage
 eSIM profiles** opens `lpa-gtk` when installed, including carrier enrollment.
-Profile deletion is not exposed by Tessera.
+Profile deletion is not exposed by Tessa.
 
 ## Runtime and storage
 

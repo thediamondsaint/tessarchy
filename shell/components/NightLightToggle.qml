@@ -5,7 +5,7 @@ import Quickshell.Io
 
 ColumnLayout {
     id: control
-    property color accentColor: "#a9e8d5"
+    property color accentColor: Theme.accent
     property bool nightLight: false
     property bool available: false
     property bool active: false
@@ -54,6 +54,6 @@ ColumnLayout {
     Text {
         visible: control.available && !!control.error
         Layout.fillWidth: true
-        text: control.error; color: "#ebbbbd"; wrapMode: Text.WordWrap
+        text: control.error; color: Theme.errorText; wrapMode: Text.WordWrap
     }
 }
