@@ -29,7 +29,10 @@ ShellRoot {
     }
     function launchApplication(id) {
         const entry = DesktopEntries.byId(id);
-        if (entry && !entry.noDisplay && entry.command.length > 0) entry.execute();
+        if (entry && !entry.noDisplay && entry.command.length > 0) {
+            const options = entry.workingDirectory ? ["--working-directory", entry.workingDirectory] : [];
+            Quickshell.execDetached(["tessarchy-launch"].concat(options, entry.command));
+        }
     }
     signal controlsRequested
     IpcHandler {
@@ -448,7 +451,7 @@ ShellRoot {
                     page = page === name ? "" : name;
                 }
                 function launch(command) {
-                    Quickshell.execDetached(command);
+                    Quickshell.execDetached(["tessarchy-launch"].concat(command));
                     page = "";
                 }
                 // Navigation actions shared by the dock buttons and edge gestures.
