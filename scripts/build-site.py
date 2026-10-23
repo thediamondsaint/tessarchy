@@ -9,9 +9,13 @@ import subprocess
 ROOT = Path(__file__).resolve().parents[1]
 SITE_IMAGES = {
     "tessarchy-mark.svg": ROOT / "shell/artwork/tessarchy-mark.svg",
-    "phone-launcher.png": ROOT / "assets/screenshots/tessa-development/phone-launcher.png",
-    "tablet-launcher.png": ROOT / "assets/screenshots/tessa-development/tablet-launcher.png",
-    "desktop-normal-workspace.png": ROOT / "assets/screenshots/tessa-development/desktop-normal-workspace.png",
+    "tess-phone-device.jpg": ROOT / "assets/marketing/tess-phone-device.jpg",
+    "tess-tablet-device.jpg": ROOT / "assets/marketing/tess-tablet-device.jpg",
+    "tess-laptop-device.jpg": ROOT / "assets/marketing/tess-laptop-device.jpg",
+    "tess-laptop-social.jpg": ROOT / "assets/marketing/tess-laptop-social.jpg",
+    "phone-screen.png": ROOT / "assets/screenshots/tessa-development/phone-launcher.png",
+    "tablet-screen.png": ROOT / "assets/screenshots/tessa-development/tablet-launcher.png",
+    "laptop-screen.png": ROOT / "assets/screenshots/tessa-development/desktop-launcher.png",
 }
 
 
@@ -25,7 +29,7 @@ def main():
         parser.error(f"Refusing existing output: {output}")
     for path in SITE_IMAGES.values():
         if not path.is_file():
-            parser.error(f"Missing real interface capture: {path}")
+            parser.error(f"Missing site image asset: {path}")
     releases = json.loads(args.releases.read_text()) if args.releases else []
     release = next((item for item in releases if not item.get("draft") and any(
         asset.get("name", "").endswith(".iso") or ".iso.part" in asset.get("name", "")
