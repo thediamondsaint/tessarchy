@@ -1,9 +1,9 @@
 # Tessarchy
 
-**Touch-first Arch Linux, built around the Tessa shell.**
+**Tessarchy is a touch-first Arch Linux operating system, powered by the Tessa desktop environment.**
 
-Tessarchy combines Arch Linux, Hyprland and Quickshell into a mobile interface
-that adapts from phone-sized screens to tablets and desktops. Its Quiet Edge
+Tessarchy combines Arch Linux, Hyprland and Quickshell through Tessa, a desktop
+environment that adapts from phone-sized screens to tablets and desktops. Its Quiet Edge
 design uses shallow glass, mint accents, a glacier wallpaper and floating icon
 navigation.
 
