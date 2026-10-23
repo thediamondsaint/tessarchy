@@ -23,9 +23,17 @@ TestCase {
     function test_reveal_and_idle_hide() {
         const control = createTemporaryObject(factory, test, {hideDelay: 100});
         compare(control.expanded, false);
-        mouseClick(control, 64, 24);
+        mouseClick(control, 24, 24);
         compare(control.expanded, true);
         tryCompare(control, "expanded", false, 500);
+    }
+    function test_tessa_cube_and_narrow_screen() {
+        const control = createTemporaryObject(factory, test, {maxControlWidth: 304});
+        compare(control.implicitWidth, 56);
+        control.expanded = true;
+        compare(control.implicitWidth, 304);
+        control.tessaCube = false;
+        compare(control.implicitWidth, 304);
     }
     function test_drag_coalesces_and_settles_without_reversing() {
         const control = createTemporaryObject(factory, test, {expanded: true});
