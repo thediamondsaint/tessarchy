@@ -4,25 +4,25 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#102b2b">
-  <meta name="description" content="Meet Tess, the friendly face of Tessa: a touch-first Linux desktop in development for phones, tablets, and desktop screens.">
+  <meta name="description" content="Meet Tess and see Tessa on phone, tablet, and desktop, set against the default mint-aurora wallpaper.">
   <title>Tessarchy — Meet Tess. Explore Tessa.</title>
   <link rel="canonical" href="https://thediamondsaint.github.io/tessarchy/">
   <link rel="icon" href="assets/tessarchy-mark.svg" type="image/svg+xml">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Tessarchy">
   <meta property="og:title" content="Tessarchy — Meet Tess. Explore Tessa.">
-  <meta property="og:description" content="An independent Arch-based desktop project taking shape across phone, tablet, and desktop.">
+  <meta property="og:description" content="Tess presents Tessa across phone, tablet, and desktop, with real interface captures on each screen.">
   <meta property="og:url" content="https://thediamondsaint.github.io/tessarchy/">
-  <meta property="og:image" content="https://thediamondsaint.github.io/tessarchy/assets/desktop-normal-workspace.png">
-  <meta property="og:image:width" content="1280">
-  <meta property="og:image:height" content="800">
-  <meta property="og:image:alt" content="Actual Tessa desktop interface with Tessa Terminal and Tessa Notes open in an Arch Linux virtual machine.">
+  <meta property="og:image" content="https://thediamondsaint.github.io/tessarchy/assets/tess-laptop-social.jpg">
+  <meta property="og:image:width" content="1536">
+  <meta property="og:image:height" content="1024">
+  <meta property="og:image:alt" content="Tess holding a laptop displaying the Tessa desktop, with the default mint-aurora wallpaper behind her.">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Tessarchy — Meet Tess. Explore Tessa.">
-  <meta name="twitter:description" content="Meet Tess, the friendly face of Tessa, an experimental touch-first Linux desktop.">
-  <meta name="twitter:image" content="https://thediamondsaint.github.io/tessarchy/assets/desktop-normal-workspace.png">
-  <link rel="stylesheet" href="style.css?v=20261023-os-captures">
-  <script src="app.js?v=20261023-os-captures" defer></script>
+  <meta name="twitter:description" content="Tess presents Tessa across phone, tablet, and desktop, with real interface captures on each screen.">
+  <meta name="twitter:image" content="https://thediamondsaint.github.io/tessarchy/assets/tess-laptop-social.jpg">
+  <link rel="stylesheet" href="style.css?v=20261023-tess-device-showcase">
+  <script src="app.js?v=20261023-tess-device-showcase" defer></script>
 </head>
 <body>
   <a class="skip" href="#main">Skip to the page</a>
@@ -43,9 +43,9 @@
     <section class="hero" id="top">
       <div class="hero-copy">
         <p class="kicker"><span class="spark" aria-hidden="true">✳</span> AN OPEN LINUX PROJECT, IN THE MAKING</p>
-        <h1>Meet <em>Tessa.</em><br>See it running.</h1>
-        <p class="hero-lede">A touch-first Linux desktop, adapting from a compact phone layout to a wider workspace.</p>
-        <p class="hero-detail">These are real captures from Tessa running in an Arch Linux QEMU development guest. The project is still working toward supported physical devices.</p>
+        <h1>Meet <em>Tess.</em><br>Meet Tessa.</h1>
+        <p class="hero-lede">A touch-first Linux desktop, at home on phones, tablets, and larger screens.</p>
+        <p class="hero-detail">Tess brings you into Tessa’s world: the default mint-aurora wallpaper and real Tessa interfaces on every device.</p>
         <div class="hero-actions">
           <a class="button button-bright" href="#devices">See Tessa in action <span aria-hidden="true">↓</span></a>
           <a class="alpha-link" href="#download">Get Alpha 17 <span aria-hidden="true">↗</span></a>
@@ -53,42 +53,45 @@
         <div class="hero-facts"><span>Arch Linux</span><i></i><span>Hyprland + Quickshell</span><i></i><span>Phone · Tablet · Desktop</span></div>
       </div>
       <figure class="hero-screen">
-        <img src="assets/desktop-normal-workspace.png" alt="Actual Tessa desktop interface with Tessa Terminal and Tessa Notes windows open above the desktop taskbar." width="1280" height="800" fetchpriority="high">
-        <figcaption><span class="tess-dot" aria-hidden="true"></span> ACTUAL TESSA DESKTOP <span class="art-note">QEMU · OCT 21, 2026</span></figcaption>
+        <div class="device-scene device-scene-laptop">
+          <img class="scene-photo" src="assets/tess-laptop-device.jpg" alt="Tess holding a laptop against Tessa’s default mint-aurora mountain wallpaper." width="1536" height="1024" fetchpriority="high">
+          <img class="screen-overlay" src="assets/laptop-screen.png" alt="Tessa desktop launcher and taskbar, shown on the laptop display." width="1280" height="800">
+        </div>
+        <figcaption><span class="tess-dot" aria-hidden="true"></span> TESSA ON DESKTOP <span class="art-note">DEFAULT WALLPAPER</span></figcaption>
       </figure>
     </section>
 
     <section class="welcome section-pad" id="meet-tess">
       <div class="welcome-mark" aria-hidden="true"><img src="assets/tessarchy-mark.svg" alt="" width="84" height="84"></div>
       <div class="welcome-copy">
-        <p class="kicker">TESSA, RUNNING FOR REAL</p>
-        <h2>See the work.<br><em>Know the stage.</em></h2>
+        <p class="kicker">YOUR GUIDE TO TESSA</p>
+        <h2>Tess shows you<br><em>around Tessa.</em></h2>
         <p class="welcome-lede">Tess is the mascot. Tessa is the operating system: an experimental desktop built with Quickshell and Hyprland on Arch Linux.</p>
-        <p>The screen captures on this page come from a real QEMU development guest. They show the interface as it ran, including app launchers, window controls, and open desktop applications. They are not concept renders or photos of supported hardware.</p>
+        <p>Each screen uses a real Tessa interface capture, composed into a device scene with the default mint-aurora wallpaper. Phone, tablet, and laptop hardware shown here is illustrative while physical-device support is in development.</p>
         <a class="under-link" href="https://github.com/thediamondsaint/tessarchy">Get to know the project on GitHub <span aria-hidden="true">↗</span></a>
       </div>
     </section>
 
     <section class="devices section-pad" id="devices">
       <div class="section-heading">
-        <div><p class="kicker">THREE REAL SCREEN CAPTURES</p><h2>One desktop.<br><em>Three layouts.</em></h2></div>
-        <p>Phone, tablet, and desktop interfaces captured directly from the Tessa development guest. The screenshots are genuine; physical-device support is still being developed.</p>
+        <div><p class="kicker">TESSA ACROSS SCREENS</p><h2>One desktop.<br><em>Three ways in.</em></h2></div>
+        <p>Tess shows off the phone, tablet, and desktop interfaces in their default mint-aurora world. The interface on each screen comes from Tessa; the hardware scenes are illustrative.</p>
       </div>
       <div class="device-grid">
         <article class="device-card phone-card">
-          <div class="device-image"><img src="assets/phone-launcher.png" alt="Actual phone-sized Tessa app launcher with Files, Firefox, Phone, Messages, Settings, and Controls tiles." width="390" height="844" loading="lazy"><span class="device-number">01</span></div>
-          <div class="device-copy"><p class="card-label">PHONE LAYOUT · QEMU</p><h3>Tessa for the phone.</h3><p>The captured launcher presents apps in touch-sized tiles, with Phone, Messages, Settings, and navigation along the bottom edge.</p><span class="status-pill">DEVELOPMENT CAPTURE</span><a class="capture-link" href="assets/phone-launcher.png">Open original ↗</a></div>
+          <div class="device-image"><div class="device-scene device-scene-phone"><img class="scene-photo" src="assets/tess-phone-device.jpg" alt="Tess presenting a phone against the default mint-aurora wallpaper." width="1536" height="1024" loading="lazy"><img class="screen-overlay" src="assets/phone-screen.png" alt="Tessa app launcher displayed on the phone." width="390" height="844" loading="lazy"></div><span class="device-number">01</span></div>
+          <div class="device-copy"><p class="card-label">PHONE</p><h3>Tessa in your hand.</h3><p>The touch-first launcher puts apps and familiar phone controls within reach.</p><span class="status-pill">INTERFACE PREVIEW</span></div>
         </article>
         <article class="device-card tablet-card">
-          <div class="device-image"><img src="assets/tablet-launcher.png" alt="Actual tablet-sized Tessa app launcher in a QEMU desktop, with a terminal window behind it." width="1024" height="768" loading="lazy"><span class="device-number">02</span></div>
-          <div class="device-copy"><p class="card-label">TABLET LAYOUT · QEMU</p><h3>Tessa for the tablet.</h3><p>The wider launcher arranges applications across a tablet-sized workspace, with the same controls and navigation kept in view.</p><span class="status-pill">DEVELOPMENT CAPTURE</span><a class="capture-link" href="assets/tablet-launcher.png">Open original ↗</a></div>
+          <div class="device-image"><div class="device-scene device-scene-tablet"><img class="scene-photo" src="assets/tess-tablet-device.jpg" alt="Tess holding a tablet against the default mint-aurora wallpaper." width="1536" height="1024" loading="lazy"><img class="screen-overlay" src="assets/tablet-screen.png" alt="Tessa tablet launcher and controls displayed on the tablet." width="1024" height="768" loading="lazy"></div><span class="device-number">02</span></div>
+          <div class="device-copy"><p class="card-label">TABLET</p><h3>Tessa opens up.</h3><p>The wider layout spreads apps across a roomy workspace while keeping touch controls close.</p><span class="status-pill">INTERFACE PREVIEW</span></div>
         </article>
         <article class="device-card desktop-card">
-          <div class="device-image"><img src="assets/desktop-normal-workspace.png" alt="Actual Tessa desktop in an Arch Linux QEMU guest, with Tessa Terminal and Tessa Notes windows open above the taskbar." width="1280" height="800" loading="lazy"><span class="device-number">03</span></div>
-          <div class="device-copy"><p class="card-label">DESKTOP LAYOUT · QEMU</p><h3>Tessa at the desktop.</h3><p>Two real application windows sit above the Tessa taskbar, with workspace controls and system status visible.</p><span class="status-pill">DEVELOPMENT CAPTURE</span><a class="capture-link" href="assets/desktop-normal-workspace.png">Open original ↗</a></div>
+          <div class="device-image"><div class="device-scene device-scene-laptop"><img class="scene-photo" src="assets/tess-laptop-device.jpg" alt="Tess presenting a laptop against the default mint-aurora wallpaper." width="1536" height="1024" loading="lazy"><img class="screen-overlay" src="assets/laptop-screen.png" alt="Tessa desktop launcher and taskbar, shown on the laptop display." width="1280" height="800" loading="lazy"></div><span class="device-number">03</span></div>
+          <div class="device-copy"><p class="card-label">DESKTOP</p><h3>Tessa at your desk.</h3><p>Desktop controls and the familiar Tessa wallpaper carry through to a larger screen.</p><span class="status-pill">INTERFACE PREVIEW</span></div>
         </article>
       </div>
-      <p class="art-disclaimer"><span aria-hidden="true">✳</span> Unedited QEMU captures from the October 21 development guest. Alpha 17’s BIOS and UEFI boot captures are linked in the release section below.</p>
+      <p class="art-disclaimer"><span aria-hidden="true">✳</span> Product scenes are illustrative; screens use Tessa captures from the development guest. Alpha 17’s BIOS and UEFI boot captures are linked in the release section below.</p>
     </section>
 
     <section class="tessa-section">

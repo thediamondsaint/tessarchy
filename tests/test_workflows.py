@@ -226,7 +226,7 @@ class Workflows(unittest.TestCase):
         self.env['DBUS_SYSTEM_BUS_ADDRESS'] = 'unix:path=/nonexistent/tessarchy-test-bus'
         self.run_quickshell_harness('power', 'POWER')
 
-    def test_site_builder_refuses_existing_output_and_bundles_real_captures(self):
+    def test_site_builder_refuses_existing_output_and_bundles_tess_device_scenes(self):
         import sys
         destination = self.home / 'site'
         command = [sys.executable, str(ROOT / 'scripts/build-site.py'),
@@ -234,14 +234,19 @@ class Workflows(unittest.TestCase):
         result = subprocess.run(command, capture_output=True, text=True)
         self.assertEqual(result.returncode, 0, result.stderr)
         page = (destination / 'index.html').read_text()
-        self.assertIn('See it running.', page)
+        self.assertIn('Meet Tessa.', page)
+        self.assertIn('default mint-aurora wallpaper', page)
         self.assertNotIn('Quiet Edge', page)
         self.assertNotIn('CONCEPT ART', page)
         expected = {
             'tessarchy-mark.svg': ROOT / 'shell/artwork/tessarchy-mark.svg',
-            'phone-launcher.png': ROOT / 'assets/screenshots/tessa-development/phone-launcher.png',
-            'tablet-launcher.png': ROOT / 'assets/screenshots/tessa-development/tablet-launcher.png',
-            'desktop-normal-workspace.png': ROOT / 'assets/screenshots/tessa-development/desktop-normal-workspace.png',
+            'tess-phone-device.jpg': ROOT / 'assets/marketing/tess-phone-device.jpg',
+            'tess-tablet-device.jpg': ROOT / 'assets/marketing/tess-tablet-device.jpg',
+            'tess-laptop-device.jpg': ROOT / 'assets/marketing/tess-laptop-device.jpg',
+            'tess-laptop-social.jpg': ROOT / 'assets/marketing/tess-laptop-social.jpg',
+            'phone-screen.png': ROOT / 'assets/screenshots/tessa-development/phone-launcher.png',
+            'tablet-screen.png': ROOT / 'assets/screenshots/tessa-development/tablet-launcher.png',
+            'laptop-screen.png': ROOT / 'assets/screenshots/tessa-development/desktop-launcher.png',
         }
         for name, source in expected.items():
             self.assertEqual((destination / 'assets' / name).read_bytes(),
