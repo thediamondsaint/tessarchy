@@ -9,11 +9,8 @@ if [[ ${1-} == ipc ]]; then
     shift
     exec qs ipc --path "$share/shell/shell.qml" "$@"
 fi
-# Load optional audio integration only when a PipeWire service socket exists.
-export TESSARCHY_AUDIO=0
-if [[ -S "${XDG_RUNTIME_DIR:-/run/user/$UID}/pipewire-0" ]]; then
-    export TESSARCHY_AUDIO=1
-fi
+# The shell keeps its audio integration loaded and follows PipeWire's live
+# availability, so a late-starting media service is still detected.
 # Offer the keyboard toggle only when the optional on-screen keyboard exists.
 export TESSARCHY_OSK=0
 if command -v squeekboard >/dev/null && command -v tessarchy-osk >/dev/null; then

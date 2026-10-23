@@ -228,10 +228,14 @@ ShellRoot {
     }
     readonly property var audioSink: audioLoader.item ? (audioLoader.item as AudioStatus).sink : null
     readonly property bool audioAvailable: !!(audioSink && audioSink.ready && audioSink.audio)
+    readonly property bool audioBackendAvailable: audioLoader.item ? (audioLoader.item as AudioStatus).backendAvailable : false
     readonly property int volumePercent: audioAvailable ? Math.round(audioSink.audio.volume * 100) : 0
     Loader {
         id: audioLoader
-        active: Quickshell.env("TESSARCHY_AUDIO") === "1"
+        // PipeWire can start after the shell (socket activation or a slow media
+        // service), so the integration stays loaded and reconciles with the
+        // daemon's live state instead of a frozen startup environment variable.
+        active: true
         source: "components/AudioStatus.qml"
     }
     // ChatGPT stays a normal desktop app; this bridge only reads the official
@@ -1402,7 +1406,7 @@ ShellRoot {
                         use24Hour: shellPreferences.use24Hour
                         accentColor: root.accentColor
                         audioSink: root.audioSink
-                        audioBackendAvailable: audioLoader.active
+                        audioBackendAvailable: root.audioBackendAvailable
                         onScreenshotRequested: {
                             statusBar.drawerOpen = false;
                             screenshotTimer.restart();

@@ -16,12 +16,32 @@ PACKAGES = ('tessera-shell-0.1.0-4-any.pkg.tar.zst',
             'tessarchy-tablet-0.1.0-3-x86_64.pkg.tar.zst')
 
 
+def source_identity():
+    """Verify the built packages match the current, clean checkout.
+
+    package.sh records the commit it built from; bundling from a different or
+    dirty checkout would otherwise label stale files with a new revision.
+    """
+    identity = ROOT / 'dist' / 'SOURCE.json'
+    if not identity.is_file():
+        raise SystemExit('error: dist/SOURCE.json missing — build with scripts/package.sh first')
+    recorded = json.loads(identity.read_text()).get('commit')
+    if not recorded:
+        raise SystemExit('error: dist/SOURCE.json records no source commit')
+    current = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip()
+    if recorded != current:
+        raise SystemExit('error: packages were built from ' + recorded + ' but the checkout is at ' + current + ' — rebuild with scripts/package.sh')
+    subprocess.check_call(['git', 'diff-index', '--quiet', 'HEAD', '--'], cwd=ROOT)
+    return recorded
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output', required=True, type=Path)
     args = parser.parse_args()
     if args.output.exists() or args.output.is_symlink():
         parser.error('Choose a new output path')
+    commit = source_identity()
     for name in PACKAGES:
         path = ROOT / 'dist' / name
         if not path.is_file() or path.is_symlink():
@@ -36,7 +56,6 @@ def main():
         for name in PACKAGES:
             shutil.copy2(ROOT / 'dist' / name, stage / 'dist' / name)
         shutil.copy2(ROOT / 'docs/tablet-install.md', stage / 'INSTALL.md')
-        commit = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip()
         (stage / 'SOURCE.json').write_text(json.dumps({'source_commit': commit,
             'platform': 'Arch Linux x86_64 Intel/AMD', 'packages': PACKAGES,
             'installs_automatically': False}, indent=2) + '\n')
