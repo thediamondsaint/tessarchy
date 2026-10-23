@@ -6,11 +6,12 @@ RowLayout {
     property color accentColor: Theme.accent
     property bool compact: false
     property int notificationCount: 0
-    property int cellularStrength: -1
-    property int wifiStrength: -1
+    property real cellularStrength: -1
+    property real wifiStrength: -1
     property bool airplaneOn: false
     property bool batteryPresent: false
     property real batteryPercent: 0
+    property string batteryState: "unknown"
     property bool audioAvailable: false
     property bool audioMuted: false
     property bool notificationsSelected: false
@@ -80,7 +81,6 @@ RowLayout {
         label: "Cellular"
         strength: control.cellularStrength
         uniform: control.compact
-        showFallback: control.compact
         touchMode: control.touchMode
         touchSlot: control.touchSlot
         onClicked: control.panelRequested()
@@ -90,7 +90,6 @@ RowLayout {
         label: "Wi-Fi"
         strength: control.wifiStrength
         uniform: control.compact
-        showFallback: control.compact
         touchMode: control.touchMode
         touchSlot: control.touchSlot
         onClicked: control.panelRequested()
@@ -112,18 +111,21 @@ RowLayout {
             id: batteryRow
             anchors.centerIn: parent
             spacing: 4
-            Icon {
-                symbol: "battery"
-                size: control.compact ? 18 : 22
-                color: control.batteryPresent ? control.accentColor : Theme.textMuted
-                opacity: control.compact || control.batteryPresent ? 1 : 0.55
+            BatteryIndicator {
+                id: batteryIcon
+                objectName: "batteryIndicator"
+                present: control.batteryPresent
+                percentage: control.batteryPercent
+                powerState: control.batteryState
+                implicitWidth: control.compact ? 18 : 22
+                implicitHeight: implicitWidth
             }
             Text {
                 visible: control.showBatteryText
-                text: control.batteryPresent ? Math.round(control.batteryPercent * 100) + "%" : "—"
+                text: batteryIcon.reported ? Math.round(control.batteryPercent * 100) + "%" : "—"
                 color: control.compact ? Theme.textSecondary : Theme.accent
                 font.pixelSize: control.compact ? 10 : 11
-                Accessible.name: control.batteryPresent ? "Battery " + text : "Battery status unavailable"
+                Accessible.name: batteryIcon.description
             }
         }
         Accessible.role: Accessible.Button
