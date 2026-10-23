@@ -7,6 +7,13 @@ data=${XDG_DATA_HOME:-$HOME/.local/share}/tessarchy
 version=$(cat "$data/.tessarchy-dev-install")
 [[ $version == tessarchy-dev-v1 || $version == tessarchy-dev-v2 || $version == tessarchy-dev-v3 ]] || exit 1
 root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
+unit=${XDG_CONFIG_HOME:-$HOME/.config}/systemd/user/tessarchy-apps.target
+if [[ -e $unit || -L $unit ]]; then
+    if [[ -L $unit || ! -f $unit || ! -f $data/session/tessarchy-apps.target ]] ||
+       ! cmp -s -- "$data/session/tessarchy-apps.target" "$unit"; then
+        echo "Modified or unsafe unit: $unit; preserve or remove it manually" >&2; exit 1;
+    fi
+fi
 manifest=$data/.tessarchy-dev-files
 entries=()
 if [[ $version != tessarchy-dev-v1 ]]; then
@@ -25,7 +32,7 @@ if [[ $version != tessarchy-dev-v1 ]]; then
     done
 fi
 # New installs retain the installed bytes so a source update is not a user edit.
-launchers=(start-tessarchy tessera-shell tessarchy-osk tessarchy-theme tessarchy-run tessera-screenshot tessera-chatgpt-status tessa-ai tessarchy-ssh tessera-brightness tessera-nightlight tessera-rotate tessarchy-session-services)
+launchers=(start-tessarchy tessera-shell tessarchy-osk tessarchy-theme tessarchy-run tessarchy-launch tessera-screenshot tessera-chatgpt-status tessa-ai tessarchy-ssh tessera-brightness tessera-nightlight tessera-rotate tessarchy-session-services)
 originals=$root/session
 if [[ $version == tessarchy-dev-v3 ]]; then
     originals=$data/.tessarchy-dev-launchers
@@ -56,6 +63,7 @@ for launcher in "${launchers[@]}"; do
 done
 
 for launcher in "${launchers[@]}"; do rm -f -- "$HOME/.local/bin/$launcher"; done
+rm -f -- "$unit"
 # Remove only files recorded by this installation.
 if [[ $version != tessarchy-dev-v1 ]]; then
     for relative in "${entries[@]}"; do rm -f -- "$data/$relative"; done

@@ -2715,3 +2715,22 @@ state. No credentials were entered, so authenticated usage, physical sign-in,
 and native ChatGPT window rendering remain unverified.
 
 [Actual VM capture and provenance](../assets/screenshots/tessa-chatgpt/README.md).
+## Shell application lifetime — current-main integration (2026-10-23)
+
+Integrated the existing PR #74 implementation onto current `main` in
+`fix/issue-72-app-lifetime`, preserving newer DesktopEntry and shell changes.
+`./scripts/check.sh` passed 235 Python tests (three expected legacy skips), 110
+Qt Quick tests, four website tests, and available syntax, Hyprland, QML and
+desktop-file checks. Fish and ShellCheck were unavailable. The first run caught
+an omitted executable-permissions entry for `tessarchy-launch`; the ISO overlay
+now sets it to mode 755.
+
+The prior PR #74 QEMU evidence verifies its earlier integrated launcher branch,
+including app PID survival across shell restart and crash. The current-main
+launcher wiring still needs its own runtime retest. Local QEMU initially crashed
+in virtio VGA initialization because the matching `hw-display-virtio-gpu` module
+was not discoverable; the previously verified local module path allowed the
+copied Basic guest to reach the desktop. The guest `arch` password differs from
+the documented demo PIN, and the disposable copy's account rate-locked after
+failed attempts. No login attempt was made against or write was made to the base
+VM disk. No current-main runtime acceptance or new ISO boot is claimed.

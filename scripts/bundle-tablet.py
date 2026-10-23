@@ -11,7 +11,7 @@ import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
 PACKAGES = ('tessera-shell-0.1.0-4-any.pkg.tar.zst',
-            'tessarchy-session-0.1.0-5-any.pkg.tar.zst',
+            'tessarchy-session-0.1.0-6-any.pkg.tar.zst',
             'tessarchy-bootsplash-0.1.0-2-any.pkg.tar.zst',
             'tessarchy-tablet-0.1.0-3-x86_64.pkg.tar.zst')
 
@@ -31,7 +31,10 @@ def source_identity():
     current = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip()
     if recorded != current:
         raise SystemExit('error: packages were built from ' + recorded + ' but the checkout is at ' + current + ' — rebuild with scripts/package.sh')
-    subprocess.check_call(['git', 'diff-index', '--quiet', 'HEAD', '--'], cwd=ROOT)
+    changes = subprocess.check_output(['git', 'status', '--porcelain',
+                                       '--untracked-files=no'], cwd=ROOT, text=True)
+    if changes:
+        raise SystemExit('error: refuse to bundle a dirty source tree:\n' + changes)
     return recorded
 
 
