@@ -363,6 +363,7 @@ ShellRoot {
             readonly property bool gestures: Policy.gestureNavigation(mode, shellPreferences.navigation)
             readonly property var dock: Policy.dockLayout(mode, modelData.width, root.oskAvailable, gestures)
             readonly property var gestureEdge: Policy.gestureEdgeSize(mode, panel.expanded)
+            readonly property int gestureStripHeight: Policy.gestureStripHeight(mode, gestures, false, gestureEdge)
             // Bar geometry comes from Policy.barGeometry; do not add literals here.
             readonly property var bar: Policy.barGeometry(mode, dock.rows)
             // Touch navigation lives in the T cube and edge gestures. Keep a
@@ -1035,6 +1036,20 @@ ShellRoot {
             // the screen edge. Touches inside a strip do not reach the app below,
             // so the strips stay a few pixels wide. The bottom strip covers the
             // gap under the dock row and spans the screen.
+            // The Bottom-layer surface reserves the exact physical strip before
+            // the Top-layer OSK maps. The Overlay input strip remains at the
+            // screen edge; neither surface can overlap a keyboard key.
+            PanelWindow {
+                screen: surface.modelData
+                visible: surface.gestureStripHeight > 0
+                anchors { bottom: true; left: true; right: true }
+                implicitHeight: surface.gestureStripHeight
+                exclusiveZone: surface.gestureStripHeight
+                color: Theme.gestureBackground
+                WlrLayershell.namespace: "tessera-gesture-reservation"
+                WlrLayershell.layer: WlrLayer.Bottom
+                WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
+            }
             PanelWindow {
                 id: bottomGesture
                 screen: surface.modelData
@@ -1044,11 +1059,12 @@ ShellRoot {
                     left: true
                     right: true
                 }
-                implicitHeight: surface.gestureEdge.bottom
+                implicitHeight: surface.gestureStripHeight
                 exclusionMode: ExclusionMode.Ignore
+                exclusiveZone: 0
                 color: "transparent"
                 WlrLayershell.namespace: "tessera-gesture"
-                WlrLayershell.layer: WlrLayer.Top
+                WlrLayershell.layer: WlrLayer.Overlay
                 WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
                 EdgeSwipeArea {
                     id: bottomSwipe

@@ -75,6 +75,25 @@ TestCase {
         compare(Policy.classifyGesture("right", -d, 0, Policy.GESTURE_HOLD * 2), "back");
         compare(Policy.classifyGesture("top", 0, d * 2, 0), "none");
     }
+    function test_bottom_reserved_strip_lifts_keyboard_without_stealing_key_input() {
+        for (const mode of ["phone", "tablet"]) {
+            const edge = Policy.gestureEdgeSize(mode, false);
+            const shown = Policy.gestureStripHeight(mode, true, false, edge);
+            const reveal = Policy.gestureStripHeight(mode, true, true, edge);
+            compare(shown, edge.bottom);
+            compare(reveal, edge.side);
+            compare(Policy.gestureStripHeight(mode, false, true, edge), edge.side);
+            compare(Policy.gestureStripHeight(mode, false, false, edge), 0);
+            for (const [height, keyboardHeight] of [[800, 266], [1280, 180], [400, 225]]) {
+                const keyboardBottom = height - shown;
+                const keyboardTop = keyboardBottom - keyboardHeight;
+                verify(keyboardTop >= 0);
+                compare(keyboardBottom, height - shown);
+                verify(keyboardBottom <= height - shown); // no OSK/overlay intersection
+            }
+        }
+        compare(Policy.gestureStripHeight("desktop", true, true, Policy.gestureEdgeSize("desktop", false)), 0);
+    }
     function test_gesture_strips_leave_dock_buttons_uncovered() {
         for (const mode of ["phone", "tablet"]) {
             const bar = Policy.barGeometry(mode, 1);
