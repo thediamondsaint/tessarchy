@@ -1,6 +1,7 @@
 """Observable install safety and profile assembly; no GUI or privileged tests."""
 import os
 import re
+import json
 from pathlib import Path
 import re
 import subprocess
@@ -1608,7 +1609,7 @@ esac
         (base / 'airootfs/etc/systemd/system/sysinit.target.wants').mkdir(parents=True)
         wait_sync = base / 'airootfs/etc/systemd/system/sysinit.target.wants/systemd-time-wait-sync.service'
         wait_sync.symlink_to('/usr/lib/systemd/system/systemd-time-wait-sync.service')
-        env = dict(self.env, ARCHISO_RELENG=str(base))
+        env = dict(self.env, ARCHISO_RELENG=str(base), TESSARCHY_COMMIT='a' * 40)
         command = [str(repo / 'scripts/stage-iso.sh')]
         result = subprocess.run(command, env=env, capture_output=True, text=True)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
@@ -1654,6 +1655,8 @@ esac
         manifests = profile / 'airootfs/usr/share/tessarchy/package-manifests'
         self.assertEqual((manifests / 'tessera-shell.json').read_bytes(),
                          (manifests / 'tessarchy-session.json').read_bytes())
+        self.assertEqual(json.loads((manifests / 'tessera-shell.json').read_text())['commit'],
+                         'a' * 40)
         if (ROOT / 'etc/pacman.conf').is_file():
             staged_pacman = (profile / 'airootfs/etc/pacman.conf').read_text()
             self.assertIn('Include = /etc/pacman.d/tessarchy.conf', staged_pacman)

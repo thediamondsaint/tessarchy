@@ -78,7 +78,7 @@ find "$airoot/usr/share/tessarchy/shell" -type f \( -name '*.pyc' -o -name '*.py
 find "$airoot/usr/share/tessarchy/shell" -depth -type d -name __pycache__ -empty -delete
 cp -R -- "$root/docs" "$airoot/usr/share/tessarchy/"
 cp -R -- "$root/session/." "$airoot/usr/share/tessarchy/session/"
-source_commit=$(git -C "$root" rev-parse HEAD)
+source_commit=${TESSARCHY_COMMIT:-$(git -C "$root" rev-parse HEAD)}
 manifest_dir="$airoot/usr/share/tessarchy/package-manifests"
 mkdir -p "$manifest_dir"
 python3 "$root/scripts/runtime-source-manifest.py" --root "$root" \
