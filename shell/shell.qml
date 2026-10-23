@@ -9,6 +9,7 @@ import Quickshell.Hyprland
 import Quickshell.Io
 import Quickshell.Wayland
 import Quickshell.Services.UPower
+import "StatusPolicy.js" as StatusPolicy
 import Quickshell.Services.Mpris
 import Quickshell.Services.SystemTray
 import Quickshell.Services.Notifications
@@ -29,7 +30,10 @@ ShellRoot {
     }
     function launchApplication(id) {
         const entry = DesktopEntries.byId(id);
-        if (entry && !entry.noDisplay && entry.command.length > 0) entry.execute();
+        if (entry && !entry.noDisplay && entry.command.length > 0) {
+            const options = entry.workingDirectory ? ["--working-directory", entry.workingDirectory] : [];
+            Quickshell.execDetached(["tessarchy-launch"].concat(options, entry.command));
+        }
     }
     signal controlsRequested
     IpcHandler {
@@ -218,7 +222,19 @@ ShellRoot {
     }
     // Bind these when wireless/modem integrations land. Never invent a signal.
     property real wifiStrength: -1
-    readonly property real cellularStrength: communications.state.cellular.signal === undefined ? -1 : communications.state.cellular.signal / 100
+    readonly property real cellularStrength: StatusPolicy.cellularStrength(communications.state.cellular)
+    readonly property string batteryState: {
+        if (!UPower.displayDevice.ready) return "unknown";
+        switch (UPower.displayDevice.state) {
+        case UPowerDeviceState.Charging: return "charging";
+        case UPowerDeviceState.Discharging: return "discharging";
+        case UPowerDeviceState.Empty: return "empty";
+        case UPowerDeviceState.FullyCharged: return "full";
+        case UPowerDeviceState.PendingCharge: return "pending-charge";
+        case UPowerDeviceState.PendingDischarge: return "pending-discharge";
+        default: return "unknown";
+        }
+    }
     // squeekboard via tessarchy-osk; it also appears by itself for text fields.
     readonly property bool oskAvailable: Quickshell.env("TESSARCHY_OSK") === "1"
     // Desktop mode must never raise the on-screen keyboard; touch modes may.
@@ -449,7 +465,7 @@ ShellRoot {
                     page = page === name ? "" : name;
                 }
                 function launch(command) {
-                    Quickshell.execDetached(command);
+                    Quickshell.execDetached(["tessarchy-launch"].concat(command));
                     page = "";
                 }
                 // Navigation actions shared by the dock buttons and edge gestures.
@@ -834,13 +850,15 @@ ShellRoot {
                                     cellularStrength: root.cellularStrength
                                     wifiStrength: root.wifiStrength
                                     airplaneOn: !!(radioBackend.state.airplane && radioBackend.state.airplane.enabled)
-                                    batteryPresent: UPower.displayDevice.isPresent
+                                    batteryPresent: UPower.displayDevice.ready && UPower.displayDevice.isPresent
                                     batteryPercent: UPower.displayDevice.percentage
+                                    batteryState: root.batteryState
                                     audioAvailable: root.audioAvailable
                                     audioMuted: root.audioAvailable && root.audioSink.audio.muted
                                     notificationsSelected: panel.page === "notifications"
                                     settingsSelected: panel.page === "settings"
                                     onNotificationsRequested: panel.showPage("notifications")
+                                    onPanelRequested: statusBar.toggleDrawer()
                                     onMuteToggled: root.audioSink.audio.muted = !root.audioSink.audio.muted
                                     onSettingsRequested: panel.showPage("settings")
                                 }
@@ -1209,6 +1227,8 @@ ShellRoot {
             }
             PanelWindow {
                 id: statusBar
+                // Desktop controls live in the taskbar; only map the top sheet while open.
+                visible: surface.mode !== "desktop" || drawerOpen
                 Timer {
                     id: screenshotTimer
                     interval: shellPreferences.reducedMotion ? 100 : 300
@@ -1240,7 +1260,7 @@ ShellRoot {
                 margins.left: surface.mode === "desktop" ? 0 : 12
                 margins.right: surface.mode === "desktop" ? 0 : 12
                 implicitHeight: drawerOpen ? Math.min(surface.modelData.height - surface.navHeight - 12, quickSheet.implicitHeight + 88) : surface.mode === "desktop" ? 48 : 64
-                exclusiveZone: surface.mode === "desktop" ? 48 : 0
+                exclusiveZone: surface.mode === "desktop" ? 0 : 48
                 color: "transparent"
                 Rectangle {
                     anchors.fill: parent
@@ -1395,8 +1415,9 @@ ShellRoot {
                         cellularStrength: root.cellularStrength
                         wifiStrength: root.wifiStrength
                         airplaneOn: !!(radioBackend.state.airplane && radioBackend.state.airplane.enabled)
-                        batteryPresent: UPower.displayDevice.isPresent
+                        batteryPresent: UPower.displayDevice.ready && UPower.displayDevice.isPresent
                         batteryPercent: UPower.displayDevice.percentage
+                        batteryState: root.batteryState
                         audioAvailable: root.audioAvailable
                         audioMuted: root.audioAvailable && root.audioSink.audio.muted
                         notificationsSelected: panel.page === "notifications"

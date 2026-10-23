@@ -5,6 +5,8 @@ set -euo pipefail
 if command -v dbus-update-activation-environment >/dev/null; then
     dbus-update-activation-environment --systemd WAYLAND_DISPLAY HYPRLAND_INSTANCE_SIGNATURE XDG_CURRENT_DESKTOP XDG_SESSION_TYPE || true
 fi
+# App units are PartOf this target, not the restartable shell service.
+if command -v systemctl >/dev/null; then systemctl --user start tessarchy-apps.target; fi
 if command -v xdg-user-dirs-update >/dev/null; then xdg-user-dirs-update; fi
 if command -v systemctl >/dev/null && systemctl --user cat hyprpolkitagent.service >/dev/null 2>&1; then
     systemctl --user start hyprpolkitagent.service || true
