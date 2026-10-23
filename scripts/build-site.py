@@ -7,7 +7,12 @@ import shutil
 import subprocess
 
 ROOT = Path(__file__).resolve().parents[1]
-SITE_ART = ("tess-mark.svg", "tess-phone.webp", "tess-tablet.webp", "tess-desktop.webp", "tess-social.jpg")
+SITE_IMAGES = {
+    "tessarchy-mark.svg": ROOT / "shell/artwork/tessarchy-mark.svg",
+    "phone-launcher.png": ROOT / "assets/screenshots/tessa-development/phone-launcher.png",
+    "tablet-launcher.png": ROOT / "assets/screenshots/tessa-development/tablet-launcher.png",
+    "desktop-normal-workspace.png": ROOT / "assets/screenshots/tessa-development/desktop-normal-workspace.png",
+}
 
 
 def main():
@@ -18,10 +23,9 @@ def main():
     output = args.output.absolute()
     if output.exists() or output.is_symlink():
         parser.error(f"Refusing existing output: {output}")
-    sources = [ROOT / "website/assets" / name for name in SITE_ART]
-    for path in sources:
+    for path in SITE_IMAGES.values():
         if not path.is_file():
-            parser.error(f"Missing site artwork: {path}")
+            parser.error(f"Missing real interface capture: {path}")
     releases = json.loads(args.releases.read_text()) if args.releases else []
     release = next((item for item in releases if not item.get("draft") and any(
         asset.get("name", "").endswith(".iso") or ".iso.part" in asset.get("name", "")
@@ -38,8 +42,8 @@ def main():
         shutil.copyfile(source, output / name)
     assets = output / "assets"
     assets.mkdir()
-    for source in sources:
-        shutil.copyfile(source, assets / source.name)
+    for name, source in SITE_IMAGES.items():
+        shutil.copyfile(source, assets / name)
     (output / "project.json").write_text(json.dumps({"commit": commit, "release": release}) + "\n")
     (output / ".nojekyll").touch()
     print(f"Built {output} from {commit[:7]}")
