@@ -167,6 +167,11 @@ ShellRoot {
         themeSetter.command = ["tessarchy-theme", "set", name];
         themeSetter.running = true;
     }
+    function setAccent(color) {
+        if (accentSetter.running || !/^#[0-9a-fA-F]{6}$/.test(color)) return;
+        accentSetter.command = ["tessarchy-first-run", "accent", color];
+        accentSetter.running = true;
+    }
     FileView {
         id: themeColors
         path: root.themeDir + "/colors.toml"
@@ -291,10 +296,7 @@ ShellRoot {
         accentChoice: String(Theme.accent)
         onThemeRequested: name => { root.setTheme(name); firstRunWizard.step = 2; }
         onVisibleChanged: if (visible) root.themeList.running = true
-        onAccentRequested: color => {
-            accentSetter.command = ["tessarchy-first-run", "accent", color];
-            accentSetter.running = true;
-        }
+        onAccentRequested: color => root.setAccent(color)
         onFinished: visible = false
     }
     Process { id: accentSetter; onExited: themeColors.reload() }
@@ -676,9 +678,11 @@ ShellRoot {
                                         preferences: shellPreferences
                                         themes: root.themes
                                         currentTheme: root.themeName
+                                        accentChoice: String(Theme.accent)
                                         themeBusy: root.themeBusy
                                         themeError: root.themeError
                                         onThemeRequested: name => root.setTheme(name)
+                                        onAccentRequested: color => root.setAccent(color)
                                         activeMode: Policy.title(surface.mode)
                                         displayWidth: surface.modelData.width
                                         displayHeight: surface.modelData.height
