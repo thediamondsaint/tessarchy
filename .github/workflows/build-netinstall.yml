@@ -92,6 +92,16 @@ jobs:
           if-no-files-found: error
           compression-level: 0
           retention-days: 7
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tessarchy-netinstall-vm-captures-${{ github.run_number }}
+          path: |
+            dist/boot-bios.png
+            dist/boot-uefi.png
+            dist/VM-TESTING.md
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 7
 
   draft-alpha:
     if: github.event_name == 'workflow_dispatch' && inputs.release_tag != ''
