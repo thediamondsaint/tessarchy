@@ -9,7 +9,7 @@ function useRelease(release) {
   releaseLink.href = release.html_url;
   releaseLink.textContent = `Get ${tag || 'the latest build'} ↓`;
   document.querySelector('#release-notes-link').href = release.html_url;
-  document.querySelector('#release-note').textContent = `${title} is the latest published tester build. Open the release for ISO parts, assembly instructions, checksums, boot evidence, and VM files.`;
+  document.querySelector('#release-note').textContent = `${title}. Download the Tessarchy netinstall, SHA-256 checksum, VM image, and install guide from the release.`;
 
   const assets = Array.isArray(release.assets) ? release.assets : [];
   const installer = assets.find(asset => typeof asset?.name === 'string'
@@ -19,7 +19,7 @@ function useRelease(release) {
     const size = Number.isFinite(installer.size) ? ` · ${(installer.size / 1048576).toFixed(0)} MiB` : '';
     releaseLink.href = installer.browser_download_url;
     releaseLink.textContent = `Download ${tag || 'the latest'} netinstall ↓`;
-    document.querySelector('#release-note').textContent = `${title}${size}. One ISO download; SHA-256, screenshots, and release notes are on the release page.`;
+    document.querySelector('#release-note').textContent = `${title}${size}. Download the netinstall ISO, checksum, VM image, and install guide from the release.`;
   }
 
   const disk = assets.find(asset => typeof asset?.name === 'string'

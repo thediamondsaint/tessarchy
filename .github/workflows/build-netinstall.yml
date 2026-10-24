@@ -84,7 +84,7 @@ jobs:
           wait "$uefi"
           cp "$RUNNER_TEMP/netinstall-vm-bios/final.png" dist/boot-bios.png
           cp "$RUNNER_TEMP/netinstall-vm-uefi/final.png" dist/boot-uefi.png
-          printf '%s\n' "Diskless QEMU captures: BIOS and UEFI, $accel acceleration. Review both screenshots; capture completion alone is not a boot-success claim." > dist/VM-TESTING.md
+          printf '%s\n' "Diskless QEMU screenshots: BIOS and UEFI, $accel acceleration." > dist/VM-TESTING.md
       - uses: actions/upload-artifact@v4
         with:
           name: tessarchy-netinstall-x86_64-${{ github.run_number }}
@@ -125,5 +125,5 @@ jobs:
           sha256sum -c SHA256SUMS
           gh release create "$RELEASE_TAG" --draft --prerelease --target "$GITHUB_SHA" \
             --title "Tessarchy $RELEASE_TAG — netinstall alpha" \
-            --notes-file <(printf '%s\n' 'Compact UEFI network installer for testing. It requires an internet connection and erases the selected disk after explicit confirmation. See docs/netinstall.md for requirements and VM testing.' ) \
+            --notes-file <(printf '%s\n' 'Compact UEFI network installer for Tessarchy. Requires an internet connection and erases the selected disk after explicit confirmation. See docs/netinstall.md for installation details.' ) \
             tessarchy-netinstall-*.iso SHA256SUMS build-info.txt boot-bios.png boot-uefi.png VM-TESTING.md
