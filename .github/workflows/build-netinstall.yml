@@ -72,16 +72,16 @@ jobs:
             accel=kvm
             seconds=60
           fi
-          python3 scripts/boot-test-iso.py "${image[0]}" build/netinstall-vm-bios \
+          python3 scripts/boot-test-iso.py "${image[0]}" "$RUNNER_TEMP/netinstall-vm-bios" \
             --firmware bios --accel "$accel" --seconds "$seconds" --sample-interval 5 --no-auto-enter &
           bios=$!
-          python3 scripts/boot-test-iso.py "${image[0]}" build/netinstall-vm-uefi \
+          python3 scripts/boot-test-iso.py "${image[0]}" "$RUNNER_TEMP/netinstall-vm-uefi" \
             --firmware uefi --accel "$accel" --seconds "$seconds" --sample-interval 5 --no-auto-enter &
           uefi=$!
           wait "$bios"
           wait "$uefi"
-          cp build/netinstall-vm-bios/final.png dist/boot-bios.png
-          cp build/netinstall-vm-uefi/final.png dist/boot-uefi.png
+          cp "$RUNNER_TEMP/netinstall-vm-bios/final.png" dist/boot-bios.png
+          cp "$RUNNER_TEMP/netinstall-vm-uefi/final.png" dist/boot-uefi.png
           printf '%s\n' "Diskless QEMU captures: BIOS and UEFI, $accel acceleration. Review both screenshots; capture completion alone is not a boot-success claim." > dist/VM-TESTING.md
       - uses: actions/upload-artifact@v4
         with:
