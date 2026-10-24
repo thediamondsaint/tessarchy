@@ -81,7 +81,7 @@ mount "$rootpart" "$target"
 mkdir -p "$target/boot"
 mount "$efi" "$target/boot"
 
-packages=(base linux linux-firmware networkmanager grub efibootmgr sudo greetd tessarchy-tablet)
+packages=(base linux linux-firmware networkmanager grub efibootmgr sudo greetd greetd-agreety tessarchy-tablet)
 if ! pacstrap -K "$target" "${packages[@]}" 2>&1 | tee "$log" | dialog --title 'Downloading Tessarchy' --programbox 22 78; then
     umount -R "$target" || true
     fail "Package installation failed. Check the network and /tmp/tessarchy-netinstall.log. Nothing is bootable yet."
