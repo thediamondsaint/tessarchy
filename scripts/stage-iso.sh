@@ -50,6 +50,7 @@ file_permissions+=(
   ["/usr/bin/tessa-ai"]="0:0:755"
   ["/usr/bin/tessarchy-ssh"]="0:0:755"
   ["/usr/bin/tessarchy-theme"]="0:0:755"
+  ["/usr/bin/tessarchy-first-run"]="0:0:755"
   ["/usr/bin/tessarchy-run"]="0:0:755"
   ["/usr/bin/tessarchy-launch"]="0:0:755"
 )
@@ -104,7 +105,7 @@ with profile_path.open('a') as profile:
     profile.write(')\n')
 PY
 install -m755 "$root/session/tessarchy-install" "$root/session/tessarchy-install-ui" "$airoot/usr/bin/"
-install -m755 "$root/session/start-tessarchy" "$root/session/tessera-shell" "$root/session/tessera-chatgpt-status" "$root/session/tessarchy-osk" "$root/session/tessarchy-theme" "$root/session/tessarchy-run" "$root/session/tessarchy-launch" "$root/session/tessera-screenshot" "$root/session/tessera-brightness" "$root/session/tessera-nightlight" "$root/session/tessera-rotate" "$root/session/tessarchy-session-services" "$root/session/tessa-ai" "$root/session/tessarchy-ssh" "$root/session/tessarchy-readiness" "$airoot/usr/bin/"
+install -m755 "$root/session/start-tessarchy" "$root/session/tessera-shell" "$root/session/tessera-chatgpt-status" "$root/session/tessarchy-osk" "$root/session/tessarchy-theme" "$root/session/tessarchy-first-run" "$root/session/tessarchy-run" "$root/session/tessarchy-launch" "$root/session/tessera-screenshot" "$root/session/tessera-brightness" "$root/session/tessera-nightlight" "$root/session/tessera-rotate" "$root/session/tessarchy-session-services" "$root/session/tessa-ai" "$root/session/tessarchy-ssh" "$root/session/tessarchy-readiness" "$airoot/usr/bin/"
 install -Dm644 "$root/session/tessarchy-apps.target" "$airoot/usr/lib/systemd/user/tessarchy-apps.target"
 install -m755 "$root/session/tessarchy-update" "$root/session/tessera-update-notify" "$airoot/usr/bin/"
 install -m755 "$root/session/tessarchy-runtime" "$airoot/usr/bin/"

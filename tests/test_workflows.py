@@ -14,6 +14,70 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class Workflows(unittest.TestCase):
+    def test_first_run_accent_is_validated_and_saved_once(self):
+        home = self.home / 'first-run-home'
+        config = self.home / 'first-run-config'
+        state = self.home / 'first-run-state'
+        bin_dir = self.home / 'first-run-bin'
+        bin_dir.mkdir()
+        (bin_dir / 'tessarchy-theme').symlink_to(ROOT / 'session/tessarchy-theme')
+        env = dict(os.environ, HOME=str(home), XDG_CONFIG_HOME=str(config),
+                   XDG_STATE_HOME=str(state), TESSARCHY_DATA_DIR=str(ROOT),
+                   PATH=str(bin_dir) + os.pathsep + os.environ.get('PATH', ''))
+        helper = ROOT / 'session/tessarchy-first-run'
+        status = subprocess.run([str(helper), 'status'], env=env, capture_output=True, text=True)
+        self.assertEqual(status.stdout, 'show\n')
+        invalid = subprocess.run([str(helper), 'accent', 'not-a-color'], env=env,
+                                 capture_output=True, text=True)
+        self.assertNotEqual(invalid.returncode, 0)
+        selected = subprocess.run([str(helper), 'accent', '#7FC8FF'], env=env,
+                                  capture_output=True, text=True)
+        self.assertEqual(selected.returncode, 0, selected.stderr)
+        self.assertEqual((config / 'tessarchy/accent').read_text(), '#7fc8ff\n')
+        self.assertIn('accent = "#7fc8ff"', (state / 'tessarchy/theme/colors.toml').read_text())
+        self.assertIn('#7fc8ff', (state / 'tessarchy/osk/gtk-3.0/gtk.css').read_text())
+        subprocess.run([str(helper), 'complete'], env=env, check=True)
+        status = subprocess.run([str(helper), 'status'], env=env, capture_output=True, text=True)
+        self.assertEqual(status.stdout, '')
+
+    def test_netinstall_staging_uses_a_separate_compact_profile(self):
+        import shutil
+        repo = self.home / 'netinstall-source'
+        (repo / 'scripts').mkdir(parents=True)
+        for directory in ('session', 'iso'):
+            shutil.copytree(ROOT / directory, repo / directory)
+        shutil.copy2(ROOT / 'scripts/stage-netinstall.sh', repo / 'scripts')
+        base = self.home / 'releng-netinstall'
+        (base / 'airootfs/etc').mkdir(parents=True)
+        (base / 'profiledef.sh').write_text('file_permissions=()\n')
+        (base / 'packages.x86_64').write_text('large-live-desktop\n')
+        (base / 'airootfs/etc/passwd').write_text('root:x:0:0:root:/root:/usr/bin/zsh\n')
+        for directory in ('syslinux', 'efiboot/loader/entries', 'grub'):
+            (base / directory).mkdir(parents=True)
+        (base / 'efiboot/loader/entries/arch.conf').write_text('old\n')
+        pacman_conf = self.home / 'pacman.conf'
+        pacman_conf.write_text('[core]\nInclude = /etc/pacman.d/mirrorlist\n')
+        env = dict(self.env, ARCHISO_RELENG=str(base), PACMAN_CONF=str(pacman_conf),
+                   TESSARCHY_REPO_URL='http://mirror.test/pkgs')
+        result = subprocess.run([str(repo / 'scripts/stage-netinstall.sh')], env=env,
+                                capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        profile = repo / 'build/netinstall-profile'
+        self.assertEqual((profile / 'packages.x86_64').read_text().splitlines(),
+                         sorted(set((ROOT / 'iso/packages.netinstall.x86_64').read_text().splitlines())))
+        self.assertNotIn('large-live-desktop', (profile / 'packages.x86_64').read_text())
+        self.assertIn('Server = http://mirror.test/pkgs/$arch',
+                      (profile / 'airootfs/etc/pacman.d/tessarchy.conf').read_text())
+        self.assertIn('/usr/bin/bash', (profile / 'airootfs/etc/passwd').read_text())
+        self.assertTrue((profile / 'airootfs/usr/bin/tessarchy-netinstall').stat().st_mode & 0o111)
+        self.assertEqual((profile / 'efiboot/loader/loader.conf').read_text().splitlines()[1],
+                         'default 01-tessarchy-netinstall.conf')
+        self.assertTrue((profile / 'efiboot/loader/entries/01-tessarchy-netinstall.conf').is_file())
+        self.assertFalse((profile / 'efiboot/loader/entries/01-tessarchy-linux.conf').exists())
+        self.assertIn('Tessarchy network installer',
+                      (profile / 'syslinux/archiso_sys-linux.cfg').read_text())
+        self.assertIn('Tessarchy network installer', (profile / 'grub/loopback.cfg').read_text())
+
     def test_osk_gesture_reservation_keeps_input_and_background_at_physical_edge(self):
         shell = (ROOT / 'shell/shell.qml').read_text()
         policy = (ROOT / 'shell/LayoutPolicy.js').read_text()

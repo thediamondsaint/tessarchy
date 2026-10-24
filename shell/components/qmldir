@@ -62,3 +62,4 @@ EdgeWheel 1.0 EdgeWheel.qml
 LauncherRow 1.0 LauncherRow.qml
 
 GlassIconButton 1.0 GlassIconButton.qml
+FirstRunWizard 1.0 FirstRunWizard.qml

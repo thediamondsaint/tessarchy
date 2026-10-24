@@ -276,7 +276,28 @@ ShellRoot {
         running: true
         onTriggered: root.refreshChatGPT()
     }
-    Component.onCompleted: root.refreshChatGPT()
+    Component.onCompleted: { root.refreshChatGPT(); firstRunProbe.running = true; }
+    Process {
+        id: firstRunProbe
+        command: ["tessarchy-first-run", "status"]
+        stdout: StdioCollector { onStreamFinished: firstRunWizard.visible = text.trim() === "show" }
+    }
+    FirstRunWizard {
+        id: firstRunWizard
+        anchors.fill: parent
+        visible: false
+        themes: root.themes
+        currentTheme: root.themeName
+        accentChoice: String(Theme.accent)
+        onThemeRequested: name => { root.setTheme(name); firstRunWizard.step = 2; }
+        onVisibleChanged: if (visible) root.themeList.running = true
+        onAccentRequested: color => {
+            accentSetter.command = ["tessarchy-first-run", "accent", color];
+            accentSetter.running = true;
+        }
+        onFinished: visible = false
+    }
+    Process { id: accentSetter; onExited: themeColors.reload() }
     readonly property var activePlayer: {
         const players = Mpris.players.values;
         const index = Policy.preferredPlayerIndex(players.map(player => player.isPlaying));
