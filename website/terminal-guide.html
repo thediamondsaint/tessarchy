@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#102b2b">
+  <meta name="description" content="A practical terminal guide to Hermes Agent, profiles, and its built-in Kanban task board.">
+  <title>Hermes in the Terminal — Tessarchy</title>
+  <link rel="icon" href="assets/tessarchy-mark.svg" type="image/svg+xml">
+  <style>
+    :root{color-scheme:light;--paper:#f4f1e8;--ink:#172c2b;--muted:#65736d;--green:#0e594d;--mint:#bde7cf;--dark:#102b2b;--line:#213b3426;font-family:Inter,"Avenir Next",Avenir,Arial,sans-serif;scroll-behavior:smooth}*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font-size:16px;line-height:1.7}a{color:var(--green);text-decoration-thickness:1px;text-underline-offset:3px}a:focus-visible{outline:3px solid #b17837;outline-offset:4px}.skip{position:absolute;top:-80px;left:12px;padding:10px;background:var(--mint);color:var(--dark)}.skip:focus{top:12px}.header{height:82px;padding:0 max(24px,calc((100vw - 1180px)/2));display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line)}.brand{display:flex;gap:10px;align-items:center;text-decoration:none;color:var(--dark);font-size:12px;font-weight:800;letter-spacing:2px}.brand img{width:38px;height:38px}.header nav{display:flex;gap:24px;font-size:12px;font-weight:650}.header nav a{text-decoration:none}.wrap{width:min(1180px,calc(100% - 48px));margin:auto}.hero{padding:82px 0 54px;max-width:850px}.eyebrow{margin:0 0 14px;color:var(--green);font-size:11px;font-weight:800;letter-spacing:1.8px;text-transform:uppercase}.hero h1{margin:0;color:var(--dark);font-size:clamp(42px,7vw,76px);letter-spacing:-4px;line-height:1.02;font-weight:620}.hero h1 em{font-style:normal;color:var(--green)}.hero .lead{max-width:740px;margin:24px 0 0;color:#435850;font-size:19px;line-height:1.6}.stamp{margin-top:18px;color:#738078;font-size:11px}.layout{display:grid;grid-template-columns:230px minmax(0,780px);gap:66px;align-items:start;padding-bottom:100px}.toc{position:sticky;top:20px;padding:20px 18px;background:#fffdf7;border:1px solid var(--line);border-radius:8px}.toc strong{display:block;margin-bottom:12px;color:var(--dark);font-size:12px}.toc a{display:block;padding:5px 0;color:#4e635a;font-size:12px;text-decoration:none}.toc a:hover{text-decoration:underline}.article section{padding:32px 0;border-top:1px solid var(--line);scroll-margin-top:22px}.article section:first-child{border-top:0;padding-top:0}.article h2{margin:0 0 14px;color:var(--dark);font-size:31px;line-height:1.2;letter-spacing:-1px}.article h3{margin:27px 0 8px;color:var(--dark);font-size:19px;line-height:1.35}.article p{margin:10px 0;color:#485b53}.article li{margin:7px 0;color:#485b53}.article ul{padding-left:23px}.article code{font-family:"SFMono-Regular",Consolas,"Liberation Mono",monospace;font-size:.9em;background:#e8e8de;padding:2px 5px;border-radius:4px}.code{margin:14px 0 19px;padding:18px 20px;background:#102b2b;border:1px solid #2a5148;border-radius:7px;overflow:auto;color:#e5f2e7;font:13px/1.7 "SFMono-Regular",Consolas,"Liberation Mono",monospace;white-space:pre}.code code{padding:0;background:none;color:inherit;font:inherit}.callout{margin:18px 0;padding:15px 18px;background:#e5efe3;border-left:3px solid #3f8064;border-radius:0 6px 6px 0;color:#344f43;font-size:14px}.callout strong{color:var(--dark)}.callout.note{background:#f0e9db;border-color:#ba8b4d}.table-wrap{overflow-x:auto;margin:16px 0}.article table{width:100%;border-collapse:collapse;background:#fffdf7;font-size:13px}.article th,.article td{padding:11px 13px;text-align:left;vertical-align:top;border:1px solid var(--line)}.article th{background:#e9e6dc;color:var(--dark)}.article td code{white-space:nowrap}.flow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:20px 0}.flow span{padding:7px 10px;background:#e4eee3;border:1px solid #c5d9c7;border-radius:4px;font-size:12px;font-weight:700;color:#315b49}.flow b{color:#79847d}.footer{padding:32px 24px;background:var(--dark);color:#d8e7db;text-align:center;font-size:12px}.footer a{color:#c5ebd0}.footer p{margin:5px}@media(max-width:800px){.header{padding:0 20px}.header nav{gap:12px}.layout{grid-template-columns:1fr;gap:28px}.toc{position:static;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:2px 12px}.toc strong{grid-column:1/-1}.hero{padding:58px 0 36px}}@media(max-width:520px){.header{height:auto;min-height:72px;align-items:flex-start;padding-top:14px;padding-bottom:14px}.brand{font-size:10px}.brand img{width:32px;height:32px}.header nav{display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;font-size:10px}.wrap{width:calc(100% - 36px)}.hero h1{font-size:47px;letter-spacing:-2.5px}.hero .lead{font-size:16px}.layout{padding-bottom:60px}.toc{grid-template-columns:1fr 1fr}.article h2{font-size:27px}.code{font-size:11px;padding:14px}.article table{min-width:560px}}@media(prefers-reduced-motion:reduce){:root{scroll-behavior:auto}}
+  </style>
+</head>
+<body>
+  <a class="skip" href="#content">Skip to the guide</a>
+  <header class="header">
+    <a class="brand" href="index.html"><img src="assets/tessarchy-mark.svg" alt=""><span>TESSARCHY</span></a>
+    <nav aria-label="Site navigation"><a href="index.html">Home</a><a href="#hermes">Hermes</a><a href="#kanban">Kanban</a><a href="#profiles">Profiles</a></nav>
+  </header>
+  <main id="content" class="wrap">
+    <div class="hero">
+      <p class="eyebrow">A practical command-line field guide</p>
+      <h1>Hermes, Kanban<br>&amp; <em>profiles.</em></h1>
+      <p class="lead">Use Hermes Agent from a terminal, keep different assistants in separate profiles, and move work through Hermes’ built-in task board. Start with commands you can type today, then see how all three pieces fit together.</p>
+      <p class="stamp">CLI examples checked against Hermes Agent v0.19.0 on October 23, 2026. Hermes changes over time; your installed <code>hermes --help</code> is the final reference.</p>
+    </div>
+    <div class="layout">
+      <aside class="toc" aria-label="On this page">
+        <strong>On this page</strong>
+        <a href="#quickstart">Quick start</a><a href="#hermes">Hermes in terminal</a><a href="#profiles">Profiles</a><a href="#kanban">Kanban concepts</a><a href="#workflow">A practical workflow</a><a href="#operations">Operate a board</a><a href="#troubleshooting">Troubleshooting</a><a href="#tessarchy">Tessarchy queue</a><a href="#reference">Command reference</a>
+      </aside>
+      <article class="article">
+        <section id="quickstart">
+          <h2>Start here</h2>
+          <p>Run these read-only commands first to see your Hermes install, profiles, and boards:</p>
+          <pre class="code"><code>hermes --version
+hermes --help
+hermes profile list
+hermes kanban boards list
+hermes kanban list</code></pre>
+          <p>Hermes is the assistant runtime and command-line interface. A <strong>profile</strong> selects an agent identity and its configuration. A <strong>Kanban board</strong> stores tasks; a <strong>task</strong> can be assigned to a profile and claimed by a worker. A board is a local task queue, not a GitHub Issues board.</p>
+          <div class="callout"><strong>Safe first move:</strong> inspect with <code>list</code>, <code>show</code>, <code>boards list</code>, <code>profile list</code>, and <code>--dry-run</code>. Creating or dispatching work can change task state or start model calls.</div>
+        </section>
+        <section id="hermes">
+          <h2>Using Hermes from the terminal</h2>
+          <p>Hermes supports interactive chat plus subcommands for setup, profiles, Kanban, gateway services, and configuration. Learn the command tree on your installed version:</p>
+          <pre class="code"><code>hermes --help
+hermes kanban --help
+hermes profile --help
+hermes kanban create --help</code></pre>
+          <h3>Start an assistant session</h3>
+          <pre class="code"><code># Start an interactive chat in the current terminal
+hermes
+
+# Start a named profile directly
+hermes -p researcher chat
+
+# Send a single prompt and exit
+hermes -p researcher -z "Summarize the open TODOs in this repository."</code></pre>
+          <p>Hermes starts in your current working directory. Change to the project first so repository instructions and tools apply to the intended code. A profile’s Hermes home is separate from the shell’s working directory; set <code>terminal.cwd</code> in the profile’s configuration if it should always start in a specific project.</p>
+          <h3>Use local help as the source of truth</h3>
+          <p>Flags and Kanban states evolve. Ask the installed CLI for a specific command before scripting it. For shell automation, use <code>--json</code> where available, check exit status, and avoid parsing pretty terminal tables.</p>
+        </section>
+        <section id="profiles">
+          <h2>Profiles: separate Hermes workspaces</h2>
+          <p>A profile is a named Hermes instance with its own home directory and settings. Profiles help separate roles, model defaults, skills, memory, sessions, and tool setup—for example a researcher, a writer, and a code reviewer. This is application-level organization; profiles are not Linux user accounts or security sandboxes.</p>
+          <h3>List, inspect, and choose a profile</h3>
+          <pre class="code"><code>hermes profile list
+hermes profile show researcher
+
+# Make researcher the sticky default for later commands
+hermes profile use researcher
+hermes profile use default
+
+# Select a profile for only this invocation
+hermes -p researcher chat</code></pre>
+          <p><code>hermes profile use NAME</code> changes the sticky default. The <code>-p NAME</code> option selects a profile for one command without changing that default. Profile selection is not the same as selecting a model; model configuration is managed separately.</p>
+          <h3>Create profiles for clear roles</h3>
+          <pre class="code"><code># Create a new profile with a useful routing description
+hermes profile create researcher --description "Finds and summarizes source-backed answers."
+
+# Clone setup from the active profile
+hermes profile create reviewer --clone
+
+# Describe an existing profile for Kanban routing
+hermes profile describe reviewer --text "Reviews patches for correctness and regressions."</code></pre>
+          <p>Use a short description that says what the profile does well. The Kanban decomposer can use descriptions to route work; names alone are a weak signal. After creation, inspect <code>hermes profile show NAME</code>, configure the model and tools it needs, and set up credentials deliberately.</p>
+          <div class="callout note"><strong>Cloning may copy secrets.</strong> In the referenced CLI, <code>--clone</code> copies config, <code>.env</code>, <code>SOUL.md</code>, and skills, but not sessions or the state database. Review the destination profile before use. <code>--clone-all</code> copies substantially more state; choose it only when intended.</div>
+          <h3>Aliases and lifecycle</h3>
+          <pre class="code"><code># Create or refresh a shell wrapper for a profile
+hermes profile alias researcher
+
+# Rename a profile
+hermes profile rename researcher research
+
+# Export and restore as a different profile
+hermes profile export research -o ./research-backup.tar.gz
+hermes profile import ./research-backup.tar.gz --name research-restored</code></pre>
+          <p>Aliases are convenience wrappers, not separate agents. Exports omit credential stores, but still treat profile archives as private because they can include configuration, memory, skills, and prompts. Deleting a profile removes its files and data; inspect <code>hermes profile --help</code> before destructive lifecycle operations.</p>
+        </section>
+        <section id="kanban">
+          <h2>Kanban: durable tasks for profiles</h2>
+          <p>Hermes Kanban stores tasks in a local SQLite-backed board and coordinates work across profiles. Tasks can be assigned, linked by dependencies, claimed, commented on, blocked, scheduled, reviewed, and completed. They can use scratch or Git worktree workspaces.</p>
+          <h3>Boards separate workstreams</h3>
+          <pre class="code"><code># List boards and inspect the active board
+hermes kanban boards list
+hermes kanban boards show
+
+# Create a board and switch to it
+hermes kanban boards create tessarchy --name "Tessarchy" --switch
+
+# Switch boards, or specify one for a single command
+hermes kanban boards switch default
+hermes kanban --board tessarchy list</code></pre>
+          <p>Use a different board for another project or queue. Tasks and dependencies stay within their board. Check the active board before creating or dispatching work so a task does not land in the wrong queue.</p>
+          <h3>Task statuses at a glance</h3>
+          <div class="flow" aria-label="Typical task flow"><span>triage</span><b>→</b><span>todo</span><b>→</b><span>ready</span><b>→</b><span>running</span><b>→</b><span>review</span><b>→</b><span>done</span></div>
+          <div class="table-wrap"><table><thead><tr><th>Status</th><th>Meaning in use</th></tr></thead><tbody>
+            <tr><td><code>triage</code></td><td>Needs a clearer brief or decomposition before execution.</td></tr>
+            <tr><td><code>todo</code></td><td>Accepted work waiting for prerequisites or promotion.</td></tr>
+            <tr><td><code>ready</code></td><td>Eligible for an assigned worker or dispatcher to claim.</td></tr>
+            <tr><td><code>running</code></td><td>A profile has claimed and is executing the work.</td></tr>
+            <tr><td><code>review</code></td><td>Implementation is handed off for review or approval.</td></tr>
+            <tr><td><code>blocked</code></td><td>Waiting for a person, capability, or external condition.</td></tr>
+            <tr><td><code>scheduled</code></td><td>Parked until a later time or follow-up.</td></tr>
+            <tr><td><code>done</code></td><td>Completed; record the outcome.</td></tr>
+          </tbody></table></div>
+          <p>Dependencies express ordering: a child stays unavailable until parent work completes. Use <code>block</code> when a person or missing capability must intervene; use <code>schedule</code> for a time-delayed follow-up. A dependency is not a human blocker.</p>
+        </section>
+        <section id="workflow">
+          <h2>A practical terminal workflow</h2>
+          <h3>1. Write a task another profile can finish</h3>
+          <p>Make the title an outcome. Put context, constraints, scope, acceptance criteria, and expected evidence in the body. Avoid vague titles like “fix things.”</p>
+          <pre class="code"><code>hermes kanban create "Document the install flow" \
+  --body "Read the current install docs. Add prerequisites, exact commands, recovery steps, and links. Do not change installer code. Report changed files and checks performed." \
+  --assignee writer \
+  --workspace scratch</code></pre>
+          <p>Assignment routes work to a profile; it does not mean the task is automatically safe, correct, or reviewed. Keep acceptance checks verifiable.</p>
+          <h3>2. Use worktrees for code changes</h3>
+          <pre class="code"><code>hermes kanban create "Add phone launcher keyboard navigation" \
+  --body "Implement the change in the project and report the affected files and validation evidence." \
+  --assignee the-coder \
+  --workspace worktree \
+  --branch wt/phone-launcher-keyboard</code></pre>
+          <p><code>scratch</code> is for isolated temporary work; <code>worktree</code> creates an isolated Git worktree; <code>dir:/path</code> uses a directory you choose. Worktrees reduce collisions, but inspect the diff and branch before integrating changes.</p>
+          <h3>3. Inspect before dispatch</h3>
+          <pre class="code"><code>hermes kanban list --status ready
+hermes kanban show TASK_ID
+hermes kanban context TASK_ID
+hermes kanban dispatch --dry-run</code></pre>
+          <p>The context command shows task details, parent results, and comments available to a worker. Dry-run previews dispatcher decisions without spawning workers. A real dispatch can start model calls and code changes.</p>
+          <h3>4. Run or monitor the work</h3>
+          <pre class="code"><code># Manually launch one dispatcher pass after reviewing the dry run
+hermes kanban dispatch --max 1
+
+# Inspect the task and follow its event stream
+hermes kanban show TASK_ID
+hermes kanban tail TASK_ID
+hermes kanban runs TASK_ID</code></pre>
+          <p>The gateway can run the embedded dispatcher when enabled; <code>hermes kanban dispatch</code> is a manual one-pass operation. In current builds, <code>hermes kanban daemon</code> is deprecated; use <code>hermes gateway start</code> to start the gateway service. Do not run a persistent dispatcher unless you intend ready tasks to launch automatically.</p>
+          <h3>5. Review and close the loop</h3>
+          <pre class="code"><code># Add a clarification or request for the handoff
+hermes kanban comment TASK_ID "Please include the command output in the handoff."
+
+# Record a completed task's result
+hermes kanban complete TASK_ID --result "Added the guide and verified the rendered page."</code></pre>
+          <p>Review resulting files, commits, and validation evidence yourself. If another pass is needed, use the review/change actions shown by your installed CLI. Record concrete outcomes, not a generic “done.”</p>
+        </section>
+        <section id="operations">
+          <h2>Board operations you will use often</h2>
+          <div class="table-wrap"><table><thead><tr><th>Goal</th><th>Terminal command</th></tr></thead><tbody>
+            <tr><td>List tasks</td><td><code>hermes kanban list</code></td></tr><tr><td>Filter ready work</td><td><code>hermes kanban list --status ready</code></td></tr><tr><td>Filter by profile</td><td><code>hermes kanban list --assignee researcher</code></td></tr><tr><td>Inspect comments and events</td><td><code>hermes kanban show TASK_ID</code></td></tr><tr><td>Assign a profile</td><td><code>hermes kanban assign TASK_ID researcher</code></td></tr><tr><td>Remove assignment</td><td><code>hermes kanban assign TASK_ID none</code></td></tr><tr><td>Add a dependency</td><td><code>hermes kanban link PARENT_ID CHILD_ID</code></td></tr><tr><td>Restore a task after clearing a blocker</td><td><code>hermes kanban unblock TASK_ID</code></td></tr><tr><td>Park for later</td><td><code>hermes kanban schedule TASK_ID "Revisit next week"</code></td></tr><tr><td>View counts</td><td><code>hermes kanban stats</code></td></tr>
+          </tbody></table></div>
+          <p>Use <code>hermes kanban --board NAME ...</code> for one-off commands on a non-active board. To pin a board for the current shell, set <code>HERMES_KANBAN_BOARD</code>; switching a board stores the default for later invocations.</p>
+        </section>
+        <section id="troubleshooting">
+          <h2>Troubleshooting and good habits</h2>
+          <ul>
+            <li><strong>Command not found:</strong> check the install and shell path with <code>command -v hermes</code> and <code>hermes --version</code>; restart the shell after changing PATH.</li>
+            <li><strong>Wrong board:</strong> run <code>hermes kanban boards show</code>, then use <code>--board SLUG</code> for a one-off.</li>
+            <li><strong>No work starts:</strong> inspect ready tasks, assignments, dependencies, gateway status, and <code>hermes kanban dispatch --dry-run</code>. Tasks in <code>todo</code> or <code>blocked</code> are not ready to claim.</li>
+            <li><strong>Unknown assignee:</strong> check <code>hermes profile list</code> and use the exact profile name. Profile descriptions improve task routing.</li>
+            <li><strong>Task stuck running:</strong> inspect events and run history first. Reclaiming affects shared state, so use recovery commands only after confirming that its worker is gone.</li>
+            <li><strong>Different behavior:</strong> inspect that subcommand’s local <code>--help</code>. Upstream docs may describe a newer release.</li>
+          </ul>
+          <div class="callout"><strong>Keep tasks reviewable.</strong> Split independent outcomes, link true prerequisites, assign profiles with matching skills, and verify the result before closing or integrating it.</div>
+        </section>
+        <section id="tessarchy">
+          <h2>Hermes Kanban vs. the Tessarchy queue</h2>
+          <p>This guide describes <code>hermes kanban</code>, Hermes Agent’s multi-profile board. Tessarchy also contains <code>scripts/agent-kanban.py</code>, a separate read-only prototype for suggesting stages for GitHub issues. That script does not use Hermes’ SQLite board, assign Hermes profiles, dispatch agents, edit issues, or create a GitHub Projects board.</p>
+          <p>Read the <a href="https://github.com/thediamondsaint/tessarchy/blob/main/docs/agent-kanban.md">Tessarchy Agent Kanban notes</a> for its setup and limits. Do not use the Python prototype’s commands as if they control Hermes profiles.</p>
+        </section>
+        <section id="reference">
+          <h2>Useful command groups and references</h2>
+          <pre class="code"><code>hermes --help                    # top-level commands
+hermes profile --help            # profile subcommands
+hermes kanban --help             # board and task operations
+hermes kanban list --help        # task filters and output modes
+hermes kanban create --help      # task fields and workspace choices</code></pre>
+          <ul>
+            <li><a href="https://hermes-agent.nousresearch.com/docs/user-guide/features/kanban">Official Hermes Kanban guide</a></li>
+            <li><a href="https://hermes-agent.nousresearch.com/docs/reference/cli-commands">Official Hermes CLI reference</a></li>
+            <li><a href="https://hermes-agent.nousresearch.com/docs/reference/profile-commands">Official Hermes profile commands</a></li>
+            <li><a href="https://github.com/thediamondsaint/tessarchy/blob/main/docs/agent-kanban.md">Tessarchy read-only issue queue</a></li>
+          </ul>
+          <p>Examples are illustrative. Replace profile names and task IDs with ones from your install. Read each command’s help before putting it into a script.</p>
+        </section>
+      </article>
+    </div>
+  </main>
+  <footer class="footer"><p><a href="index.html">← Back to Tessarchy</a></p><p>Hermes Agent terminal guide · Tessarchy</p></footer>
+</body>
+</html>
