@@ -1,0 +1,32 @@
+{
+  "source_commit": "eee498bcb84f40ea429d72f6aa7b998b04a00780",
+  "method": "Actual package() recipes into scratch pkgdir; remove their generated file set; rerun package() recipes. Retained-copy control is outside that simulated ownership set.",
+  "real_pacman_transaction": false,
+  "real_Quickshell_or_Hyprland_processes": false,
+  "system_or_personal_config_modified": false,
+  "recipe_generated_files": 153,
+  "selected_file_sha256": {
+    "shell/shell.qml": "e5403f0a2f9af618a29dfeaa69d8f29e6557f865ba804f79edc42df935b65b9e",
+    "shell/helpers/communications.py": "622edfec12fb7ebcd757f1dd9d7219a351d7e037c2e7603eb0ab8af3f8ad0a3b",
+    "session/hyprland.lua": "ef1fcc44bd9dfc84741a6e0b7313a8d8585a220bfa1b71b11054f627ddba4040",
+    "session/window-controls.lua": "d12920b4e883698aaf6606daa8f8951d0d7a50f463902261d91b327926d03a8a"
+  },
+  "missing_during_simulated_replacement": {
+    "shell/shell.qml": true,
+    "shell/helpers/communications.py": true,
+    "session/hyprland.lua": true,
+    "session/window-controls.lua": true
+  },
+  "retained_copy_unchanged": {
+    "shell/shell.qml": true,
+    "shell/helpers/communications.py": true,
+    "session/hyprland.lua": true,
+    "session/window-controls.lua": true
+  },
+  "present_after_repopulation": {
+    "shell/shell.qml": true,
+    "shell/helpers/communications.py": true,
+    "session/hyprland.lua": true,
+    "session/window-controls.lua": true
+  }
+}

@@ -1,0 +1,141 @@
+{
+  "real_pacman": true,
+  "private_root_and_database": true,
+  "all_host_hooks_masked": true,
+  "cases": [
+    {
+      "NoUpgrade": false,
+      "upgrade_events": [
+        {
+          "name": "shell.qml",
+          "mask": 512
+        },
+        {
+          "name": "hyprland.lua",
+          "mask": 512
+        },
+        {
+          "name": "helper.py",
+          "mask": 512
+        },
+        {
+          "name": "shell.qml",
+          "mask": 256
+        },
+        {
+          "name": "shell.qml",
+          "mask": 8
+        },
+        {
+          "name": "helper.py",
+          "mask": 256
+        },
+        {
+          "name": "helper.py",
+          "mask": 8
+        },
+        {
+          "name": "hyprland.lua",
+          "mask": 256
+        },
+        {
+          "name": "hyprland.lua",
+          "mask": 8
+        }
+      ],
+      "original_content_after_upgrade": "version=2-1",
+      "pacnew_created": false,
+      "dropped_helper_exists": false,
+      "drop_events": [
+        {
+          "name": "shell.qml",
+          "mask": 512
+        },
+        {
+          "name": "hyprland.lua",
+          "mask": 512
+        },
+        {
+          "name": "helper.py",
+          "mask": 512
+        },
+        {
+          "name": "shell.qml",
+          "mask": 256
+        },
+        {
+          "name": "shell.qml",
+          "mask": 8
+        },
+        {
+          "name": "hyprland.lua",
+          "mask": 256
+        },
+        {
+          "name": "hyprland.lua",
+          "mask": 8
+        }
+      ],
+      "private_db_version": "tessarchy-source-probe 3-1"
+    },
+    {
+      "NoUpgrade": true,
+      "upgrade_events": [
+        {
+          "name": "shell.qml.pacnew",
+          "mask": 256
+        },
+        {
+          "name": "shell.qml.pacnew",
+          "mask": 8
+        },
+        {
+          "name": "helper.py.pacnew",
+          "mask": 256
+        },
+        {
+          "name": "helper.py.pacnew",
+          "mask": 8
+        },
+        {
+          "name": "hyprland.lua.pacnew",
+          "mask": 256
+        },
+        {
+          "name": "hyprland.lua.pacnew",
+          "mask": 8
+        }
+      ],
+      "original_content_after_upgrade": "version=1-1",
+      "pacnew_created": true,
+      "dropped_helper_exists": true,
+      "drop_events": [
+        {
+          "name": "shell.qml.pacnew",
+          "mask": 512
+        },
+        {
+          "name": "shell.qml.pacnew",
+          "mask": 256
+        },
+        {
+          "name": "shell.qml.pacnew",
+          "mask": 8
+        },
+        {
+          "name": "hyprland.lua.pacnew",
+          "mask": 512
+        },
+        {
+          "name": "hyprland.lua.pacnew",
+          "mask": 256
+        },
+        {
+          "name": "hyprland.lua.pacnew",
+          "mask": 8
+        }
+      ],
+      "private_db_version": "tessarchy-source-probe 3-1"
+    }
+  ]
+}
