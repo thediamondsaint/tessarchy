@@ -1899,5 +1899,12 @@ esac
             with self.subTest(workflow=workflow):
                 self.assertRegex(content, r'pacman -Syu[^\n]*git')
 
+    def test_tablet_bundle_tracks_the_current_shell_and_session_package_revisions(self):
+        bundle = (ROOT / 'scripts/bundle-tablet.py').read_text()
+        for package in ('tessera-shell', 'tessarchy-session'):
+            pkgbuild = (ROOT / 'packaging' / package / 'PKGBUILD').read_text()
+            pkgrel = re.search(r'(?m)^pkgrel=(\d+)$', pkgbuild).group(1)
+            self.assertIn(f"{package}-0.1.0-{pkgrel}-", bundle)
+
 if __name__ == '__main__':
     unittest.main()
