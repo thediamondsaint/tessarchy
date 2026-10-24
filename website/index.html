@@ -48,7 +48,7 @@
         <p class="hero-detail">Tess brings you into Tessa’s world: the default mint-aurora wallpaper and real Tessa interfaces on every device.</p>
         <div class="hero-actions">
           <a class="button button-bright" href="#devices">See Tessa in action <span aria-hidden="true">↓</span></a>
-          <a class="alpha-link" href="#download">Get Alpha 17 <span aria-hidden="true">↗</span></a>
+          <a class="alpha-link" href="#download">Download the netinstall <span aria-hidden="true">↗</span></a>
         </div>
         <div class="hero-facts"><span>Arch Linux</span><i></i><span>Hyprland + Quickshell</span><i></i><span>Phone · Tablet · Desktop</span></div>
       </div>
@@ -111,7 +111,7 @@
         <p>Tessarchy is an experimental operating system. We separate what boots today from what still needs hardware, testing, and time.</p>
       </div>
       <div class="progress-grid">
-        <article class="progress-card progress-now"><span class="progress-index">NOW</span><h3>Try it in a VM</h3><p>Alpha 17 boots to Tessa in BIOS and UEFI QEMU runs. The live session is a disposable demonstration with no persistence.</p><a href="#download">Explore the current release <span aria-hidden="true">↓</span></a></article>
+        <article class="progress-card progress-now"><span class="progress-index">NOW</span><h3>Install from one small download</h3><p>The netinstaller starts in UEFI, connects to the internet, and fetches Tessa and the rest of Tessarchy during setup.</p><a href="#download">See requirements and download <span aria-hidden="true">↓</span></a></article>
         <article class="progress-card"><span class="progress-index">NEXT</span><h3>Pick reference hardware</h3><p>Choose a Linux-friendly device and prove the display, touch, keyboard, audio, and radio paths on physical hardware.</p></article>
         <article class="progress-card"><span class="progress-index">LATER</span><h3>Make it dependable</h3><p>Build repeatable install, update, data-protection, and recovery paths before calling it ready for daily use.</p></article>
       </div>
@@ -121,16 +121,16 @@
 
     <section class="download-section" id="download">
       <div class="download-copy">
-        <p class="kicker">THE CURRENT TESTER BUILD · ALPHA 17</p>
-        <h2>Say hello<br>to Tessa.</h2>
-        <p>Boot the latest x86_64 live image in a disposable virtual machine. Check the release notes before you start; this build is for curious testers and contributors.</p>
-        <div class="download-actions"><a class="button button-bright" id="release-link" href="https://github.com/thediamondsaint/tessarchy/releases/tag/v0.1.0-alpha.17">Get Alpha 17 <span aria-hidden="true">↓</span></a><a class="download-source" href="https://github.com/thediamondsaint/tessarchy">Browse the source <span aria-hidden="true">↗</span></a></div>
-        <p class="download-note" id="release-note">The release page has the split ISO parts, assembly guide, checksums, boot captures, and current VM image.</p>
+        <p class="kicker">THE TESSARCHY NETINSTALLER</p>
+        <h2>One small<br>download.</h2>
+        <p>Start the installer, connect to the internet, and let it fetch Tessa and the system for your device. The ISO is designed to stay under 1 GiB.</p>
+        <div class="download-actions"><a class="button button-bright" id="release-link" href="https://github.com/thediamondsaint/tessarchy/releases">Download netinstall <span aria-hidden="true">↓</span></a><a class="download-source" id="release-notes-link" href="https://github.com/thediamondsaint/tessarchy/releases">Release notes and checksums <span aria-hidden="true">↗</span></a></div>
+        <p class="download-note" id="release-note">The installer needs UEFI, an internet connection, and a 24 GiB or larger disk. It erases the selected disk after you confirm its name.</p>
       </div>
       <div class="download-details">
-        <article><span class="download-step">01 / THE LIVE IMAGE</span><h3>Put the parts together.</h3><p>Download both ISO parts and the guide from the release. Reassemble them in one directory, then check the published SHA-256 sums.</p><a class="detail-link" href="https://github.com/thediamondsaint/tessarchy/releases/download/v0.1.0-alpha.17/DOWNLOAD-ISO.md">Open the ISO guide ↗</a></article>
-        <article><span class="download-step">02 / THE DEVELOPMENT VM</span><h3>Start with a clean base.</h3><p>The official Arch Basic qcow2 is available with a checksum and detached signature. Follow the VM guide to use it with the project.</p><a class="vm-download" id="vm-image-link" href="https://github.com/thediamondsaint/tessarchy/releases/download/v0.1.0-alpha.17/Arch-Linux-x86_64-basic-20261015.611680.qcow2">Get the VM image ↓</a><p class="verify-links"><a id="vm-checksum-link" href="https://github.com/thediamondsaint/tessarchy/releases/download/v0.1.0-alpha.17/Arch-Linux-x86_64-basic-20261015.611680.qcow2.SHA256">Checksum</a><span> · </span><a id="vm-signature-link" href="https://github.com/thediamondsaint/tessarchy/releases/download/v0.1.0-alpha.17/Arch-Linux-x86_64-basic-20261015.611680.qcow2.sig">Signature</a><span> · </span><a href="https://github.com/thediamondsaint/tessarchy/blob/main/docs/vm.md">Setup guide</a></p></article>
-        <article><span class="download-step">03 / BEFORE YOU BOOT</span><h3>Keep expectations clear.</h3><p>The session does not save changes when you shut it down. Alpha 17 was checked in QEMU; physical device support and phone hardware acceptance are still in progress.</p><a class="detail-link" href="https://github.com/thediamondsaint/tessarchy/releases/tag/v0.1.0-alpha.17">See what’s in Alpha 17 ↗</a></article>
+        <article><span class="download-step">01 / BEFORE INSTALLING</span><h3>Check the basics.</h3><p>This alpha needs an x86_64 UEFI computer, a working internet connection, and a 24 GiB or larger target disk. Wi-Fi support includes common Intel, Atheros, Broadcom, MediaTek, and Realtek devices.</p><a class="detail-link" href="https://github.com/thediamondsaint/tessarchy/blob/main/docs/netinstall.md">Read netinstall requirements ↗</a></article>
+        <article><span class="download-step">02 / FIRST-TIME SETUP</span><h3>Make Tessarchy yours.</h3><p>Choose your username, device name, password, and time zone in the installer. On the first sign-in, Tessa helps you pick a theme and accent color. Change them again later in Settings.</p><a class="detail-link" href="https://github.com/thediamondsaint/tessarchy/blob/main/docs/netinstall.md#vm-install-check">See the install flow ↗</a></article>
+        <article><span class="download-step">03 / THE DEVELOPMENT VM</span><h3>Build and explore.</h3><p>The separate Arch development image is a clean base for testing Tessarchy changes. Its release includes a checksum and detached signature.</p><a class="vm-download" id="vm-image-link" href="https://github.com/thediamondsaint/tessarchy/releases/tag/v0.1.0-alpha.17">Get the development VM ↓</a><p class="verify-links"><a id="vm-checksum-link" href="https://github.com/thediamondsaint/tessarchy/releases/tag/v0.1.0-alpha.17">Checksum</a><span> · </span><a id="vm-signature-link" href="https://github.com/thediamondsaint/tessarchy/releases/tag/v0.1.0-alpha.17">Signature</a><span> · </span><a href="https://github.com/thediamondsaint/tessarchy/blob/main/docs/vm.md">Setup guide</a></p></article>
       </div>
     </section>
   </main>

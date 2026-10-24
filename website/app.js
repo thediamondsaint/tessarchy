@@ -8,9 +8,20 @@ function useRelease(release) {
   const title = typeof release.name === 'string' && release.name ? release.name : tag;
   releaseLink.href = release.html_url;
   releaseLink.textContent = `Get ${tag || 'the latest build'} ↓`;
+  document.querySelector('#release-notes-link').href = release.html_url;
   document.querySelector('#release-note').textContent = `${title} is the latest published tester build. Open the release for ISO parts, assembly instructions, checksums, boot evidence, and VM files.`;
 
   const assets = Array.isArray(release.assets) ? release.assets : [];
+  const installer = assets.find(asset => typeof asset?.name === 'string'
+    && asset.name.startsWith('tessarchy-netinstall-') && asset.name.endsWith('.iso'));
+  if (typeof installer?.browser_download_url === 'string'
+    && installer.browser_download_url.startsWith('https://github.com/thediamondsaint/tessarchy/releases/download/')) {
+    const size = Number.isFinite(installer.size) ? ` · ${(installer.size / 1048576).toFixed(0)} MiB` : '';
+    releaseLink.href = installer.browser_download_url;
+    releaseLink.textContent = `Download ${tag || 'the latest'} netinstall ↓`;
+    document.querySelector('#release-note').textContent = `${title}${size}. One ISO download; SHA-256, screenshots, and release notes are on the release page.`;
+  }
+
   const disk = assets.find(asset => typeof asset?.name === 'string'
     && /^Arch-Linux-x86_64-basic-\d{8}\.\d+\.qcow2$/.test(asset.name));
   if (!disk) return;
