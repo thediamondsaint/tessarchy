@@ -59,6 +59,8 @@ jobs:
               cd dist
               sha256sum tessarchy-netinstall-*.iso > SHA256SUMS
             '
+      - name: Restore runner ownership of generated files
+        run: sudo chown -R "$(id -u):$(id -g)" .git dist
       - name: Capture installer boots in diskless BIOS and UEFI VMs
         shell: bash
         run: |
