@@ -29,6 +29,8 @@ jobs:
     timeout-minutes: 50
     steps:
       - uses: actions/checkout@v4
+      - name: Prepare source-check dependencies
+        run: sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends ffmpeg libgtk-3-dev libglib2.0-dev pkg-config
       - name: Check source and QML
         run: ./scripts/check.sh
       - name: Build compact ISO in Arch container
