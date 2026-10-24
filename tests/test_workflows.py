@@ -70,6 +70,7 @@ class Workflows(unittest.TestCase):
                       (profile / 'airootfs/etc/pacman.d/tessarchy.conf').read_text())
         self.assertIn('/usr/bin/bash', (profile / 'airootfs/etc/passwd').read_text())
         self.assertTrue((profile / 'airootfs/usr/bin/tessarchy-netinstall').stat().st_mode & 0o111)
+        self.assertTrue((profile / 'airootfs/root/customize_airootfs.sh').is_file())
         self.assertEqual((profile / 'efiboot/loader/loader.conf').read_text().splitlines()[1],
                          'default 01-tessarchy-netinstall.conf')
         self.assertTrue((profile / 'efiboot/loader/entries/01-tessarchy-netinstall.conf').is_file())
