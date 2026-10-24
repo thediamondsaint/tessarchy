@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="480" viewBox="0 0 640 480">
+  <defs>
+    <linearGradient id="sky" x2="1" y2="1">
+      <stop stop-color="#07161c"/>
+      <stop offset=".52" stop-color="#0b2931"/>
+      <stop offset="1" stop-color="#07121e"/>
+    </linearGradient>
+    <linearGradient id="glow" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#c7ffe9"/>
+      <stop offset="1" stop-color="#52c6aa"/>
+    </linearGradient>
+    <linearGradient id="aurora" x2="1">
+      <stop stop-color="#41d6b5" stop-opacity="0"/>
+      <stop offset=".45" stop-color="#53e7c0" stop-opacity=".54"/>
+      <stop offset="1" stop-color="#a4ffe1" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect width="640" height="480" fill="url(#sky)"/>
+  <path d="M0 146C117 86 175 93 277 143s215 47 363-44v108c-153 83-253 90-379 35S105 206 0 254Z" fill="url(#aurora)"/>
+  <path d="M0 204c122-65 199-55 299-5s203 49 341-27" fill="none" stroke="#a2ffe1" stroke-opacity=".25" stroke-width="2"/>
+  <path d="M0 274c112-50 226-22 327 19s211 39 313-14v201H0Z" fill="#071522" fill-opacity=".54"/>
+  <path d="M0 350 117 264l89 64 93-83 121 101 99-75 121 83v126H0Z" fill="#091824" fill-opacity=".82"/>
+  <g transform="translate(48 45) scale(.76)">
+    <path fill="url(#glow)" d="M64 9 90 24 64 39 38 24Z"/>
+    <path fill="#a6edd7" d="m10 40 26-15 26 15-26 15Z"/>
+    <path fill="#65baa9" d="m66 40 26-15 26 15-26 15Z"/>
+    <path fill="url(#glow)" d="m39 59 25-15 25 15-25 15Z"/>
+    <path fill="#8ce1c9" d="m39 64 23 14v35L39 99Z"/>
+    <path fill="#4b9f94" d="m66 78 23-14v35l-23 14Z"/>
+  </g>
+  <text x="48" y="207" fill="#f3fff9" font-family="DejaVu Sans, sans-serif" font-size="37" font-weight="700" letter-spacing="5">TESSARCHY</text>
+  <path d="M48 228h544" stroke="#72d9bc" stroke-opacity=".7"/>
+  <text x="49" y="266" fill="#9cebd3" font-family="DejaVu Sans, sans-serif" font-size="17" font-weight="600" letter-spacing="3">TESSA NETWORK INSTALLER</text>
+  <text x="49" y="296" fill="#c4d7d3" font-family="DejaVu Sans, sans-serif" font-size="12" letter-spacing="1">A small download. A full system from the network.</text>
+</svg>
