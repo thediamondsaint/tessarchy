@@ -12,7 +12,11 @@ grub
 iwd
 intel-ucode
 linux
-linux-firmware
+linux-firmware-atheros
+linux-firmware-broadcom
+linux-firmware-intel
+linux-firmware-mediatek
+linux-firmware-realtek
 mkinitcpio
 mkinitcpio-archiso
 networkmanager

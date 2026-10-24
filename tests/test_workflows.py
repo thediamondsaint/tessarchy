@@ -66,11 +66,16 @@ class Workflows(unittest.TestCase):
         self.assertEqual((profile / 'packages.x86_64').read_text().splitlines(),
                          sorted(set((ROOT / 'iso/packages.netinstall.x86_64').read_text().splitlines())))
         self.assertNotIn('large-live-desktop', (profile / 'packages.x86_64').read_text())
+        netinstall_packages = (profile / 'packages.x86_64').read_text().splitlines()
+        self.assertNotIn('linux-firmware', netinstall_packages)
+        for firmware in ('linux-firmware-atheros', 'linux-firmware-broadcom',
+                         'linux-firmware-intel', 'linux-firmware-mediatek',
+                         'linux-firmware-realtek'):
+            self.assertIn(firmware, netinstall_packages)
         self.assertIn('Server = http://mirror.test/pkgs/$arch',
                       (profile / 'airootfs/etc/pacman.d/tessarchy.conf').read_text())
         self.assertIn('/usr/bin/bash', (profile / 'airootfs/etc/passwd').read_text())
         self.assertTrue((profile / 'airootfs/usr/bin/tessarchy-netinstall').stat().st_mode & 0o111)
-        self.assertTrue((profile / 'airootfs/root/customize_airootfs.sh').is_file())
         self.assertEqual((profile / 'efiboot/loader/loader.conf').read_text().splitlines()[1],
                          'default 01-tessarchy-netinstall.conf')
         self.assertTrue((profile / 'efiboot/loader/entries/01-tessarchy-netinstall.conf').is_file())

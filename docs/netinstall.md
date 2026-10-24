@@ -1,10 +1,11 @@
 # Tessarchy network installer
 
-The netinstall image contains ArchISO startup, the Linux kernel and firmware,
-network tools, disk utilities, package download support, and the guided
-installer. The Tessa desktop and its applications are fetched after the
-computer joins a network. The release target for the ISO is below 1 GiB; the
-hard GitHub Releases per-file limit is 2 GiB.
+The netinstall image contains ArchISO startup, the Linux kernel, common Wi-Fi
+firmware, network tools, disk utilities, package download support, and the
+guided installer. Wi-Fi firmware covers Intel, Atheros, Broadcom, MediaTek,
+and Realtek devices. The Tessa desktop and its applications are fetched after
+the computer joins a network. The ISO target is below 1 GiB so it stays a
+single easy download; the hard GitHub Releases per-file limit is 2 GiB.
 
 The alpha installer targets x86_64 UEFI computers with EFI variables enabled
 and a 24 GiB or larger install disk. It supports wired networking and Wi-Fi
