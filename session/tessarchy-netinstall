@@ -32,7 +32,7 @@ for row in "${disks[@]}"; do
 done
 disk=$(dialog --stdout --title 'Choose an install disk' --menu 'Everything on the selected disk will be erased.' 18 76 8 "${options[@]}") || exit 0
 [[ -b $disk ]] || fail 'The selected disk is no longer available.'
-if lsblk -nrpo MOUNTPOINT "$disk" | grep -q . || lsblk -nrpo NAME "$disk" | grep -Fxf <(swapon --show=NAME --noheadings | sed 's/^[[:space:]]*//') -q; then
+if lsblk -nrpo MOUNTPOINT "$disk" | grep -q . || lsblk -nrpo NAME "$disk" | grep -qFxf <(swapon --show=NAME --noheadings | sed 's/^[[:space:]]*//'); then
     fail 'The selected disk has mounted or active swap partitions. Restart the installer before selecting another disk.'
 fi
 (( $(blockdev --getsize64 "$disk") >= 25769803776 )) || fail 'Choose an install disk with at least 24 GiB of space.'
@@ -58,7 +58,7 @@ case "$timezone" in
 esac
 if [[ $timezone != UTC ]]; then
     timezone="$timezone/$city"
-    [[ -e /usr/share/zoneinfo/$timezone ]] || fail 'That time zone was not found. Restart the installer and choose a valid region and city.'
+    [[ -e "/usr/share/zoneinfo/$timezone" ]] || fail 'That time zone was not found. Restart the installer and choose a valid region and city.'
 fi
 
 dialog --title 'Ready to install' --yesno "Install Tessarchy on $disk?\n\nThe installer will erase this disk, create an EFI and system partition, download Tessarchy and its desktop, and create account $username." 12 76 || exit 0
