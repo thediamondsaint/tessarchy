@@ -223,6 +223,20 @@ ColumnLayout {
                     Layout.minimumWidth: 48
                     Layout.preferredWidth: 72
                     Layout.preferredHeight: 56
+                    background: Rectangle {
+                        radius: Theme.radius("button", 12, height)
+                        color: accentButton.modelData
+                        border.width: accentButton.selected ? 3 : 1
+                        border.color: accentButton.selected ? Theme.text : Qt.alpha(Theme.text, 0.45)
+                    }
+                    contentItem: Text {
+                        text: accentButton.text
+                        color: Theme.darkBackground
+                        font.pixelSize: 13
+                        font.bold: true
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
                     onClicked: page.accentRequested(modelData)
                 }
             }
