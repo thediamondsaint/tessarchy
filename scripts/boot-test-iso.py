@@ -18,6 +18,7 @@ def main():
     parser.add_argument('--seconds', type=int, default=120)
     parser.add_argument('--sample-interval', type=int, default=0, help='capture early startup every N seconds (2–30)')
     parser.add_argument('--capture-launcher', action='store_true', help='click Home after the final capture for manual launcher review')
+    parser.add_argument('--no-auto-enter', action='store_true', help='leave installer and confirmation screens untouched')
     args = parser.parse_args()
     if args.sample_interval and not 2 <= args.sample_interval <= 30:
         parser.error('Sample interval must be 2–30 seconds')
@@ -92,7 +93,8 @@ def main():
                 execute('qmp_capabilities')
                 start = time.monotonic()
                 time.sleep(3)
-                execute('human-monitor-command', {'command-line': 'sendkey ret'})
+                if not args.no_auto_enter:
+                    execute('human-monitor-command', {'command-line': 'sendkey ret'})
                 samples = [10, 30, 60, args.seconds]
                 if args.sample_interval:
                     samples += list(range(args.sample_interval, min(90, args.seconds) + 1, args.sample_interval))
@@ -101,7 +103,8 @@ def main():
                         continue
                     time.sleep(max(0, second - (time.monotonic() - start)))
                     # Wake a blanked panel so idle timeouts cannot hide the shell.
-                    execute('human-monitor-command', {'command-line': 'sendkey ret'})
+                    if not args.no_auto_enter:
+                        execute('human-monitor-command', {'command-line': 'sendkey ret'})
                     time.sleep(1)
                     name = 'final' if second == args.seconds else str(second)
                     ppm = output / (name + '.ppm')

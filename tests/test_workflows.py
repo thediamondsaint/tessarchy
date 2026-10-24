@@ -84,6 +84,12 @@ class Workflows(unittest.TestCase):
                       (profile / 'syslinux/archiso_sys-linux.cfg').read_text())
         self.assertIn('Tessarchy network installer', (profile / 'grub/loopback.cfg').read_text())
 
+    def test_boot_capture_can_leave_installer_prompts_untouched(self):
+        result = subprocess.run([sys.executable, str(ROOT / 'scripts/boot-test-iso.py'), '--help'],
+                                capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn('--no-auto-enter', result.stdout)
+
     def test_osk_gesture_reservation_keeps_input_and_background_at_physical_edge(self):
         shell = (ROOT / 'shell/shell.qml').read_text()
         policy = (ROOT / 'shell/LayoutPolicy.js').read_text()

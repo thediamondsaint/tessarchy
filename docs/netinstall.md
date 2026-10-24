@@ -32,7 +32,9 @@ On Arch Linux with `archiso` installed:
 The profile and build workspace are under ignored `build/`; the ISO and
 SHA-256 file are under ignored `dist/`. The build wrapper stops if the ISO is
 larger than 1 GiB. GitHub Actions builds the same profile for pull requests and
-manual dispatches.
+manual dispatches, then captures diskless BIOS and UEFI QEMU boots in the build
+artifact. Review those screenshots; capture completion alone does not prove a
+successful boot.
 
 ## VM install check
 

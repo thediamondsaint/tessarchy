@@ -30,7 +30,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Prepare source-check dependencies
-        run: sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends ffmpeg libgtk-3-dev libglib2.0-dev pkg-config
+        run: sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends ffmpeg libgtk-3-dev libglib2.0-dev pkg-config qemu-system-x86 ovmf python3-pil
       - name: Check source and QML
         run: ./scripts/check.sh
       - name: Build compact ISO in Arch container
@@ -59,6 +59,30 @@ jobs:
               cd dist
               sha256sum tessarchy-netinstall-*.iso > SHA256SUMS
             '
+      - name: Capture installer boots in diskless BIOS and UEFI VMs
+        shell: bash
+        run: |
+          set -euo pipefail
+          image=(dist/tessarchy-netinstall-*.iso)
+          [[ ${#image[@]} == 1 ]]
+          accel=tcg
+          seconds=180
+          if [[ -e /dev/kvm ]]; then
+            sudo chmod a+rw /dev/kvm
+            accel=kvm
+            seconds=60
+          fi
+          python3 scripts/boot-test-iso.py "${image[0]}" build/netinstall-vm-bios \
+            --firmware bios --accel "$accel" --seconds "$seconds" --sample-interval 5 --no-auto-enter &
+          bios=$!
+          python3 scripts/boot-test-iso.py "${image[0]}" build/netinstall-vm-uefi \
+            --firmware uefi --accel "$accel" --seconds "$seconds" --sample-interval 5 --no-auto-enter &
+          uefi=$!
+          wait "$bios"
+          wait "$uefi"
+          cp build/netinstall-vm-bios/final.png dist/boot-bios.png
+          cp build/netinstall-vm-uefi/final.png dist/boot-uefi.png
+          printf '%s\n' "Diskless QEMU captures: BIOS and UEFI, $accel acceleration. Review both screenshots; capture completion alone is not a boot-success claim." > dist/VM-TESTING.md
       - uses: actions/upload-artifact@v4
         with:
           name: tessarchy-netinstall-x86_64-${{ github.run_number }}
@@ -90,4 +114,4 @@ jobs:
           gh release create "$RELEASE_TAG" --draft --prerelease --target "$GITHUB_SHA" \
             --title "Tessarchy $RELEASE_TAG — netinstall alpha" \
             --notes-file <(printf '%s\n' 'Compact UEFI network installer for testing. It requires an internet connection and erases the selected disk after explicit confirmation. See docs/netinstall.md for requirements and VM testing.' ) \
-            tessarchy-netinstall-*.iso SHA256SUMS build-info.txt
+            tessarchy-netinstall-*.iso SHA256SUMS build-info.txt boot-bios.png boot-uefi.png VM-TESTING.md
