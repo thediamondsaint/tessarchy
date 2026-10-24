@@ -1,6 +1,6 @@
 # Tessarchy website
 
-The public site introduces Tessa through Tess, shown holding a phone, tablet, and laptop against the default mint-aurora wallpaper. The device scenes are illustrative compositions; each display uses a real Tessa development capture. They do not claim physical hardware support. The Alpha 17 release section links its separate BIOS and UEFI boot evidence.
+The public site introduces Tessa through Tess, presenting a phone, tablet, and laptop against the default mint-aurora wallpaper. Each device screen shows the Tessa interface. The release section links the BIOS and UEFI installer captures.
 
 The site icon and header mark use the original tessellated T cube from `shell/artwork/tessarchy-mark.svg`.
 

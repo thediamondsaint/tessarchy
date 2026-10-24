@@ -80,3 +80,22 @@ test('release metadata updates the alpha link and signed VM image links', async 
   assert.equal(result.nodes.get('#vm-checksum-link').href, base + disk + '.SHA256');
   assert.equal(result.nodes.get('#vm-signature-link').href, base + disk + '.sig');
 });
+
+test('netinstall release links directly to the one-file ISO and keeps release notes', async () => {
+  const url = root + 'releases/download/v0.1.0-alpha.18/tessarchy-netinstall-0.1.0-20261024-x86_64.iso';
+  const release = {
+    tag_name: 'v0.1.0-alpha.18', name: 'Tessarchy Alpha 18 — netinstall',
+    html_url: root + 'releases/tag/v0.1.0-alpha.18',
+    assets: [{
+      name: 'tessarchy-netinstall-0.1.0-20261024-x86_64.iso',
+      browser_download_url: url,
+      size: 892678144
+    }]
+  };
+  const result = await page([release]);
+  assert.equal(result.nodes.get('#release-link').href, url);
+  assert.equal(result.nodes.get('#release-link').textContent, 'Download v0.1.0-alpha.18 netinstall ↓');
+  assert.equal(result.nodes.get('#release-notes-link').href, release.html_url);
+  assert.match(result.nodes.get('#release-note').textContent, /851 MiB/);
+  assert.match(result.nodes.get('#release-note').textContent, /SHA-256/);
+});

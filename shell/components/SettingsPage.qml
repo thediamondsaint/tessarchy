@@ -16,7 +16,9 @@ ColumnLayout {
     property string currentTheme: ""
     property bool themeBusy: false
     property string themeError: ""
+    property string accentChoice: String(Theme.accent)
     signal themeRequested(string name)
+    signal accentRequested(string color)
     signal endSessionRequested
     signal controlsRequested
     signal tapeRequested
@@ -192,6 +194,52 @@ ColumnLayout {
             font.pixelSize: 12
             Layout.fillWidth: true
             wrapMode: Text.WordWrap
+        }
+    }
+
+    SettingsCard {
+        title: "ACCENT COLOR"
+        subtitle: "Choose the highlight color used across Tessa."
+        accentColor: page.accentColor
+        Layout.fillWidth: true
+        GridLayout {
+            columns: width >= 520 ? 6 : 3
+            columnSpacing: 8
+            rowSpacing: 8
+            Layout.fillWidth: true
+            Repeater {
+                model: Theme.accentChoices
+                delegate: TouchButton {
+                    id: accentButton
+                    required property string modelData
+                    readonly property var labels: ["Mint", "Sky", "Lavender", "Rose", "Amber", "Cloud"]
+                    text: labels[index]
+                    required property int index
+                    Accessible.name: "Accent color " + text
+                    Accessible.checked: selected
+                    selected: page.accentChoice.toLowerCase() === modelData
+                    accentColor: modelData
+                    Layout.fillWidth: true
+                    Layout.minimumWidth: 48
+                    Layout.preferredWidth: 72
+                    Layout.preferredHeight: 56
+                    background: Rectangle {
+                        radius: Theme.radius("button", 12, height)
+                        color: accentButton.modelData
+                        border.width: accentButton.selected ? 3 : 1
+                        border.color: accentButton.selected ? Theme.text : Qt.alpha(Theme.text, 0.45)
+                    }
+                    contentItem: Text {
+                        text: accentButton.text
+                        color: Theme.darkBackground
+                        font.pixelSize: 13
+                        font.bold: true
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    onClicked: page.accentRequested(modelData)
+                }
+            }
         }
     }
 

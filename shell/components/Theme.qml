@@ -16,6 +16,7 @@ QtObject {
     property color textMuted: "#8da7b9"
     property color muted: "#7a8589"
     property color accent: "#a9e8d5"
+    readonly property var accentChoices: ["#a9e8d5", "#7fc8ff", "#c5a3ff", "#ff9eae", "#ffc66d", "#f3f5f7"]
     property color danger: "#ef8a9b"
     property var shellOverrides: ({})
     function token(name, fallback) {
