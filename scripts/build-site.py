@@ -41,7 +41,7 @@ def main():
         if result.returncode == 0:
             commit = result.stdout.strip()
     output.mkdir(parents=True)
-    for name in ("index.html", "style.css", "app.js"):
+    for name in ("index.html", "terminal-guide.html", "style.css", "app.js"):
         source = ROOT / "website" / name
         shutil.copyfile(source, output / name)
     assets = output / "assets"
