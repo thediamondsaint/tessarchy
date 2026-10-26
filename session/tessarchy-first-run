@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+set -euo pipefail
+config=${XDG_CONFIG_HOME:-$HOME/.config}/tessarchy
+case ${1:-} in
+    status)
+        [[ -e /run/archiso/bootmnt || -e $config/first-run-complete ]] || printf 'show\n'
+        ;;
+    accent)
+        [[ $# == 2 && $2 =~ ^#[0-9A-Fa-f]{6}$ ]] || { echo 'Usage: tessarchy-first-run accent #RRGGBB' >&2; exit 2; }
+        mkdir -p -- "$config"
+        chmod 700 "$config"
+        tmp=$(mktemp -- "$config/accent.XXXXXX")
+        printf '%s\n' "${2,,}" > "$tmp"
+        chmod 600 "$tmp"
+        mv -f -- "$tmp" "$config/accent"
+        if command -v tessarchy-theme >/dev/null 2>&1; then
+            current_theme=$(tessarchy-theme current)
+            tessarchy-theme set "$current_theme"
+        fi
+        ;;
+    complete)
+        mkdir -p -- "$config"
+        chmod 700 "$config"
+        : > "$config/first-run-complete"
+        chmod 600 "$config/first-run-complete"
+        ;;
+    *) echo 'Usage: tessarchy-first-run status | accent #RRGGBB | complete' >&2; exit 2 ;;
+esac

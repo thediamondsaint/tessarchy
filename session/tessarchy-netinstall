@@ -1,0 +1,121 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+export LANG=C
+title='Tessarchy network installer'
+target=/mnt
+log=/tmp/tessarchy-netinstall.log
+
+message() { dialog --title "$title" --msgbox "$1" 12 72; }
+fail() { dialog --title "$title" --msgbox "$1" 12 72; exit 1; }
+input() { dialog --stdout --title "$title" --inputbox "$1" "$2" "$3" "${4:-}"; }
+[[ -c /dev/tty1 ]] || exec </dev/tty
+clear
+if [[ ! -d /sys/firmware/efi/efivars ]]; then
+    fail 'This alpha installer requires a UEFI system with EFI variables enabled. Reboot the computer in UEFI mode and try again.'
+fi
+
+dialog --title "$title" --yesno 'Tessarchy installs a fresh system from the internet. You will choose a disk to erase, create your account, and select a time zone. Connect to Wi-Fi with nmtui first if needed. Continue?' 12 72 || exit 0
+
+if ! curl --fail --silent --show-error --max-time 8 https://archlinux.org/ >/dev/null 2>&1; then
+    dialog --title 'Connect to the internet' --msgbox 'The installer cannot reach Arch Linux. Wired networking should connect automatically. For Wi-Fi, choose OK to open the network menu, connect, then return.' 10 72
+    nmtui-connect || true
+    curl --fail --silent --show-error --max-time 15 https://archlinux.org/ >/dev/null 2>&1 || fail 'No internet connection was found. Connect to a network and restart the installer.'
+fi
+
+mapfile -t disks < <(lsblk -dnpo NAME,SIZE,MODEL,TYPE | awk '$4 == "disk" {printf "%s\t%s\t%s\n", $1, $2, $3}')
+((${#disks[@]})) || fail 'No installable disks were found.'
+options=()
+for row in "${disks[@]}"; do
+    IFS=$'\t' read -r name size model <<< "$row"
+    options+=("$name" "$size  $model")
+done
+disk=$(dialog --stdout --title 'Choose an install disk' --menu 'Everything on the selected disk will be erased.' 18 76 8 "${options[@]}") || exit 0
+[[ -b $disk ]] || fail 'The selected disk is no longer available.'
+if lsblk -nrpo MOUNTPOINT "$disk" | grep -q . || lsblk -nrpo NAME "$disk" | grep -qFxf <(swapon --show=NAME --noheadings | sed 's/^[[:space:]]*//'); then
+    fail 'The selected disk has mounted or active swap partitions. Restart the installer before selecting another disk.'
+fi
+(( $(blockdev --getsize64 "$disk") >= 25769803776 )) || fail 'Choose an install disk with at least 24 GiB of space.'
+confirm=$(input "Type ERASE $disk to confirm that its contents can be erased:" 10 72) || exit 0
+[[ $confirm == "ERASE $disk" ]] || fail 'Disk confirmation did not match. Nothing was changed.'
+
+username=$(input 'Choose your username (lowercase letters and numbers):' 10 72) || exit 0
+[[ $username =~ ^[a-z_][a-z0-9_-]{0,30}$ ]] || fail 'Use a username starting with a lowercase letter or underscore, followed by lowercase letters, numbers, _ or -.'
+hostname=$(input 'Choose a name for this device:' 10 72 tessarchy) || exit 0
+[[ $hostname =~ ^[A-Za-z0-9][A-Za-z0-9.-]{0,62}$ ]] || fail 'Use letters, numbers, dots or hyphens for the device name.'
+password=$(dialog --stdout --title "$title" --insecure --passwordbox 'Set your account password (at least 8 characters):' 10 72) || exit 0
+[[ ${#password} -ge 8 && $password != *:* && $password != *$'\n'* ]] || fail 'Use a password of at least 8 characters without a colon.'
+password_again=$(dialog --stdout --title "$title" --insecure --passwordbox 'Enter the password again:' 10 72) || exit 0
+[[ $password == "$password_again" ]] || fail 'The passwords did not match. Nothing was installed.'
+unset password_again
+
+timezone=$(dialog --stdout --title 'Time zone' --menu 'Choose a time zone region. You can refine it after installation.' 18 72 10 \
+    America 'North and South America' Europe 'Europe' Asia 'Asia' Africa 'Africa' Australia 'Australia' Pacific 'Pacific' UTC 'UTC') || exit 0
+case "$timezone" in
+    America) city=$(dialog --stdout --title 'Time zone' --inputbox 'Enter your city or region, for example Chicago:' 10 72) || exit 0 ;;
+    UTC) city='UTC' ;;
+    *) city=$(dialog --stdout --title 'Time zone' --inputbox "Enter a city or region in $timezone, for example Paris:" 10 72) || exit 0 ;;
+esac
+if [[ $timezone != UTC ]]; then
+    timezone="$timezone/$city"
+    [[ -e "/usr/share/zoneinfo/$timezone" ]] || fail 'That time zone was not found. Restart the installer and choose a valid region and city.'
+fi
+
+dialog --title 'Ready to install' --yesno "Install Tessarchy on $disk?\n\nThe installer will erase this disk, create an EFI and system partition, download Tessarchy and its desktop, and create account $username." 12 76 || exit 0
+
+dialog --title 'Installing Tessarchy' --infobox 'Preparing the selected disk…' 5 60
+{
+    wipefs --all --force "$disk"
+    sgdisk --zap-all "$disk"
+    parted --script "$disk" mklabel gpt mkpart ESP fat32 1MiB 1025MiB set 1 esp on mkpart ROOT ext4 1025MiB 100%
+} >>"$log" 2>&1
+partprobe "$disk"
+udevadm settle
+if [[ $disk =~ [0-9]$ ]]; then
+    efi="${disk}p1" rootpart="${disk}p2"
+else
+    efi="${disk}1" rootpart="${disk}2"
+fi
+[[ -b $efi && -b $rootpart ]] || fail 'The new partitions did not appear. See /tmp/tessarchy-netinstall.log.'
+{
+    mkfs.fat -F32 "$efi"
+    mkfs.ext4 -F "$rootpart"
+} >>"$log" 2>&1
+mount "$rootpart" "$target"
+mkdir -p "$target/boot"
+mount "$efi" "$target/boot"
+
+packages=(base linux linux-firmware networkmanager grub efibootmgr sudo greetd greetd-agreety tessarchy-tablet)
+if ! pacstrap -K "$target" "${packages[@]}" 2>&1 | tee "$log" | dialog --title 'Downloading Tessarchy' --programbox 22 78; then
+    umount -R "$target" || true
+    fail "Package installation failed. Check the network and /tmp/tessarchy-netinstall.log. Nothing is bootable yet."
+fi
+genfstab -U "$target" >> "$target/etc/fstab"
+printf '%s\n' "$hostname" > "$target/etc/hostname"
+printf 'LANG=en_US.UTF-8\n' > "$target/etc/locale.conf"
+sed -i 's/^#en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' "$target/etc/locale.gen"
+arch-chroot "$target" locale-gen >>"$log" 2>&1
+arch-chroot "$target" ln -sf "/usr/share/zoneinfo/$timezone" /etc/localtime
+arch-chroot "$target" hwclock --systohc
+arch-chroot "$target" useradd --create-home --groups wheel --shell /bin/bash "$username"
+printf '%s:%s\n' "$username" "$password" | arch-chroot "$target" chpasswd
+unset password
+printf '%%wheel ALL=(ALL:ALL) ALL\n' > "$target/etc/sudoers.d/10-wheel"
+chmod 440 "$target/etc/sudoers.d/10-wheel"
+cat > "$target/etc/greetd/config.toml" <<'GREETD'
+[terminal]
+vt = 1
+
+[default_session]
+command = "agreety --cmd start-tessarchy"
+user = "greeter"
+GREETD
+arch-chroot "$target" systemctl enable NetworkManager.service greetd.service
+{
+    arch-chroot "$target" grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=Tessarchy --recheck
+    arch-chroot "$target" grub-mkconfig -o /boot/grub/grub.cfg
+} >>"$log" 2>&1
+umount -R "$target"
+
+dialog --title 'Tessarchy is installed' --msgbox "Tessarchy is ready on $disk. Remove the installer and restart. Sign in as $username with the password you chose. Tessa will guide you through themes and colors on first login." 12 72
+reboot

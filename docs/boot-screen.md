@@ -1,4 +1,4 @@
-# Quiet Edge power-on screen
+# Tessarchy power-on screen
 
 Tessarchy's Plymouth theme uses the supplied eight-second power-on video.
 The original 1080×1080 MP4 is retained in `session/boot/power-on.mp4`; packaging

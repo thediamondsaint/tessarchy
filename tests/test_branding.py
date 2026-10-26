@@ -70,8 +70,12 @@ class BootMenus(unittest.TestCase):
         background = BOOT / 'syslinux/splash.png'
         self.assertEqual(png_size(background), (640, 480))
         head = (BOOT / 'syslinux/archiso_head.cfg').read_text()
+        artwork = (BOOT / 'syslinux/splash.svg').read_text()
         self.assertIn('MENU BACKGROUND splash.png', head)
         self.assertIn('Tessarchy', head)
+        self.assertIn('TESSARCHY', artwork)
+        self.assertIn('TESSA NETWORK INSTALLER', artwork)
+        self.assertNotIn('Quiet Edge', artwork + head)
         self.assertEqual([p.name for p in (BOOT / 'syslinux').glob('*.png')], ['splash.png'])
 
     def test_the_isolinux_labels_are_unique_and_tessarchy_led(self):

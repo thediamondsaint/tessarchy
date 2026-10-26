@@ -167,6 +167,11 @@ ShellRoot {
         themeSetter.command = ["tessarchy-theme", "set", name];
         themeSetter.running = true;
     }
+    function setAccent(color) {
+        if (accentSetter.running || !/^#[0-9a-fA-F]{6}$/.test(color)) return;
+        accentSetter.command = ["tessarchy-first-run", "accent", color];
+        accentSetter.running = true;
+    }
     FileView {
         id: themeColors
         path: root.themeDir + "/colors.toml"
@@ -276,7 +281,25 @@ ShellRoot {
         running: true
         onTriggered: root.refreshChatGPT()
     }
-    Component.onCompleted: root.refreshChatGPT()
+    Component.onCompleted: { root.refreshChatGPT(); firstRunProbe.running = true; }
+    Process {
+        id: firstRunProbe
+        command: ["tessarchy-first-run", "status"]
+        stdout: StdioCollector { onStreamFinished: firstRunWizard.visible = text.trim() === "show" }
+    }
+    FirstRunWizard {
+        id: firstRunWizard
+        anchors.fill: parent
+        visible: false
+        themes: root.themes
+        currentTheme: root.themeName
+        accentChoice: String(Theme.accent)
+        onThemeRequested: name => { root.setTheme(name); firstRunWizard.step = 2; }
+        onVisibleChanged: if (visible) root.themeList.running = true
+        onAccentRequested: color => root.setAccent(color)
+        onFinished: visible = false
+    }
+    Process { id: accentSetter; onExited: themeColors.reload() }
     readonly property var activePlayer: {
         const players = Mpris.players.values;
         const index = Policy.preferredPlayerIndex(players.map(player => player.isPlaying));
@@ -655,9 +678,11 @@ ShellRoot {
                                         preferences: shellPreferences
                                         themes: root.themes
                                         currentTheme: root.themeName
+                                        accentChoice: String(Theme.accent)
                                         themeBusy: root.themeBusy
                                         themeError: root.themeError
                                         onThemeRequested: name => root.setTheme(name)
+                                        onAccentRequested: color => root.setAccent(color)
                                         activeMode: Policy.title(surface.mode)
                                         displayWidth: surface.modelData.width
                                         displayHeight: surface.modelData.height
