@@ -19,7 +19,7 @@ function useRelease(release) {
     const size = Number.isFinite(installer.size) ? ` · ${(installer.size / 1048576).toFixed(0)} MiB` : '';
     releaseLink.href = installer.browser_download_url;
     releaseLink.textContent = `Download ${tag || 'the latest'} netinstall ↓`;
-    document.querySelector('#release-note').textContent = `${title}${size}. Download the netinstall ISO, checksum, VM image, and install guide from the release.`;
+    document.querySelector('#release-note').textContent = `${title}${size}. Download the netinstall ISO, SHA-256 checksum, VM image, and install guide from the release.`;
   }
 
   const disk = assets.find(asset => typeof asset?.name === 'string'
