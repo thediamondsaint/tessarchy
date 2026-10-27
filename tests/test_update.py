@@ -147,6 +147,7 @@ class UpdateCase(unittest.TestCase):
 
     def repo_server(self):
         server, url = serve(self.repo)
+        self.addCleanup(server.server_close)  # cleanups run LIFO: close after shutdown
         self.addCleanup(server.shutdown)
         self.configure_repo(url)
         return url
